@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine Radio</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0e0c08;--surface:#1a1108;--border:#3a2a10;
+  --amber:#c8a84a;--amber-light:#e8c86a;
+  --green:#4a7a3a;--green-bright:#c8f0a8;--dim:#3a2a10;
+  --text-dim:#5a4a28;
+}
+html,body{height:100%;background:var(--bg);color:var(--amber);font-family:'Share Tech Mono',monospace;}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px 16px 40px;}
+
+.site-header{width:100%;max-width:700px;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.site-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:500;letter-spacing:6px;text-transform:uppercase;}
+.site-sub{font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-top:2px;}
+
+/* API Key Setup */
+.api-setup{
+  width:100%;max-width:700px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;
+  padding:16px 20px;margin-bottom:16px;
+}
+.api-setup-title{font-size:10px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;}
+.api-row{display:flex;gap:10px;align-items:center;margin-bottom:8px;}
+.api-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;width:80px;flex-shrink:0;}
+.api-input{
+  flex:1;background:#0a0d08;border:1px solid var(--border);border-radius:4px;
+  padding:6px 10px;font-size:10px;color:var(--amber);font-family:'Share Tech Mono',monospace;
+  outline:none;
+}
+.api-input:focus{border-color:var(--amber);}
+.api-input::placeholder{color:#2a2010;}
+.api-save{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  background:none;border:1px solid var(--border);border-radius:4px;
+  color:var(--text-dim);padding:5px 10px;cursor:pointer;font-family:'Share Tech Mono',monospace;
+  transition:all .15s;
+}
+.api-save:hover{border-color:var(--amber);color:var(--amber);}
+.api-status{font-size:9px;color:var(--text-dim);letter-spacing:1px;}
+.api-status.ok{color:#6ab84a;}
+.api-status.err{color:#c86858;}
+
+/* Radio */
+.radio{width:100%;max-width:700px;background:var(--surface);border-radius:16px;border:2px solid var(--border);padding:22px 26px 26px;}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.app-name{font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase;}
+.status-badge{font-size:10px;letter-spacing:2px;border:1px solid var(--dim);border-radius:4px;padding:3px 8px;}
+
+/* Display */
+.display{background:#0a0d08;border-radius:10px;border:1.5px solid #2a3a1a;padding:14px 18px 12px;margin-bottom:16px;}
+.freq-bar{position:relative;height:40px;background:#060906;border-radius:4px;border:1px solid #1a2a12;overflow:hidden;margin-bottom:10px;cursor:pointer;user-select:none;}
+.freq-ticks{position:absolute;bottom:7px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-end;}
+.ft{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.ft-tick{width:1px;}.ft-tick.maj{background:#5a8a3a;height:10px;}.ft-tick.min{background:#2a4a1a;height:5px;}
+.ft-num{font-size:7px;color:#4a7a2a;}
+.needle{position:absolute;top:0;bottom:0;width:2px;background:var(--amber);transform:translateX(-50%);pointer-events:none;transition:left 0.1s;}
+.needle::after{content:'';position:absolute;top:-1px;left:-4px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:9px solid var(--amber);}
+.display-info{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px;}
+.station-readout{font-size:20px;color:var(--green-bright);letter-spacing:1px;}
+.era-chip{background:#1a2a0a;border:1px solid #3a5a1a;border-radius:4px;padding:3px 10px;font-size:11px;color:#8ab86a;letter-spacing:2px;}
+.now-playing{font-size:11px;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px;}
+.queue-section{border-top:1px solid #1a2a0a;padding-top:8px;}
+.queue-label{font-size:8px;color:#2a4a18;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.queue-item{font-size:10px;color:#2a4a18;padding:1.5px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.queue-item.next{color:var(--green);}
+
+/* DJ Bubble */
+.dj-bubble{
+  display:none;
+  background:#0a0d08;border:1px solid #3a5a1a;border-radius:8px;
+  padding:10px 14px;margin-bottom:14px;
+  position:relative;
+}
+.dj-bubble.show{display:block;animation:bubblein .35s ease-out forwards;}
+@keyframes bubblein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.dj-name{font-size:8px;color:#4a7a2a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.dj-text{font-size:12px;color:#8ab86a;line-height:1.5;letter-spacing:.5px;}
+.dj-text.typing::after{content:'▋';animation:blink .8s step-end infinite;}
+@keyframes blink{50%{opacity:0}}
+.dj-controls{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.dj-voice-btn{
+  font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  background:none;border:1px solid var(--dim);border-radius:4px;
+  color:var(--text-dim);padding:3px 8px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;transition:all .15s;
+}
+.dj-voice-btn:hover{border-color:var(--amber);color:var(--amber);}
+.dj-voice-btn.playing{border-color:#6ab84a;color:#6ab84a;}
+.dj-voice-btn.loading{color:#3a5a28;border-color:#2a3a18;}
+.dj-skip{font-size:8px;color:#2a3a18;cursor:pointer;letter-spacing:1px;}
+.dj-skip:hover{color:var(--text-dim);}
+
+/* Timeline */
+.timeline-section{margin-bottom:16px;}
+.timeline-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.timeline-label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+.year-readout{font-size:14px;letter-spacing:3px;}
+.slider-wrap{position:relative;padding:4px 0;margin-bottom:5px;}
+.slider-track{height:4px;background:#2a1e0a;border-radius:2px;border:1px solid var(--border);position:relative;}
+.slider-fill{position:absolute;left:0;top:0;bottom:0;background:var(--amber);border-radius:2px;pointer-events:none;}
+input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translateY(-50%);opacity:0;cursor:pointer;height:24px;margin:0;}
+.slider-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:var(--amber-light);border:2px solid var(--bg);pointer-events:none;}
+.era-marks{display:flex;justify-content:space-between;}
+.era-mark{font-size:8px;color:#3a2a10;}
+
+/* Transition Banner */
+.transition-banner{display:none;background:#0a1a0a;border:1px solid #2a5a1a;border-radius:6px;padding:7px 14px;margin-bottom:14px;font-size:10px;color:#6ab84a;letter-spacing:1px;text-align:center;}
+.transition-banner.show{display:block;animation:bfade 3.2s ease-in-out forwards;}
+@keyframes bfade{0%{opacity:0;transform:translateY(-3px)}8%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+
+/* Presets */
+.presets-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;min-height:76px;align-content:flex-start;}
+.preset{flex:0 0 calc(25% - 6px);background:#140e04;border:1px solid var(--border);border-radius:6px;padding:7px 4px 5px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.preset:hover{border-color:var(--amber);background:#1e1608;}
+.preset.active{border-color:var(--amber);background:#2a1e08;}
+.preset.flicker{animation:flk 1.3s ease-in-out forwards;}
+@keyframes flk{0%{opacity:0;border-color:#3a2a10}7%{opacity:.9;border-color:#8ab86a}14%{opacity:.15}26%{opacity:.95;border-color:#8ab86a}36%{opacity:.25}52%{opacity:1;border-color:#6ab84a}68%{opacity:.65}84%{opacity:1}100%{opacity:1}}
+.preset-call{font-size:8px;color:#4a3a18;display:block;margin-bottom:2px;letter-spacing:1px;}
+.preset-name{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.preset-count{font-size:8px;color:#3a2a10;display:block;margin-top:2px;}
+.preset.active .preset-name{color:var(--amber);}
+.c-amber .preset-name{color:#8a7a48;}.c-amber.active{border-color:var(--amber);background:#2a1e08;}
+.c-red .preset-name{color:#c86858;}.c-red.active{border-color:#b85848;background:#1e0e08;}
+.c-coral .preset-name{color:#c8886a;}.c-coral.active{border-color:#b87858;background:#1e1008;}
+.c-green .preset-name{color:#6ab84a;}.c-green.active{border-color:#5aa83a;background:#0a1808;}
+.c-teal .preset-name{color:#4ab8a8;}.c-teal.active{border-color:#3aa898;background:#081e1c;}
+.c-purple .preset-name{color:#9a8ac8;}.c-purple.active{border-color:#9a7ad8;background:#1e1828;}
+.c-blue .preset-name{color:#6a9ad8;}.c-blue.active{border-color:#5a8ac8;background:#081018;}
+
+/* Transport */
+.transport{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.transport-btns{display:flex;gap:10px;align-items:center;}
+.t-btn{width:36px;height:36px;border-radius:50%;background:#1e1608;border:1.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.t-btn:hover{border-color:var(--amber);background:#2a1e08;}
+.t-btn svg{width:14px;height:14px;fill:#7a6a38;}
+.t-btn.play-btn{width:52px;height:52px;border-color:#7a5a20;}
+.t-btn.play-btn svg{width:18px;height:18px;fill:var(--amber);}
+.t-btn.is-playing{border-color:var(--green-bright);background:#1a2a10;}
+.t-btn.is-playing svg{fill:var(--green-bright);}
+.waveform{display:flex;align-items:center;gap:2px;height:24px;flex:1;justify-content:center;}
+.wb{width:3px;background:#1a5a40;border-radius:2px;}
+.wb.active{animation:wv .7s ease-in-out infinite alternate;}
+.wb:nth-child(2){animation-delay:.1s}.wb:nth-child(3){animation-delay:.2s}
+.wb:nth-child(4){animation-delay:.05s}.wb:nth-child(5){animation-delay:.15s}
+.wb:nth-child(6){animation-delay:.25s}.wb:nth-child(7){animation-delay:.08s}
+.wb:nth-child(8){animation-delay:.18s}
+@keyframes wv{from{height:4px;background:#1a4a30}to{height:20px;background:#3af8a8}}
+.right-controls{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.shuffle-btn{font-size:9px;color:var(--text-dim);letter-spacing:1px;cursor:pointer;border:1px solid var(--border);border-radius:4px;padding:3px 8px;transition:all .15s;background:none;font-family:'Share Tech Mono',monospace;}
+.shuffle-btn:hover{border-color:var(--amber);color:var(--amber);}
+.shuffle-btn.on{border-color:#6ab84a;color:#6ab84a;}
+.vol-row{display:flex;align-items:center;gap:7px;}
+.vol-label{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+.vol-knob{width:36px;height:36px;border-radius:50%;background:#1e1608;border:1.5px solid var(--border);cursor:pointer;position:relative;transition:border-color .15s;}
+.vol-knob:hover{border-color:var(--amber);}
+.vol-marker{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:2px;height:10px;background:#8a7a48;border-radius:1px;}
+
+/* YouTube */
+#yt-wrapper{margin-top:16px;border-radius:8px;overflow:hidden;border:1px solid #2a1e08;display:none;}
+#yt-wrapper.visible{display:block;}
+
+/* Bottom */
+.bottom-strip{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid #1e1608;}
+.signal-dots{display:flex;gap:4px;}
+.dot{width:6px;height:6px;border-radius:50%;background:#0a2020;}
+.dot.on{background:#3af8a8;}.dot.mid{background:#1a8858;}
+.bottom-tag{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+
+.site-footer{width:100%;max-width:700px;margin-top:18px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;}
+.footer-note{font-size:9px;color:#2a1e0a;letter-spacing:1px;}
+
+@media(max-width:520px){
+  body{padding:12px 10px 32px;}
+  .radio,.api-setup{padding:16px 14px 20px;}
+  .preset{flex:0 0 calc(33.333% - 5px);}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <div class="site-title">Time Machine Radio</div>
+    <div class="site-sub">Tune through time · DJ Brain · Spotify</div>
+  </div>
+  <div id="song-total" style="font-size:10px;color:#3a2a10;letter-spacing:2px;"></div>
+</header>
+
+<!-- Setup Panel -->
+<div class="api-setup">
+  <div class="api-setup-title">Setup</div>
+  <div class="api-row">
+    <div class="api-label">Spotify ID</div>
+    <input class="api-input" type="text" id="spotify-client-id" placeholder="Your Spotify Client ID">
+    <div class="api-status" id="spotify-status">not set</div>
+  </div>
+  <div class="api-row">
+    <div class="api-label">Anthropic</div>
+    <input class="api-input" type="password" id="anthropic-key" placeholder="sk-ant-...  (optional — for DJ lines)">
+    <div class="api-status" id="anthropic-status">not set</div>
+  </div>
+  <div class="api-row">
+    <div class="api-label">ElevenLabs</div>
+    <input class="api-input" type="password" id="elevenlabs-key" placeholder="optional — enables DJ voice">
+    <div class="api-status" id="elevenlabs-status">not set</div>
+  </div>
+  <div class="api-row">
+    <button class="api-save" id="save-keys">Save</button>
+    <button class="api-save" id="spotify-auth-btn" style="display:none;border-color:#1DB954;color:#1DB954;">Connect Spotify →</button>
+    <div class="api-status" id="spotify-connect-status" style="margin-left:8px;"></div>
+  </div>
+</div>
+
+<div class="radio">
+  <div class="top-bar">
+    <div class="app-name">Time Machine Radio</div>
+    <div class="status-badge" id="status-badge">TUNED · 1983</div>
+  </div>
+
+  <div class="display">
+    <div class="freq-bar" id="freq-bar">
+      <div class="freq-ticks">
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1920</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1935</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1950</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1965</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1980</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">1995</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">2010</div></div>
+        <div class="ft"><div class="ft-tick min"></div></div>
+        <div class="ft"><div class="ft-tick maj"></div><div class="ft-num">NOW</div></div>
+      </div>
+      <div class="needle" id="needle" style="left:50%"></div>
+    </div>
+    <div class="display-info">
+      <div class="station-readout" id="station-readout">K-HIT</div>
+      <div class="era-chip" id="era-chip">80–89</div>
+    </div>
+    <div class="now-playing" id="now-playing">▶  Select an era and press play</div>
+    <div class="queue-section">
+      <div class="queue-label">Up next</div>
+      <div class="queue-item next" id="q1">—</div>
+      <div class="queue-item" id="q2">—</div>
+      <div class="queue-item" id="q3">—</div>
+    </div>
+  </div>
+
+  <!-- DJ Bubble -->
+  <div class="dj-bubble" id="dj-bubble">
+    <div class="dj-name" id="dj-name">DJ NAME</div>
+    <div class="dj-text" id="dj-text"></div>
+    <div class="dj-controls">
+      <button class="dj-voice-btn" id="dj-voice-btn" style="display:none">▶ Voice</button>
+      <span class="dj-skip" id="dj-skip">skip →</span>
+    </div>
+  </div>
+
+  <div class="transition-banner" id="transition-banner"></div>
+
+  <div class="timeline-section">
+    <div class="timeline-top">
+      <div class="timeline-label">Timeline</div>
+      <div class="year-readout" id="year-readout">1983</div>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-track">
+        <div class="slider-fill" id="slider-fill" style="width:50%"></div>
+      </div>
+      <input type="range" id="era-slider" min="1920" max="2025" value="1983" step="1">
+      <div class="slider-thumb" id="slider-thumb" style="left:50%"></div>
+    </div>
+    <div class="era-marks">
+      <span class="era-mark">1920</span><span class="era-mark">1940</span>
+      <span class="era-mark">1960</span><span class="era-mark">1980</span>
+      <span class="era-mark">2000</span><span class="era-mark">NOW</span>
+    </div>
+  </div>
+
+  <div class="presets-grid" id="presets-grid"></div>
+
+  <div class="transport">
+    <div class="transport-btns">
+      <div class="t-btn" id="btn-prev"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></div>
+      <div class="t-btn play-btn" id="btn-play"><svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="t-btn" id="btn-next"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 4.5 3.18L8 16.14V9.86zM16 6h2v12h-2z"/></svg></div>
+    </div>
+    <div class="waveform">
+      <div class="wb" style="height:5px"></div><div class="wb" style="height:13px"></div>
+      <div class="wb" style="height:7px"></div><div class="wb" style="height:17px"></div>
+      <div class="wb" style="height:9px"></div><div class="wb" style="height:15px"></div>
+      <div class="wb" style="height:6px"></div><div class="wb" style="height:11px"></div>
+    </div>
+    <div class="right-controls">
+      <button class="shuffle-btn on" id="shuffle-btn">⇄ Shuffle</button>
+      <div class="vol-row">
+        <div class="vol-label">Vol</div>
+        <div class="vol-knob"><div class="vol-marker"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Now Playing Link -->
+  <div id="yt-link-bar" style="display:none;margin-top:14px;background:#0a0d08;border:1px solid #2a5a1a;border-radius:8px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;">
+    <div style="font-size:10px;color:#4a7a2a;letter-spacing:1px;" id="yt-link-label">Now playing on YouTube</div>
+    <a id="yt-link" href="#" target="_blank" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;border:1px solid #3a5a1a;border-radius:4px;padding:4px 10px;color:#6ab84a;text-decoration:none;font-family:'Share Tech Mono',monospace;white-space:nowrap;">▶ Open YouTube</a>
+  </div>
+
+  <div class="bottom-strip">
+    <div class="signal-dots">
+      <div class="dot on"></div><div class="dot on"></div>
+      <div class="dot mid"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="bottom-tag" id="mode-tag">Tune-in mode</div>
+    <div class="bottom-tag" id="era-tag">FM · Archive</div>
+    <button id="quality-toggle" style="font-size:8px;letter-spacing:2px;text-transform:uppercase;background:none;border:1px solid #3a2a10;border-radius:4px;color:#5a4a28;padding:3px 8px;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all .15s;" title="Toggle era-accurate audio quality">◉ ERA AUDIO</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-note">Time Machine Radio — DJ Brain v0.1</div>
+  <div class="footer-note" id="total-count"></div>
+</footer>
+
+<script>
+// ─── DJ PERSONALITIES ────────────────────────────────────────────────────────
+const DJ_PERSONALITIES = {
+  weaf:{name:"Harold Pemberton",handle:"The Gentleman of the Airwaves",tone:"formal, gracious, theatrical, slightly pompous",persona:"A dapper 1920s radio announcer who treats every broadcast like a formal occasion. Speaks in complete sentences. Formal but warm. Believes radio is a miracle of civilization.",vocab:"splendid, marvelous, delightful, my dear listeners, most distinguished, the finest",catchphrase:"This is WEAF, bringing the finest music directly into your home."},
+  wsng:{name:"Frankie Delano",handle:"The Swing King",tone:"energetic, playful, big band hype man",persona:"A jive-talking swing era DJ who treats every broadcast like a dance hall. Infectiously enthusiastic. Loves Benny Goodman like a religion.",vocab:"cats, hep, solid, in the groove, swing it, gone, crazy, daddy-o",catchphrase:"That's the most, coast to coast!"},
+  wcrn:{name:"Montgomery Reed",handle:"The Voice of Romance",tone:"smooth, romantic, velvet, late-night intimate",persona:"The romantic crooner DJ. Warm, unhurried, makes every listener feel like he's talking only to them. Probably has a glass of bourbon nearby.",vocab:"lovely, beautiful, sweetheart, darling, the night, close your eyes",catchphrase:"Close your eyes, darling. This one's for you."},
+  wjaz:{name:"Memphis Blue",handle:"The Midnight Professor",tone:"cool, knowing, world-weary, hip",persona:"A cool jazz cat who sounds like he's been everywhere and heard everything. Speaks in short poetic bursts. Think late-night jazz radio.",vocab:"dig it, cool, hip, the changes, cats, laid back, tasty, swinging",catchphrase:"Dig it. Just... dig it."},
+  wjazb:{name:"Professor Charlie B",handle:"The Bebop Philosopher",tone:"intellectual, excited, bebop energy",persona:"A bebop evangelist who can barely contain his excitement about Bird and Dizzy. Speaks quickly when excited, slows down for emphasis.",vocab:"crazy, Bird, the changes, angular, hip cats, blowing, far out",catchphrase:"That's Bird, baby. Nobody plays like Bird."},
+  wrnb:{name:"Big Mama Sweet",handle:"The Queen of the Night",tone:"warm, soulful, powerful, church-house energy",persona:"A big-voiced R&B host who grew up in church. Deeply knowledgeable about blues roots. Laughs easily and loudly. Calls listeners honey.",vocab:"honey, sugar, feel it, in your soul, the groove, come on now, testify",catchphrase:"That right there'll heal what ails you."},
+  khit:{name:"Rick Wilde",handle:"The Hitmaker",tone:"upbeat, crowd-pleasing, professional Top 40",persona:"The classic Top 40 DJ. Always professional, always excited, always selling the hits. Vocabulary shifts with each decade but relentless positivity never changes.",vocab:"number one, hottest, smash hit, the charts, coming up, right now",catchphrase:"Number one, and we're just getting started."},
+  krok:{name:"Daddy Thunders",handle:"The Axe Man",tone:"gravelly, enthusiastic, guitar-worshipping",persona:"A rock and roll true believer. Gets visibly excited about guitar solos. Embraces every era of rock with equal passion.",vocab:"raw, smokin, killer riff, turned it up, cranked, heavy, solid gold",catchphrase:"Turn. It. Up."},
+  kmet:{name:"Iron Rex",handle:"The Lord of Riffs",tone:"dark, intense, reverential, speaks in metal metaphors",persona:"A metal purist who believes heavy music is spiritual. Serious, intense. Gets philosophical about distortion and human emotion.",vocab:"heavy, crushing, riff, brutal, blistering, dark, relentless, headbang",catchphrase:"This riff will haunt you."},
+  wsol:{name:"Velvet Jones",handle:"The Soul Preacher",tone:"smooth, soulful, preacher energy, deeply emotional",persona:"Half DJ, half preacher. Talks about soul music the way a minister talks about scripture. Voice drops to a whisper for the emotional parts.",vocab:"feel it, soul, the real thing, deep, truth, testify, beautiful, in your chest",catchphrase:"Feel it in your chest. Let it move you."},
+  wflk:{name:"Dusty Lane",handle:"The People's Poet",tone:"earnest, literary, protest-era, coffeehouse intellectual",persona:"A Greenwich Village type who believes folk music is journalism. Takes the politics seriously but lets the songs do the work. Quotes poetry.",vocab:"truth, brother, sister, the movement, honest, real, poetry, change",catchphrase:"The truth will come out in the song."},
+  kpsy:{name:"Captain Cosmo",handle:"The Frequency Rider",tone:"trippy, cosmic, Haight-Ashbury, genuinely mind-expanded",persona:"A Summer of Love psychedelic host who genuinely believes music can change consciousness. Speaks slowly with long pauses.",vocab:"cosmic, the vibrations, beautiful people, the universe, love, higher, far out, trip",catchphrase:"We're all riding the same frequency, beautiful people."},
+  kdsc:{name:"Freddie Mirror",handle:"The Disco Lord",tone:"sleazy-glamorous, Studio 54, theatrical excess",persona:"He's at Studio 54 every night and the music is always fabulous. Theatrical, over the top, completely committed to the disco dream.",vocab:"darling, fabulous, divine, the floor, dancing, shimmer, gorgeous, alive",catchphrase:"The night is young and the floor is ours, darling."},
+  kpnk:{name:"Johnny Wreck",handle:"The Wrecker",tone:"confrontational, fast, anti-establishment, genuine anger",persona:"A genuine punk who believes in the music as revolution. Short sentences. Hates prog rock. In the 90s he mellows slightly into pop-punk.",vocab:"raw, real, sell out, the system, loud, fast, three chords, truth",catchphrase:"No gods, no masters, no ballads."},
+  kroq:{name:"Sarah Static",handle:"The Frequency",tone:"cool, indie, slightly detached, genuinely knowledgeable",persona:"The alt-radio voice. Knowledgeable without being pretentious. In the 80s she plays New Wave imports. In the 90s she's the Nirvana era gatekeeper.",vocab:"deep cut, b-side, import, the scene, honest, underground, sonically",catchphrase:"You heard it here first."},
+  kdnc:{name:"DJ Axis",handle:"The Floor Controller",tone:"minimal, cool, club-professional",persona:"A proper club DJ who has played every warehouse in Chicago, Detroit, and Manchester. Economical with words. Lets the music breathe.",vocab:"drop, floor, the mix, vibes, locked in, body, move, underground, warehouse",catchphrase:"Feel the drop."},
+  khip:{name:"Supreme Allah",handle:"The Word Doctor",tone:"authoritative, respectful of the culture, knowledge-dropping",persona:"A hip hop historian and cultural ambassador. Always giving context about where samples came from, what the beef was, why this record mattered.",vocab:"peace, word, real talk, knowledge, the culture, respect, lyrical, the craft",catchphrase:"Real talk — that record changed the culture."},
+  kwst:{name:"DJ West",handle:"The Left Coast",tone:"laid back, gangsta-cool, Compton energy",persona:"West Coast through and through. Chill but with an edge. Deeply loyal to the G-funk era. Speaks slowly and confidently.",vocab:"real, the west, homie, straight, bangin, the coast, legit",catchphrase:"West side, all day."},
+  kbtm:{name:"Dirty Slab",handle:"The Southern Oracle",tone:"syrupy slow, Houston lean, southern pride, hypnotic",persona:"H-Town energy. Speaks slowly — influenced by DJ Screw's chopped-and-screwed aesthetic. Deep southern pride. Never rushing, never loud.",vocab:"slab, swangin, the south, chopped, screwed, candy paint, Houston",catchphrase:"The South runs this. Always did."},
+  ksth:{name:"Lil Buck",handle:"The Trap Door",tone:"street, energetic, Atlanta pre-trap",persona:"Pre-trap era Atlanta energy. Young, hungry, represents the block. The voice that bridged Southern rap into modern trap.",vocab:"street, real, hustle, grind, ATL, the block, stackin",catchphrase:"ATL all day. On God."},
+  ktrap:{name:"Savage K",handle:"The Trap God",tone:"minimal, cold, trap-cool, Atlanta royalty",persona:"Modern Atlanta. Speaks sparingly — every word lands. Treats the music like luxury goods. 2012+ energy.",vocab:"slime, no cap, drip, trap, ice, plug, finessin, real ones",catchphrase:"No cap, this is Atlanta."},
+  kcons:{name:"Thought",handle:"The Conscious",tone:"thoughtful, literary, political, Kendrick/Cole energy",persona:"Takes hip hop seriously as literature and social commentary. Quotes James Baldwin. In the TDE/Dreamville era.",vocab:"real, truth, the culture, conscious, aware, lyricism, craft, legacy",catchphrase:"Hip hop has always been journalism. This is proof."},
+  wltn:{name:"La Voz",handle:"El Maestro",tone:"warm, bilingual, celebratory, pan-Latin pride",persona:"A bilingual DJ who moves fluidly between English and Spanish. Celebrates Latin music across all genres. Warm and inclusive.",vocab:"fuego, la familia, el ritmo, beautiful, corazon, the rhythm, caliente",catchphrase:"El ritmo no miente, familia."},
+  kgro:{name:"Buck Williams",handle:"The Porch",tone:"folksy, honest, porch-sitting, whiskey-weathered",persona:"The voice of working America. Sounds like he grew up on a farm. Never condescending. The same authentic warmth from Jimmie Rodgers to Zach Bryan.",vocab:"friend, neighbor, good people, the land, honest work, real country, home",catchphrase:"Pull up a chair. This one's worth your time."},
+  wclx:{name:"Maestro Hartwell",handle:"The Eternal Voice",tone:"refined, contemplative, deeply reverent, unhurried",persona:"A classical music host who sounds like he was born in a concert hall. Treats each work like a sacred object. Never rushes.",vocab:"sublime, transcendent, architecture, time, eternal, emotion, the composer",catchphrase:"Allow yourself to simply listen."},
+};
+
+// ERA_VOICES defined in ElevenLabs voice synthesis section below
+
+// ─── STATION / TIMELINE / DB (reuse from base file) ───────────────────────
+const SDEFS={weaf:{name:"Big Band",call:"WEAF",color:"amber"},wjaz:{name:"Jazz & Blues",call:"WJAZ",color:"amber"},wgro:{name:"Country",call:"WGRO",color:"green"},wsng:{name:"Swing",call:"WSNG",color:"amber"},wcrn:{name:"Crooner",call:"WCRN",color:"amber"},wrnb:{name:"R&B",call:"WRNB",color:"coral"},wjazb:{name:"Jazz",call:"WJAZ",color:"amber"},khit:{name:"K-HIT",call:"K-HIT",color:"amber"},krok:{name:"Rocktop",call:"KROK",color:"red"},wsol:{name:"Soul FM",call:"WSOL",color:"coral"},kmet:{name:"Hard Rock",call:"KMET",color:"red"},kgro:{name:"Country",call:"KGRO",color:"green"},wflk:{name:"Folk",call:"WFLK",color:"teal"},kpsy:{name:"Psych",call:"KPSY",color:"purple"},kdsc:{name:"Disco·54",call:"KDSC",color:"purple"},kpnk:{name:"Punk",call:"KPNK",color:"red"},kroq:{name:"Alternative",call:"KROQ",color:"teal"},kdnc:{name:"Dance FM",call:"KDNC",color:"teal"},khip:{name:"Hip·Hop",call:"KHIP",color:"purple"},kwst:{name:"West Coast",call:"KWST",color:"purple"},kbtm:{name:"South Rap",call:"KBTM",color:"purple"},ktrap:{name:"Trap",call:"KTRAP",color:"purple"},kcons:{name:"Conscious",call:"KCONS",color:"purple"},ksth:{name:"South Hip Hop",call:"KSTH",color:"purple"},wltn:{name:"Latin·FM",call:"WLTN",color:"coral"},wclx:{name:"Classical",call:"WCLX",color:"blue"}};
+const TIMELINE=[{range:[1920,1929],stations:[{id:"wjaz"},{id:"weaf"},{id:"wclx"}]},{range:[1930,1939],stations:[{id:"wsng"},{id:"wjaz"},{id:"wcrn"},{id:"wgro"},{id:"wclx"}]},{range:[1940,1949],stations:[{id:"wsng"},{id:"wcrn"},{id:"wrnb",appearsAt:1942},{id:"wgro"},{id:"wjazb"},{id:"wclx"}]},{range:[1950,1959],stations:[{id:"khit"},{id:"krok",appearsAt:1954},{id:"wrnb"},{id:"kgro"},{id:"wjaz"},{id:"kmet",appearsAt:1958},{id:"wclx"}]},{range:[1960,1969],stations:[{id:"khit"},{id:"krok"},{id:"wsol",appearsAt:1962},{id:"wrnb"},{id:"kmet"},{id:"kgro"},{id:"wjaz"},{id:"wflk",appearsAt:1962},{id:"kpsy",appearsAt:1967},{id:"wclx"}]},{range:[1970,1979],stations:[{id:"khit"},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"kdsc",appearsAt:1974,disappearsAt:1981},{id:"kgro"},{id:"wjaz"},{id:"kpnk",appearsAt:1977},{id:"wclx"}]},{range:[1980,1989],stations:[{id:"khit"},{id:"kroq",appearsAt:1980},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"khip",appearsAt:1988},{id:"kgro"},{id:"kdnc",appearsAt:1983},{id:"wjaz"},{id:"wclx"}]},{range:[1990,1999],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"kpnk"},{id:"khip"},{id:"kwst",appearsAt:1992},{id:"kbtm",appearsAt:1995},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn",appearsAt:1996},{id:"wjaz"},{id:"wclx"}]},{range:[2000,2009],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ksth"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2010,2019],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ktrap",appearsAt:2012},{id:"kcons",appearsAt:2012},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2020,2029],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ktrap"},{id:"kcons"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]}];
+const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blues is born"},{year:1954,id:"krok",label:"New signal: KROK — Rock & Roll just changed everything"},{year:1958,id:"kmet",label:"New signal: KMET — Hard rock is coming"},{year:1962,id:"wsol",label:"New signal: WSOL — Soul music finds its voice"},{year:1962,id:"wflk",label:"New signal: WFLK — Folk & protest on the air"},{year:1967,id:"kpsy",label:"New signal: KPSY — Turn on, tune in"},{year:1974,id:"kdsc",label:"New signal: KDSC — The dancefloor is open"},{year:1977,id:"kpnk",label:"New signal: KPNK — Punk is not dead"},{year:1980,id:"kroq",label:"New signal: KROQ — Alternative is here"},{year:1981,id:"kdsc",label:"Signal lost: KDSC — Disco is dead. Long live disco.",disappears:true},{year:1983,id:"kdnc",label:"New signal: KDNC — House music all night long"},{year:1988,id:"khip",label:"New signal: KHIP — Hip Hop is now on the air"},{year:1992,id:"kwst",label:"New signal: KWST — West Coast in the house"},{year:1995,id:"kbtm",label:"New signal: KBTM — The South is about to run this"},{year:1996,id:"wltn",label:"New signal: WLTN — Latin radio has arrived"},{year:2012,id:"ktrap",label:"New signal: KTRAP — Atlanta takes over"},{year:2012,id:"kcons",label:"New signal: KCONS — Real hip hop never left"}];
+
+const CLASSICAL=[{t:"Symphony No 5",a:"Beethoven",y:1808,st:["wclx"],p:99,q:"Beethoven Symphony No 5 Karajan"},{t:"Ode to Joy",a:"Beethoven",y:1824,st:["wclx"],p:99,q:"Beethoven Ode to Joy Symphony 9"},{t:"The Four Seasons Spring",a:"Vivaldi",y:1725,st:["wclx"],p:97,q:"Vivaldi Four Seasons Spring"},{t:"Clair de lune",a:"Debussy",y:1905,st:["wclx"],p:97,q:"Debussy Clair de lune"},{t:"Moonlight Sonata",a:"Beethoven",y:1801,st:["wclx"],p:97,q:"Beethoven Moonlight Sonata"},{t:"Rhapsody in Blue",a:"Gershwin",y:1924,st:["wclx"],p:96,q:"Gershwin Rhapsody in Blue Bernstein"},{t:"Swan Lake Suite",a:"Tchaikovsky",y:1877,st:["wclx"],p:96,q:"Tchaikovsky Swan Lake Suite"},{t:"Canon in D",a:"Pachelbel",y:1694,st:["wclx"],p:96,q:"Pachelbel Canon in D"},{t:"Bolero",a:"Ravel",y:1928,st:["wclx"],p:95,q:"Ravel Bolero"},{t:"Symphony No 40",a:"Mozart",y:1788,st:["wclx"],p:95,q:"Mozart Symphony No 40"},{t:"Gymnopedie No 1",a:"Satie",y:1888,st:["wclx"],p:94,q:"Satie Gymnopedie No 1"},{t:"Air on the G String",a:"Bach",y:1731,st:["wclx"],p:94,q:"Bach Air on G String"},{t:"New World Symphony",a:"Dvorak",y:1893,st:["wclx"],p:95,q:"Dvorak New World Symphony"},{t:"Adagio for Strings",a:"Barber",y:1936,st:["wclx"],p:95,q:"Barber Adagio for Strings"},{t:"Schindlers List Theme",a:"John Williams",y:1993,st:["wclx"],p:96,q:"Schindlers List Theme John Williams"},{t:"Interstellar Main Theme",a:"Hans Zimmer",y:2014,st:["wclx"],p:94,q:"Interstellar Main Theme Hans Zimmer"},{t:"On the Nature of Daylight",a:"Max Richter",y:2004,st:["wclx"],p:93,q:"Max Richter On the Nature of Daylight"}];
+
+const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["wgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["wgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"},{t:"Like a Prayer",a:"Madonna",y:1989,st:["khit","kdnc"],p:97,q:"Like a Prayer Madonna 1989"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:97,q:"Every Breath You Take The Police 1983"},{t:"Purple Rain",a:"Prince",y:1984,st:["khit","wsol"],p:97,q:"Purple Rain Prince 1984"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:95,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Dont Stop Believin",a:"Journey",y:1981,st:["krok","khit"],p:96,q:"Don't Stop Believin Journey 1981"},{t:"Sweet Child O Mine",a:"Guns N Roses",y:1988,st:["krok","khit"],p:97,q:"Sweet Child O Mine Guns N Roses 1988"},{t:"Master of Puppets",a:"Metallica",y:1986,st:["kmet"],p:96,q:"Master of Puppets Metallica 1986"},{t:"Back in Black",a:"ACDC",y:1980,st:["kmet"],p:96,q:"Back in Black AC DC 1980"},{t:"Dont You Forget About Me",a:"Simple Minds",y:1985,st:["kroq","khit"],p:94,q:"Don't You Forget About Me Simple Minds 1985"},{t:"Blue Monday",a:"New Order",y:1983,st:["kroq","kdnc"],p:93,q:"Blue Monday New Order 1983"},{t:"Sweet Dreams",a:"Eurythmics",y:1983,st:["kdnc","khit"],p:93,q:"Sweet Dreams Eurythmics 1983"},{t:"Fight the Power",a:"Public Enemy",y:1989,st:["khip"],p:94,q:"Fight the Power Public Enemy 1989"},{t:"Straight Outta Compton",a:"NWA",y:1988,st:["khip"],p:94,q:"Straight Outta Compton NWA 1988"},{t:"The Message",a:"Grandmaster Flash",y:1982,st:["khip"],p:92,q:"The Message Grandmaster Flash 1982"},{t:"When Doves Cry",a:"Prince",y:1984,st:["wrnb","khit"],p:97,q:"When Doves Cry Prince 1984"},{t:"Islands in the Stream",a:"Kenny Rogers and Dolly Parton",y:1983,st:["kgro","khit"],p:94,q:"Islands in the Stream Kenny Rogers Dolly Parton 1983"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious BIG",y:1994,st:["khip"],p:96,q:"Juicy Notorious BIG 1994"},{t:"CREAM",a:"Wu-Tang Clan",y:1993,st:["khip"],p:95,q:"C.R.E.A.M. Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["khip"],p:95,q:"NY State of Mind Nas 1994"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis Kind of Blue"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["khip"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["khip"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["khip"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},{t:"Gasolina",a:"Daddy Yankee",y:2004,st:["wltn"],p:94,q:"Gasolina Daddy Yankee 2004"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["khip","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Despacito",a:"Luis Fonsi ft Daddy Yankee",y:2017,st:["wltn","khit"],p:99,q:"Despacito Luis Fonsi Daddy Yankee 2017"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["khip","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
+
+// ─── YOUTUBE ID MAP ───────────────────────────────────────────────────────────
+const YT={
+"West End Blues":"uAalDCNe4eY","My Blue Heaven":"mVA-ypqhON0",
+"Sing Sing Sing":"h2oskS-Jqnk","In the Mood":"9CnEswKB1xk","Over the Rainbow":"PSZxmZmBfnU","Strange Fruit":"Web007rzSOI","Body and Soul":"EvEfNuqmJxY",
+"White Christmas":"aOr_MvCR5Q4","Boogie Woogie Bugle Boy":"G99oVRBmKFE","As Time Goes By":"YJqPNFnjDhM","Round Midnight":"cMOFBgFY7OY",
+"Rock Around the Clock":"EWSN1DaIRsA","Hound Dog":"2mBjHWFMmqA","Heartbreak Hotel":"bpMYRfkBkA4","Johnny B Goode":"oMbhxQ7tLRg","Jailhouse Rock":"gj0Rz-uP4Mk","So What":"ylXk1LBvIqU","I Walk the Line":"sOFrgnwdNxA",
+"I Want to Hold Your Hand":"jenWdylTtzs","Satisfaction":"nrIPxlFzDi0","Hey Jude":"A_MjCqQoLLA","Good Vibrations":"Eab_beh07HU","Respect":"6FOUqQt3Kg0","My Girl":"huFDqOoKmLE","Purple Haze":"vjVkXlxsO8Q","Light My Fire":"mbRDUWRHxA0","Whole Lotta Love":"HQmmM_qwG4k","Like a Rolling Stone":"IwOfCgkyEj0","Blowin in the Wind":"vVFSKJiB40M","White Rabbit":"WANNqr-vcx0","Strawberry Fields Forever":"naoknj1ebqI","Ring of Fire":"fItAiAHAQH0","Crazy":"07mPMnTX8sI",
+"Bohemian Rhapsody":"fJ9rUzIMcZQ","Hotel California":"BciS5krYL2I","Stayin Alive":"I_izvAbhExY","Piano Man":"gxEPV4kolz0","Stairway to Heaven":"QkF3oxziZqA","Born to Run":"XbGs_qK2PQA","Smoke on the Water":"aBDNBmI4Hd4","Iron Man":"8QNIfOisB4s","Superstition":"-d3bIm4Hd4o","Whats Going On":"H-kA3UtBOh0","Lean on Me":"fOZ-MySzAac","I Will Survive":"ARt9HV9T0w8","September":"Gs069dndIYk","Good Times":"8q4X7Hl3E1k","Jolene":"Ixrje2bfNlY","London Calling":"EfGEMnRBWUw","Blitzkrieg Bop":"SGJFMSmA58I","Chameleon":"7XtSm4zRxqA",
+"Billie Jean":"Zi_XLOBDo_Y","Like a Prayer":"79fzeNUqSubQ","Every Breath You Take":"OMOGaugKpzs","Purple Rain":"TvnYmWpD_T8","Girls Just Want to Have Fun":"PIb6AZdTr-A","Dont Stop Believin":"1k8craCGpgs","Sweet Child O Mine":"1w7OgIMMRc4","Master of Puppets":"xopkKOzR3oQ","Back in Black":"pAgnJDJN4VA","Dont You Forget About Me":"CdqoNKCCt7A","Blue Monday":"FYH8DsE2RDs","Sweet Dreams":"qkIDkl-NmH8","Fight the Power":"8PaoLy7PHwk","Straight Outta Compton":"TMZi25Pq3T8","The Message":"PobrSpMwKk4","When Doves Cry":"UG3VcCAlUgE","Islands in the Stream":"3j8DlhGl9LA",
+"Smells Like Teen Spirit":"hTWKbfoikeg","I Will Always Love You":"qCmHLHHwxSo","Waterfalls":"8WEtxJ4-sh4","Wonderwall":"bx1Bh8ZvH84","Creep":"XFkzRNTAef0","Under the Bridge":"glen_84n3OU","Basket Case":"NUTGr5t3MoY","Enter Sandman":"CD-E-LDc384","Juicy":"f5TKqOsFQrg","CREAM":"PBwAxmrE194","NY State of Mind":"VHcqCCnCVQU","California Love":"OZDIoJJSj58","Nuthin But a G Thang":"6hFvQaRKoBw","Ms Jackson":"gx3YBjHegcY","End of the Road":"fSI5cnBiLtg","Friends in Low Places":"MpW5LtaWXts","Livin la Vida Loca":"p47fEXGabaY","Gangsta's Paradise":"cvHPDQMgCNM",
+"Crazy in Love":"ViwtNLUqkMY","Umbrella":"CvBfHwUxHIk","Poker Face":"bESGLojNYSo","Hey Ya":"PWgvGjAhvIw","Mr Brightside":"gGdGFtwCNBE","Seven Nation Army":"0J2QdDbelmY","Numb":"kXYiU_JCYtU","Lose Yourself":"_Yhyp-_hX2s","In Da Club":"5qm8PH4xAss","Gold Digger":"6vwNcNOTVzY","Lollipop":"we2IKFMrwyk","Rehab":"KUmZp8pR1uc","One More Time":"FGBhQbmPwH8","Gasolina":"CCF8FJcSXEo","Hips Dont Lie":"DUT5rEU6pqM","Before He Cheats":"bRHJBsqZBKE","Get Low":"F3XfEwRU-HI",
+"Uptown Funk":"OPf0YbXqDm0","Blinding Lights":"4NRXx6U8ABQ","Rolling in the Deep":"rYEDA3JcQqw","Shape of You":"JGwWNGJdvx8","Shake It Off":"nfWlot6h_JM","Someone Like You":"hLQl3WQQoQ0","Happy":"ZbZSe6N_BXs","Hello":"YQHsXMglC9A","Do I Wanna Know":"bpOSxM0MsIk","Take Me to Church":"MYSVMgRr6pw","Gods Plan":"xpVfcZ0ZcFM","Mask Off":"xvZqHgFz51I","Bad and Boujee":"HL1UzIK-flA","Rockstar":"fKpy6EsU_Cw","HUMBLE":"tvTRZJ-4EyI","Redbone":"Kp7eSUU9oy8","All of Me":"450p7goxZqg","Despacito":"ktvTqknDobU","Wake Me Up":"IcrbM1l_BoI","Tennessee Whiskey":"4zAThXFOy0c","Old Town Road":"r7qovpFAGrQ",
+"As It Was":"H5v3kku4y6Q","Anti-Hero":"b1kbLwvqugk","Levitating":"IXuFBs4F3qo","Heat Waves":"mRD0-GxqHVo","Fukumean":"d1RfSs-aL9c","Count Me Out":"c2ECwYe2HBQ","Kill Bill":"dnrCEKgJJDs","Bad Habit":"syFU0uGJBrA","I Remember Everything":"J39JHbSNLBc","Ella Baila Sola":"gdoFjfaUiTA",
+};
+
+function getYTId(song){
+  // Try exact title match first
+  if(YT[song.t])return YT[song.t];
+  // Try partial match
+  for(const key of Object.keys(YT)){if(song.t.includes(key)||key.includes(song.t))return YT[key];}
+  return null;
+}
+
+// ─── APP STATE ────────────────────────────────────────────────────────────────
+let curYear=1983, curStation='khit', prevYear=1983;
+let curPlaylist=[], curIdx=0, playing=false, shuffleOn=true;
+let anthropicKey='', spotifyClientId='', elevenlabsKey='';
+let djAudio=null, djGenPending=false;
+let spotifyToken=null, spotifyDeviceId=null;
+
+// ─── KEY MANAGEMENT ──────────────────────────────────────────────────────────
+function loadKeys(){
+  spotifyClientId = localStorage.getItem('tmr_spotify_id')||'';
+  anthropicKey = localStorage.getItem('tmr_anthropic')||'';
+  elevenlabsKey = localStorage.getItem('tmr_elevenlabs')||'';
+  spotifyToken = localStorage.getItem('tmr_spotify_token')||null;
+  if(spotifyClientId) document.getElementById('spotify-client-id').value = spotifyClientId;
+  if(anthropicKey) document.getElementById('anthropic-key').value = anthropicKey;
+  if(elevenlabsKey) document.getElementById('elevenlabs-key').value = elevenlabsKey;
+  updateKeyStatus();
+  // Check if we just returned from Spotify OAuth
+  handleSpotifyCallback();  // async, runs in background
+}
+
+function saveKeys(){
+  spotifyClientId = document.getElementById('spotify-client-id').value.trim();
+  anthropicKey = document.getElementById('anthropic-key').value.trim();
+  elevenlabsKey = document.getElementById('elevenlabs-key').value.trim();
+  if(spotifyClientId) localStorage.setItem('tmr_spotify_id', spotifyClientId);
+  else localStorage.removeItem('tmr_spotify_id');
+  if(anthropicKey) localStorage.setItem('tmr_anthropic', anthropicKey);
+  else localStorage.removeItem('tmr_anthropic');
+  if(elevenlabsKey) localStorage.setItem('tmr_elevenlabs', elevenlabsKey);
+  else localStorage.removeItem('tmr_elevenlabs');
+  updateKeyStatus();
+}
+
+function updateKeyStatus(){
+  const ss = document.getElementById('spotify-status');
+  const as = document.getElementById('anthropic-status');
+  const authBtn = document.getElementById('spotify-auth-btn');
+  const connectStatus = document.getElementById('spotify-connect-status');
+
+  if(spotifyClientId){ ss.textContent='✓ set'; ss.className='api-status ok'; authBtn.style.display='block'; }
+  else { ss.textContent='not set'; ss.className='api-status'; authBtn.style.display='none'; }
+
+  if(anthropicKey){ as.textContent='✓ set'; as.className='api-status ok'; }
+  else { as.textContent='not set'; as.className='api-status'; }
+  const es = document.getElementById('elevenlabs-status');
+  if(es){ 
+    if(elevenlabsKey){ es.textContent='✓ set'; es.className='api-status ok'; }
+    else { es.textContent='optional'; es.className='api-status'; }
+  }
+
+  if(spotifyToken){
+    connectStatus.textContent='✓ Spotify connected';
+    connectStatus.style.color='#1DB954';
+    authBtn.textContent='Reconnect Spotify';
+  } else {
+    connectStatus.textContent='';
+    authBtn.textContent='Connect Spotify →';
+  }
+}
+
+document.getElementById('save-keys').addEventListener('click', saveKeys);
+document.getElementById('spotify-auth-btn').addEventListener('click', ()=>startSpotifyAuth());
+
+// ─── SPOTIFY OAUTH (PKCE) ────────────────────────────────────────────────────
+async function generateCodeChallenge(verifier){
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function generateCodeVerifier(){
+  const array = new Uint32Array(56);
+  crypto.getRandomValues(array);
+  return Array.from(array, x => x.toString(36)).join('').substring(0, 64);
+}
+
+async function startSpotifyAuth(){
+  if(!spotifyClientId){ alert('Enter your Spotify Client ID first and click Save.'); return; }
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+  localStorage.setItem('spotify_pkce_verifier', verifier);
+  const redirectUri = window.location.origin + window.location.pathname;
+  const scopes = [
+    'streaming',
+    'user-read-email',
+    'user-read-private',
+    'user-read-playback-state',
+    'user-modify-playback-state',
+    'user-read-currently-playing'
+  ].join(' ');
+  const url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    response_type: 'code',
+    client_id: spotifyClientId,
+    scope: scopes,
+    redirect_uri: redirectUri,
+    code_challenge_method: 'S256',
+    code_challenge: challenge
+  });
+  window.location.href = url;
+}
+
+async function handleSpotifyCallback(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if(!code) return;
+
+  // Reload clientId from localStorage since page just reloaded after OAuth redirect
+  spotifyClientId = localStorage.getItem('tmr_spotify_id')||'';
+  if(!spotifyClientId){ showMessage('Spotify auth error: Client ID missing.'); return; }
+
+  const verifier = localStorage.getItem('spotify_pkce_verifier');
+  if(!verifier){ showMessage('Spotify auth error: verifier missing. Try connecting again.'); return; }
+
+  // Clean the URL AFTER reading params
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  // Redirect URI must match EXACTLY what is in Spotify dashboard
+  const redirectUri = window.location.origin + window.location.pathname;
+
+  try {
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: redirectUri,
+      client_id: spotifyClientId,
+      code_verifier: verifier
+    });
+
+    const resp = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+
+    const text = await resp.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e){ console.error('Token response was not JSON:', text); showMessage('Spotify auth failed — unexpected response.'); return; }
+
+    if(data.access_token){
+      spotifyToken = data.access_token;
+      localStorage.setItem('tmr_spotify_token', spotifyToken);
+      if(data.refresh_token) localStorage.setItem('tmr_spotify_refresh', data.refresh_token);
+      updateKeyStatus();
+      scheduleTokenRefresh(data.expires_in || 3600);
+      showMessage('Spotify connected! Open Spotify on your Mac, then press play.');
+    } else {
+      console.error('Token exchange failed:', data);
+      showMessage('Spotify auth failed: ' + (data.error_description||data.error||'unknown error'));
+    }
+  } catch(e){
+    console.error('Token exchange error:', e);
+    showMessage('Spotify auth error — check console.');
+  }
+}
+
+// ─── TOKEN AUTO-REFRESH ──────────────────────────────────────────────────────
+function scheduleTokenRefresh(expiresInSeconds){
+  // Refresh 5 minutes before expiry
+  const refreshInMs = (expiresInSeconds - 300) * 1000;
+  if(refreshInMs > 0){
+    setTimeout(()=>{
+      console.log('Spotify token expiring soon — refreshing...');
+      refreshSpotifyToken();
+    }, refreshInMs);
+  }
+}
+
+async function refreshSpotifyToken(){
+  const refreshToken = localStorage.getItem('tmr_spotify_refresh');
+  if(!refreshToken){ 
+    showMessage('Spotify session expired — click Reconnect Spotify.');
+    updateKeyStatus();
+    return;
+  }
+  try {
+    const resp = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: spotifyClientId
+      }).toString()
+    });
+    const data = await resp.json();
+    if(data.access_token){
+      spotifyToken = data.access_token;
+      localStorage.setItem('tmr_spotify_token', spotifyToken);
+      if(data.refresh_token) localStorage.setItem('tmr_spotify_refresh', data.refresh_token);
+      console.log('Spotify token refreshed successfully');
+      scheduleTokenRefresh(data.expires_in || 3600);
+    } else {
+      console.warn('Token refresh failed:', data);
+      showMessage('Spotify session expired — click Reconnect Spotify.');
+      spotifyToken = null;
+      updateKeyStatus();
+    }
+  } catch(e){
+    console.warn('Token refresh error:', e);
+  }
+}
+
+function showMessage(txt){
+  const b = document.getElementById('transition-banner');
+  b.textContent = txt;
+  b.className = 'transition-banner';
+  void b.offsetWidth;
+  b.className = 'transition-banner show';
+  setTimeout(()=>{ b.className='transition-banner'; }, 4000);
+}
+
+// ─── SPOTIFY SEARCH + PLAY ────────────────────────────────────────────────────
+async function searchAndPlay(song, positionMs){
+  if(!spotifyToken){ showMessage('Connect Spotify first — click Save then Connect Spotify →'); return; }
+  // Use Spotify field filters for precise matching — avoids covers, remixes, and samples
+  const query = encodeURIComponent(`track:"${song.t}" artist:"${song.a}" year:${song.y}`);
+  try {
+    const searchRes = await fetch(
+      `https://api.spotify.com/v1/search?q=${query}&type=track&limit=3`,
+      { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+    );
+    if(searchRes.status === 401){
+      // Try refreshing the token first before giving up
+      await refreshSpotifyToken();
+      if(spotifyToken){ searchAndPlay(song, positionMs); return; }
+      setPlaying(false); return;
+    }
+    const searchData = await searchRes.json();
+    const items = searchData.tracks?.items || [];
+    if(!items.length){
+      // Fallback: broader search without quotes
+      const fallbackQuery = encodeURIComponent(song.t + ' ' + song.a + ' ' + song.y);
+      const fallbackRes = await fetch(
+        `https://api.spotify.com/v1/search?q=${fallbackQuery}&type=track&limit=3`,
+        { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+      );
+      if(fallbackRes.ok){
+        const fallbackData = await fallbackRes.json();
+        items.push(...(fallbackData.tracks?.items || []));
+      }
+    }
+    if(!items.length){ console.log('No Spotify track found for:', song.t); skipToNext(); return; }
+    // Pick the track whose release year is closest to song.y
+    const track = items.reduce((best, t) => {
+      const tYear = parseInt((t.album?.release_date||'0').substring(0,4));
+      const bYear = parseInt((best.album?.release_date||'0').substring(0,4));
+      return Math.abs(tYear - song.y) < Math.abs(bYear - song.y) ? t : best;
+    });
+
+    // Build play body — include position_ms to join mid-song like a real radio broadcast
+    const seekMs = (positionMs !== undefined) ? positionMs : 0;
+    const playBody = { uris: [track.uri], position_ms: seekMs };
+    const playUrl = spotifyDeviceId
+      ? `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`
+      : 'https://api.spotify.com/v1/me/player/play';
+
+    const playRes = await fetch(playUrl, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(playBody)
+    });
+
+    if(playRes.status === 404 || playRes.status === 403){
+      showMessage('Open Spotify on any device first, then press play again.');
+      setPlaying(false); return;
+    }
+    if(playRes.status === 401){
+      spotifyToken = null; localStorage.removeItem('tmr_spotify_token');
+      updateKeyStatus(); showMessage('Spotify session expired — please reconnect.'); setPlaying(false); return;
+    }
+
+    // Success
+    setPlaying(true); updateQueue();
+    // DJ speaks at clock-defined break points only (see monitorPlayback)
+
+    // Use real track duration for timer; fall back to default
+    const remainingMs = (track.duration_ms || DEFAULT_DURATION_MS) - seekMs;
+    monitorPlayback(remainingMs);
+
+  } catch(e) {
+    console.error('Spotify error:', e);
+    showMessage('Spotify error — check console.');
+    setPlaying(false);
+  }
+}
+
+let playbackTimer = null;
+function monitorPlayback(remainingMs){
+  if(playbackTimer) clearTimeout(playbackTimer);
+  playbackTimer = setTimeout(()=>{
+    if(playing){
+      const prevSong = curPlaylist[curIdx];
+      const prevIdx = curIdx;
+      // Advance to next song in rotation
+      curIdx = (curIdx + 1) % curPlaylist.length;
+      updateQueue();
+      // Check if a format-clock DJ break fires at this position
+      // DJ break fires BETWEEN songs — at the transition point
+      checkDJBreak(prevIdx, prevSong, curPlaylist[curIdx]);
+      // Next song starts from beginning
+      doPlay(0);
+    }
+  }, remainingMs + 800);
+}
+
+function skipToNext(){
+  // Skip = advance to next song at position 0
+  const prevSong = curPlaylist[curIdx];
+  const prevIdx = curIdx;
+  curIdx = (curIdx + 1) % curPlaylist.length;
+  updateQueue();
+  if(playing){ 
+    checkDJBreak(prevIdx, prevSong, curPlaylist[curIdx]);
+    doPlay(0); 
+  }
+}
+
+// ─── FORMAT CLOCK ────────────────────────────────────────────────────────────
+// Defines how each station formats its broadcast — talk break frequency,
+// length, and content types. Based on how these actual station formats operated.
+const FORMAT_PROFILES = {
+  weaf: {every:2,lengths:["medium","long"],weather:true,time:true},
+  wsng: {every:2,lengths:["medium","long"],weather:true,time:true},
+  wcrn: {every:2,lengths:["medium","long"],weather:false,time:true},
+  kdsc: {every:2,lengths:["medium","long"],weather:false,time:true},
+  khit: {every:2,lengths:["short","medium"],weather:true,time:true},
+  kgro: {every:3,lengths:["short","medium"],weather:true,time:true},
+  wrnb: {every:3,lengths:["short","medium"],weather:false,time:true},
+  wsol: {every:3,lengths:["short","medium"],weather:false,time:true},
+  krok: {every:3,lengths:["short","medium"],weather:false,time:false},
+  kpnk: {every:3,lengths:["short"],weather:false,time:false},
+  kroq: {every:4,lengths:["short","medium"],weather:false,time:false},
+  wjazb:{every:4,lengths:["short","medium"],weather:false,time:false},
+  wflk: {every:3,lengths:["medium"],weather:false,time:false},
+  wltn: {every:3,lengths:["short","medium"],weather:false,time:true},
+  wjaz: {every:5,lengths:["short","medium"],weather:false,time:true},
+  kmet: {every:5,lengths:["short"],weather:false,time:false},
+  kdnc: {every:6,lengths:["short"],weather:false,time:false},
+  kpsy: {every:5,lengths:["medium"],weather:false,time:false},
+  khip: {every:4,lengths:["short","medium"],weather:false,time:false},
+  kwst: {every:4,lengths:["short","medium"],weather:false,time:false},
+  kbtm: {every:5,lengths:["short"],weather:false,time:false},
+  ksth: {every:4,lengths:["short"],weather:false,time:false},
+  ktrap:{every:5,lengths:["short"],weather:false,time:false},
+  kcons:{every:5,lengths:["short","medium"],weather:false,time:false},
+  wclx: {every:7,lengths:["short","medium"],weather:false,time:false},
+};
+const LENGTH_TOKENS = {short:60, medium:110, long:160};
+
+// Determines if a talk break fires at a given song index in the rotation
+function shouldBreakAtIndex(sid, songIdx){
+  const profile = FORMAT_PROFILES[sid] || {every:4};
+  return (songIdx % profile.every === profile.every - 1);
+}
+
+// ─── WEATHER FETCH ────────────────────────────────────────────────────────────
+let cachedWeather = null;
+let weatherFetchTime = 0;
+
+async function getWeather(){
+  // Cache for 30 minutes
+  if(cachedWeather && Date.now() - weatherFetchTime < 30 * 60 * 1000) return cachedWeather;
+  try {
+    // Get user location
+    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:5000}));
+    const {latitude, longitude} = pos.coords;
+    // Open-Meteo: free, no key required
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const temp = Math.round(d.current.temperature_2m);
+    const code = d.current.weathercode;
+    const conditions = weatherCodeToDesc(code);
+    // Get city name from coordinates
+    const geoR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+    const geoD = await geoR.json();
+    const city = geoD.address?.city || geoD.address?.town || geoD.address?.county || 'your city';
+    cachedWeather = { temp, conditions, city };
+    weatherFetchTime = Date.now();
+    return cachedWeather;
+  } catch(e) {
+    console.log('Weather fetch failed:', e);
+    return null;
+  }
+}
+
+function weatherCodeToDesc(code){
+  if(code === 0) return 'clear skies';
+  if(code <= 3) return 'partly cloudy';
+  if(code <= 9) return 'foggy';
+  if(code <= 19) return 'drizzling';
+  if(code <= 29) return 'rainy';
+  if(code <= 39) return 'snowing';
+  if(code <= 49) return 'foggy';
+  if(code <= 59) return 'drizzling';
+  if(code <= 69) return 'raining';
+  if(code <= 79) return 'snowing';
+  if(code <= 84) return 'rainy';
+  if(code <= 94) return 'stormy';
+  return 'thunderstorming';
+}
+
+function getTimeOfDay(){
+  const h = new Date().getHours();
+  if(h < 6) return 'late night';
+  if(h < 12) return 'morning';
+  if(h < 17) return 'afternoon';
+  if(h < 21) return 'evening';
+  return 'night';
+}
+
+function getDayOfWeek(){
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+}
+
+// ─── ELEVENLABS VOICE SYNTHESIS ──────────────────────────────────────────────
+// Voice IDs mapped by era — each era cluster gets a voice with appropriate character
+// These are ElevenLabs stock voices available on all plans
+const ERA_VOICES = {
+  // 1920s-40s: formal, warm, slightly clipped — classic radio announcer
+  1920: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.75, similarity: 0.75 },
+  1930: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.75, similarity: 0.75 },
+  1940: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.70, similarity: 0.75 },
+  // 1950s-60s: warmer, more energetic
+  1950: { id: 'yoZ06aMxZJJ28mfd3POQ', name: 'Sam',  stability: 0.65, similarity: 0.80 },
+  1960: { id: 'yoZ06aMxZJJ28mfd3POQ', name: 'Sam',  stability: 0.60, similarity: 0.80 },
+  // 1970s-80s: smooth, FM-ready
+  1970: { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', stability: 0.60, similarity: 0.80 },
+  1980: { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', stability: 0.55, similarity: 0.80 },
+  // 1990s-2000s: younger, more casual
+  1990: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.50, similarity: 0.80 },
+  2000: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.50, similarity: 0.80 },
+  // 2010s+: modern, natural
+  2010: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.45, similarity: 0.85 },
+  2020: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.45, similarity: 0.85 },
+};
+
+function getEraVoice(y){
+  const d = Math.floor(y/10)*10;
+  return ERA_VOICES[Math.min(d, 2020)] || ERA_VOICES[2020];
+}
+
+let djAudioContext = null;
+let currentDJAudio = null;
+
+async function speakDJLine(text){
+  if(!elevenlabsKey || !text) return;
+  const voice = getEraVoice(curYear);
+  try {
+    const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`, {
+      method: 'POST',
+      headers: { 
+        'xi-api-key': elevenlabsKey, 
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: {
+          stability: voice.stability,
+          similarity_boost: voice.similarity,
+          style: 0.0,
+          use_speaker_boost: true
+        }
+      })
+    });
+
+    if(!resp.ok){
+      console.warn('ElevenLabs error:', resp.status, await resp.text());
+      return;
+    }
+
+    const audioBlob = await resp.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    // Stop any currently playing DJ audio
+    if(currentDJAudio){
+      currentDJAudio.pause();
+      currentDJAudio = null;
+    }
+
+    // Apply era-accurate audio processing via Web Audio API
+    const audio = new Audio(audioUrl);
+    audio.crossOrigin = 'anonymous';
+    currentDJAudio = audio;
+
+    // Web Audio processing for era feel
+    if(eraAudioOn && curYear < 1960){
+      // Pre-FM: narrow frequency, warmth, slight crackle feel
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = ctx.createMediaElementSource(audio);
+        // Bandpass filter — simulates AM radio frequency range
+        const bandpass = ctx.createBiquadFilter();
+        bandpass.type = 'bandpass';
+        bandpass.frequency.value = curYear < 1940 ? 1200 : 1800;
+        bandpass.Q.value = curYear < 1940 ? 0.8 : 0.5;
+        // Slight gain boost to compensate
+        const gain = ctx.createGain();
+        gain.gain.value = 1.4;
+        source.connect(bandpass);
+        bandpass.connect(gain);
+        gain.connect(ctx.destination);
+      } catch(e) {
+        // Fallback if Web Audio fails
+        audio.play();
+        return;
+      }
+    }
+
+    await audio.play();
+    audio.onended = () => { 
+      currentDJAudio = null;
+      URL.revokeObjectURL(audioUrl);
+    };
+
+  } catch(e) {
+    console.warn('DJ voice error:', e);
+  }
+}
+
+// ─── DJ BRAIN ────────────────────────────────────────────────────────────────
+async function generateDJLine(prevSong, nextSong, weatherData){
+  if(!anthropicKey) return null;
+  const dj = DJ_PERSONALITIES[curStation] || DJ_PERSONALITIES['khit'];
+  const stationDef = SDEFS[curStation] || {name:curStation, call:curStation};
+  const profile = FORMAT_PROFILES[curStation] || {every:4, lengths:["short"], weather:false, time:false};
+
+  // Pick break length
+  const lengthKey = profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
+  const maxTokens = LENGTH_TOKENS[lengthKey] || 80;
+
+  // Build context for the DJ
+  const timeStr = profile.time ? `The local time is ${getTimeOfDay()} on a ${getDayOfWeek()}.` : '';
+  const weatherStr = (profile.weather && weatherData) 
+    ? `Local weather: ${weatherData.conditions}, ${weatherData.temp}°F in ${weatherData.city}.` 
+    : '';
+
+  // Pick break type based on what's available
+  // Always include song context since we have it
+  const hasSongContext = prevSong && nextSong;
+
+  const systemPrompt = `You are ${dj.name}, known as "${dj.handle}", the DJ of ${stationDef.call} (${stationDef.name}) in the year ${curYear}.
+
+Personality: ${dj.persona}
+Tone: ${dj.tone}
+Vocabulary: ${dj.vocab}
+Catchphrase (use occasionally, not always): "${dj.catchphrase}"
+
+${timeStr}
+${weatherStr}
+
+Rules:
+- This is a BROADCAST talk break. You are speaking to everyone listening, not to a specific user.
+- Be era-accurate. Use language, references, and sensibility from ${curYear} only.
+- ${lengthKey === 'short' ? 'Keep it to 1-2 sentences maximum.' : lengthKey === 'medium' ? '2-3 sentences.' : '3-4 sentences, with natural flow.'}
+- Sound like a real radio DJ from ${curYear}, not an AI assistant.
+- ${profile.time && timeStr ? 'You may naturally reference the time of day.' : ''}
+- ${profile.weather && weatherStr ? 'You may naturally weave in the weather.' : ''}
+- Output ONLY the DJ spoken words. No quotes, labels, or stage directions.`;
+
+  const userMsg = hasSongContext
+    ? `Talk break after "${prevSong.t}" by ${prevSong.a} (${prevSong.y}). Next up: "${nextSong.t}" by ${nextSong.a} (${nextSong.y}). You may reference either song, or just do station patter — your call.`
+    : `Talk break on ${stationDef.call}. Do a natural station patter break.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
+    });
+    if(!resp.ok){
+      const errText = await resp.text();
+      console.warn('DJ Brain error', resp.status, errText);
+      return null;
+    }
+    const data = await resp.json();
+    return data.content?.[0]?.text?.trim()||null;
+  } catch(e){ console.warn('DJ Brain:', e); return null; }
+}
+
+function showDJBubble(text, djDef){
+  const bubble = document.getElementById('dj-bubble');
+  const nameEl = document.getElementById('dj-name');
+  const textEl = document.getElementById('dj-text');
+  nameEl.textContent = (djDef?.name||'DJ') + ' · ' + (djDef?.handle||'');
+  textEl.textContent = '';
+  textEl.classList.add('typing');
+  bubble.className = 'dj-bubble show';
+  let i = 0;
+  const chars = text.split('');
+  // Typing speed varies by break length — longer breaks type slightly faster
+  const speed = chars.length > 150 ? 16 : chars.length > 80 ? 20 : 25;
+  const timer = setInterval(()=>{
+    if(i < chars.length){ textEl.textContent += chars[i++]; }
+    else { textEl.classList.remove('typing'); clearInterval(timer); }
+  }, speed);
+  // Display duration proportional to length
+  const displayMs = Math.max(8000, chars.length * 60);
+  setTimeout(()=>{ if(bubble.classList.contains('show')) bubble.className='dj-bubble'; }, displayMs);
+
+  // Speak the line if ElevenLabs is configured
+  if(elevenlabsKey) speakDJLine(text);
+}
+
+// Clock-based DJ break trigger — fires at fixed rotation positions, not per-user events
+async function checkDJBreak(songIdx, prevSong, nextSong){
+  if(!anthropicKey || djGenPending) return;
+  if(!shouldBreakAtIndex(curStation, songIdx)) return;
+
+  djGenPending = true;
+
+  // Fetch weather if station uses it (non-blocking)
+  const profile = FORMAT_PROFILES[curStation];
+  const weather = (profile?.weather) ? await getWeather() : null;
+
+  const line = await generateDJLine(prevSong, nextSong, weather);
+  djGenPending = false;
+  if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
+}
+
+document.getElementById('dj-skip').addEventListener('click', ()=>{
+  document.getElementById('dj-bubble').className = 'dj-bubble';
+});
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function decade(y){ return Math.floor(y/10)*10; }
+function pct(y){ return (y-1920)/(2025-1920)*100; }
+function eraLabel(y){ const d=decade(y); return d+'–'+(d+9).toString().slice(-2); }
+function getEraConfig(y){ for(const e of TIMELINE){ if(y>=e.range[0]&&y<=e.range[1]) return e; } return TIMELINE[TIMELINE.length-1]; }
+function getActiveStations(y){
+  const cfg = getEraConfig(y);
+  return cfg.stations.filter(s=>{
+    if(s.disappearsAt && y>=s.disappearsAt) return false;
+    if(s.appearsAt && y<s.appearsAt) return false;
+    return true;
+  }).map(s=>({...SDEFS[s.id],...s}));
+}
+function getNewStations(oldY, newY){
+  const oldIds = getActiveStations(oldY).map(s=>s.id);
+  return getActiveStations(newY).filter(s=>!oldIds.includes(s.id));
+}
+function getSongs(sid, y){
+  if(sid==='wclx') return CLASSICAL;
+  const d = decade(y);
+
+  // Search current decade first, then adjacent decades for this station
+  const allKeys = Object.keys(DB).map(Number).sort();
+  const targetDecade = d>=2020?2020:d;
+
+  // Try current decade
+  let pool = (DB[String(targetDecade)]||[]).filter(s=>s.st.includes(sid));
+  if(pool.length) return pool;
+
+  // Try nearby decades (within 20 years), closest first
+  const nearby = allKeys
+    .filter(k => k !== targetDecade)
+    .sort((a,b) => Math.abs(a-targetDecade) - Math.abs(b-targetDecade));
+
+  for(const k of nearby){
+    pool = (DB[String(k)]||[]).filter(s=>s.st.includes(sid));
+    if(pool.length) return pool;
+    // Don't go more than 20 years away
+    if(Math.abs(k - targetDecade) > 20) break;
+  }
+
+  // Last resort: any decade
+  for(const k of nearby){
+    pool = (DB[String(k)]||[]).filter(s=>s.st.includes(sid));
+    if(pool.length) return pool;
+  }
+
+  return [];
+}
+
+// ─── BROADCAST CLOCK ────────────────────────────────────────────────────────
+// Each station runs a continuous loop synced to real time.
+// Everyone tuning in at the same moment hears the same song at the same position.
+const STATION_SEEDS = {
+  weaf:3438160,wsng:268434,wcrn:3314836,wjaz:1232097,wjazb:3255408,
+  wrnb:2023516,khit:1568189,krok:3564612,kmet:2014912,wsol:1824291,
+  wflk:2872488,kpsy:237931,kdsc:1224101,kpnk:2494687,kroq:1951165,
+  kdnc:1584499,khip:1756714,kwst:262553,kbtm:266572,ksth:903531,
+  ktrap:1973585,kcons:556829,wltn:251527,kgro:3553971,wclx:983872
+};
+
+// Estimated duration per song in ms (used before we get real Spotify duration)
+const DEFAULT_DURATION_MS = 210000; // 3.5 minutes
+
+function getBroadcastPlaylist(sid, y){
+  // Get songs sorted chronologically (oldest first) — stable, predictable order
+  let songs = getSongs(sid, y);
+  if(!songs.length){
+    const active = getActiveStations(y);
+    if(active.length) songs = getSongs(active[0].id, y);
+  }
+  return [...songs].sort((a,b) => a.y - b.y || a.t.localeCompare(b.t));
+}
+
+function getBroadcastPosition(sid, y){
+  // Returns {song, positionMs, idx} for the current moment in time
+  const playlist = getBroadcastPlaylist(sid, y);
+  if(!playlist.length) return null;
+
+  const seed = STATION_SEEDS[sid] || 0;
+  const now = Date.now() + seed;
+
+  // Total playlist duration (using default since we don't have real durations yet)
+  const totalMs = playlist.length * DEFAULT_DURATION_MS;
+  const posInLoop = now % totalMs;
+
+  // Find which song we're in
+  let elapsed = 0;
+  for(let i = 0; i < playlist.length; i++){
+    const dur = DEFAULT_DURATION_MS;
+    if(posInLoop < elapsed + dur){
+      return {
+        song: playlist[i],
+        positionMs: Math.floor(posInLoop - elapsed),
+        idx: i,
+        playlist: playlist,
+        durationMs: dur
+      };
+    }
+    elapsed += dur;
+  }
+  // Fallback to first song
+  return { song: playlist[0], positionMs: 0, idx: 0, playlist, durationMs: DEFAULT_DURATION_MS };
+}
+
+// ─── PLAYLIST ────────────────────────────────────────────────────────────────
+function buildPlaylist(){
+  const pos = getBroadcastPosition(curStation, curYear);
+  if(!pos){ curPlaylist = []; curIdx = 0; updateQueue(); return; }
+  curPlaylist = pos.playlist;
+  curIdx = pos.idx;
+  updateQueue();
+}
+
+function updateQueue(){
+  const s = curPlaylist[curIdx];
+  document.getElementById('now-playing').textContent = s ? '▶  '+s.t+' — '+s.a+(s.y?' · '+s.y:'') : '▶  Press play to tune in';
+  // Up next shows next 3 in rotation
+  ['q1','q2','q3'].forEach((id,i)=>{
+    const n = curPlaylist[(curIdx+i+1) % curPlaylist.length];
+    document.getElementById(id).textContent = n ? n.t+' — '+n.a : '—';
+  });
+}
+
+// ─── BANNER ──────────────────────────────────────────────────────────────────
+function showBanner(txt){
+  const b = document.getElementById('transition-banner');
+  b.textContent = txt; b.className='transition-banner';
+  void b.offsetWidth;
+  b.className='transition-banner show';
+  setTimeout(()=>{ b.className='transition-banner'; }, 3400);
+}
+
+// ─── PRESETS ─────────────────────────────────────────────────────────────────
+function renderPresets(y, newIds){
+  const stations = getActiveStations(y);
+  const container = document.getElementById('presets-grid');
+  const existing = {};
+  container.querySelectorAll('.preset').forEach(el=>{ existing[el.dataset.sid]=el; });
+  const toKeep = new Set(stations.map(s=>s.id));
+  Object.keys(existing).forEach(sid=>{ if(!toKeep.has(sid)) existing[sid].remove(); });
+  stations.forEach(s=>{
+    const cnt = s.id==='wclx' ? CLASSICAL.length : getSongs(s.id,y).length;
+    const isActive = s.id===curStation;
+    if(existing[s.id]){
+      const el = existing[s.id];
+      el.querySelector('.preset-call').textContent = s.call;
+      el.querySelector('.preset-name').textContent = s.name;
+      el.querySelector('.preset-count').textContent = cnt ? cnt+'♪' : '—';
+      el.className = `preset c-${s.color}${isActive?' active':''}`;
+    } else {
+      const el = document.createElement('div');
+      el.className = `preset c-${s.color}${isActive?' active':''}`;
+      el.dataset.sid = s.id;
+      el.innerHTML = `<span class="preset-call">${s.call}</span><span class="preset-name">${s.name}</span><span class="preset-count">${cnt?cnt+'♪':'—'}</span>`;
+      el.addEventListener('click', ()=>selectStation(s.id));
+      if(newIds && newIds.includes(s.id)){
+        el.classList.add('flicker');
+        setTimeout(()=>el.classList.remove('flicker'), 1400);
+      }
+      container.appendChild(el);
+    }
+  });
+  if(!toKeep.has(curStation)){
+    curStation = stations[0].id;
+    container.querySelectorAll('.preset').forEach(el=>el.classList.toggle('active', el.dataset.sid===curStation));
+    buildPlaylist();
+  }
+}
+
+function selectStation(sid){
+  curStation = sid;
+  document.querySelectorAll('.preset').forEach(el=>el.classList.toggle('active', el.dataset.sid===sid));
+  buildPlaylist(); updateUI(false);
+  if(playing){ if(playbackTimer) clearTimeout(playbackTimer); doPlay(); }
+  // Don't trigger DJ on every station click — only on era changes and between songs
+}
+
+// ─── UI UPDATE ───────────────────────────────────────────────────────────────
+function updateUI(checkT){
+  const p = pct(curYear);
+  document.getElementById('slider-fill').style.width = p+'%';
+  document.getElementById('slider-thumb').style.left = p+'%';
+  document.getElementById('needle').style.left = p+'%';
+  document.getElementById('year-readout').textContent = curYear;
+  document.getElementById('era-chip').textContent = eraLabel(curYear);
+  document.getElementById('status-badge').textContent = 'TUNED · '+curYear;
+  const stations = getActiveStations(curYear);
+  const stn = stations.find(s=>s.id===curStation);
+  document.getElementById('station-readout').textContent = stn ? stn.call+' · '+stn.name : '—';
+  document.getElementById('mode-tag').textContent = eraLabel(curYear)+(stn?' · '+stn.call:'');
+  updateEraAudio();
+  let newIds = null;
+  if(checkT){
+    const news = getNewStations(prevYear, curYear);
+    if(news.length){
+      newIds = news.map(s=>s.id);
+      const tr = TRANSITIONS.find(t=>!t.disappears && news.some(s=>s.id===t.id) && curYear>=t.year && prevYear<t.year);
+      if(tr) showBanner(tr.label);
+    }
+    const lostTr = TRANSITIONS.find(t=>t.disappears && curYear>=t.year && prevYear<t.year);
+    if(lostTr) showBanner(lostTr.label);
+    if(getEraConfig(prevYear) !== getEraConfig(curYear)){
+      buildPlaylist();
+      // Era change — broadcast continues, no special DJ announcement
+    }
+  }
+  renderPresets(curYear, newIds);
+}
+
+// ─── PLAYBACK ─────────────────────────────────────────────────────────────────
+function setPlaying(p){
+  playing = p;
+  const btn = document.getElementById('btn-play');
+  const ico = document.getElementById('play-icon');
+  document.querySelectorAll('.wb').forEach(w=>p ? w.classList.add('active') : w.classList.remove('active'));
+  btn.classList.toggle('is-playing', p);
+  ico.innerHTML = p ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+}
+
+function doPlay(overridePositionMs){
+  // Get current broadcast position for this station
+  const pos = getBroadcastPosition(curStation, curYear);
+  if(!pos){ showMessage('No songs available for this station/era.'); return; }
+
+  // If overridePositionMs is provided (e.g. skip = 0), use that
+  // Otherwise use the real broadcast clock position
+  const posMs = (overridePositionMs !== undefined) ? overridePositionMs : pos.positionMs;
+
+  // Sync playlist index to broadcast position
+  if(overridePositionMs === undefined){
+    curIdx = pos.idx;
+    curPlaylist = pos.playlist;
+  }
+
+  const s = curPlaylist[curIdx];
+  if(!s) return;
+  updateQueue();
+  searchAndPlay(s, posMs);
+}
+
+// ─── CONTROLS ────────────────────────────────────────────────────────────────
+let sliderTimer = null;
+document.getElementById('era-slider').addEventListener('input', function(){
+  curYear = parseInt(this.value);
+  clearTimeout(sliderTimer);
+  const p = pct(curYear);
+  document.getElementById('slider-fill').style.width = p+'%';
+  document.getElementById('slider-thumb').style.left = p+'%';
+  document.getElementById('needle').style.left = p+'%';
+  document.getElementById('year-readout').textContent = curYear;
+  document.getElementById('era-chip').textContent = eraLabel(curYear);
+  document.getElementById('status-badge').textContent = 'TUNED · '+curYear;
+  sliderTimer = setTimeout(()=>{
+    updateUI(true); prevYear=curYear; buildPlaylist();
+    if(playing){ if(playbackTimer) clearTimeout(playbackTimer); doPlay(); }
+  }, 180);
+});
+
+document.getElementById('freq-bar').addEventListener('click', function(e){
+  const r = this.getBoundingClientRect();
+  curYear = Math.round(1920 + (e.clientX-r.left)/r.width*(2025-1920));
+  document.getElementById('era-slider').value = curYear;
+  updateUI(true); prevYear=curYear; buildPlaylist();
+  if(playing){ if(playbackTimer) clearTimeout(playbackTimer); doPlay(); }
+});
+
+document.getElementById('btn-play').addEventListener('click', function(){
+  if(!playing){ doPlay(); }
+  else {
+    setPlaying(false);
+    if(playbackTimer) clearTimeout(playbackTimer);
+    // Pause Spotify
+    if(spotifyToken){
+      fetch('https://api.spotify.com/v1/me/player/pause', {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer '+spotifyToken }
+      }).catch(()=>{});
+    }
+  }
+});
+
+document.getElementById('btn-next').addEventListener('click', function(){
+  if(playbackTimer) clearTimeout(playbackTimer);
+  skipToNext();
+});
+
+document.getElementById('btn-prev').addEventListener('click', function(){
+  // Radio doesn't rewind — this restarts the current song from the broadcast position
+  if(playbackTimer) clearTimeout(playbackTimer);
+  if(playing) doPlay();
+});
+
+// Shuffle disabled in broadcast mode — stations run in fixed rotation
+document.getElementById('shuffle-btn').style.display = 'none';
+
+// ─── ERA AUDIO QUALITY ───────────────────────────────────────────────────────
+// Applies era-accurate audio filtering to DJ voice output
+// (Spotify audio itself can't be filtered due to DRM, but we apply visual + DJ audio effects)
+
+let eraAudioOn = true; // Default: era audio enabled
+
+const ERA_AUDIO_PROFILES = {
+  1920: { label: 'AM · 1920s', color: '#8a6a28', dotPattern: [true, false, false, false, false] },
+  1930: { label: 'AM · 1930s', color: '#8a6a28', dotPattern: [true, false, false, false, false] },
+  1940: { label: 'AM · 1940s', color: '#9a7a38', dotPattern: [true, true, false, false, false] },
+  1950: { label: 'AM · 1950s', color: '#a88848', dotPattern: [true, true, false, false, false] },
+  1960: { label: 'AM/FM · 1960s', color: '#b89858', dotPattern: [true, true, true, false, false] },
+  1970: { label: 'FM · 1970s', color: '#c8a868', dotPattern: [true, true, true, true, false] },
+  1980: { label: 'FM · 1980s', color: '#c8f0a8', dotPattern: [true, true, true, true, false] },
+  1990: { label: 'FM · Digital', color: '#c8f0a8', dotPattern: [true, true, true, true, true] },
+  2000: { label: 'Digital · HD', color: '#3af8a8', dotPattern: [true, true, true, true, true] },
+  2010: { label: 'Digital · HD', color: '#3af8a8', dotPattern: [true, true, true, true, true] },
+  2020: { label: 'Digital · HD', color: '#3af8a8', dotPattern: [true, true, true, true, true] },
+};
+
+function getEraProfile(y){
+  const d = Math.floor(y/10)*10;
+  return ERA_AUDIO_PROFILES[d] || ERA_AUDIO_PROFILES[2020];
+}
+
+function applyEraVisuals(y){
+  if(!eraAudioOn){ 
+    // Clean mode — full signal, no degradation visual
+    const dots = document.querySelectorAll('.dot');
+    dots.forEach(d => { d.classList.add('on'); d.classList.remove('mid'); });
+    document.getElementById('era-tag').textContent = 'Clean · Full Quality';
+    document.getElementById('era-tag').style.color = '';
+    return;
+  }
+  const profile = getEraProfile(y);
+  const dots = document.querySelectorAll('.dot');
+  const pattern = profile.dotPattern;
+  dots.forEach((d, i) => {
+    d.classList.remove('on', 'mid');
+    if(i < pattern.length){
+      if(pattern[i]){
+        if(i === pattern.filter(Boolean).length - 1 && i < 4) d.classList.add('mid');
+        else d.classList.add('on');
+      }
+    }
+  });
+  document.getElementById('era-tag').textContent = profile.label;
+  document.getElementById('era-tag').style.color = profile.color;
+}
+
+// Apply era visuals whenever year or quality toggle changes
+function updateEraAudio(){
+  applyEraVisuals(curYear);
+  const btn = document.getElementById('quality-toggle');
+  if(btn){
+    btn.style.borderColor = eraAudioOn ? '#c8a84a' : '#3a2a10';
+    btn.style.color = eraAudioOn ? '#c8a84a' : '#5a4a28';
+    btn.textContent = eraAudioOn ? '◉ ERA AUDIO' : '○ ERA AUDIO';
+  }
+}
+
+document.getElementById('quality-toggle').addEventListener('click', function(){
+  eraAudioOn = !eraAudioOn;
+  updateEraAudio();
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+loadKeys();
+buildPlaylist();
+updateUI(false);
+updateEraAudio();
+const total = CLASSICAL.length + Object.values(DB).reduce((a,d)=>a+d.length, 0);
+document.getElementById('total-count').textContent = total+' songs';
+document.getElementById('song-total').textContent = total+' songs';
+</script>
+</body>
+</html>
