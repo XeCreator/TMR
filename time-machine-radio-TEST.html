@@ -300,7 +300,7 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
   <div class="transport">
     <div class="transport-btns">
       <div class="t-btn" id="btn-prev"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></div>
-      <div class="t-btn play-btn" id="btn-play"><svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="t-btn play-btn" id="btn-play" title="Tune in / Tune out"><svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg></div>
       <div class="t-btn" id="btn-next"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 4.5 3.18L8 16.14V9.86zM16 6h2v12h-2z"/></svg></div>
     </div>
     <div class="waveform">
@@ -1286,7 +1286,11 @@ function setPlaying(p){
   const ico = document.getElementById('play-icon');
   document.querySelectorAll('.wb').forEach(w=>p ? w.classList.add('active') : w.classList.remove('active'));
   btn.classList.toggle('is-playing', p);
-  ico.innerHTML = p ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  // Tune in = play triangle, Tune out = power symbol
+  ico.innerHTML = p
+    ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'  // stop/tuneout when playing
+    : '<path d="M8 5v14l11-7z"/>';                      // play triangle when stopped
+  btn.title = p ? 'Tune out' : 'Tune in';
 }
 
 function doPlay(overridePositionMs){
@@ -1294,20 +1298,23 @@ function doPlay(overridePositionMs){
   const pos = getBroadcastPosition(curStation, curYear);
   if(!pos){ showMessage('No songs available for this station/era.'); return; }
 
-  // If overridePositionMs is provided (e.g. skip = 0), use that
-  // Otherwise use the real broadcast clock position
-  const posMs = (overridePositionMs !== undefined) ? overridePositionMs : pos.positionMs;
-
-  // Sync playlist index to broadcast position
-  if(overridePositionMs === undefined){
+  if(overridePositionMs !== undefined){
+    // Explicit position override (e.g. skip to next song at 0)
+    // Keep current playlist index, just use the given position
+    const s = curPlaylist[curIdx];
+    if(!s) return;
+    updateQueue();
+    searchAndPlay(s, overridePositionMs);
+  } else {
+    // TUNE IN — always sync to live broadcast clock position
+    // This is what happens when user presses play after tuning out
     curIdx = pos.idx;
     curPlaylist = pos.playlist;
+    const s = curPlaylist[curIdx];
+    if(!s) return;
+    updateQueue();
+    searchAndPlay(s, pos.positionMs);
   }
-
-  const s = curPlaylist[curIdx];
-  if(!s) return;
-  updateQueue();
-  searchAndPlay(s, posMs);
 }
 
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
@@ -1337,17 +1344,22 @@ document.getElementById('freq-bar').addEventListener('click', function(e){
 });
 
 document.getElementById('btn-play').addEventListener('click', function(){
-  if(!playing){ doPlay(); }
-  else {
+  if(!playing){
+    // TUNE IN — sync to broadcast clock and start playing
+    doPlay();
+  } else {
+    // TUNE OUT — stop listening, but broadcast continues without us
     setPlaying(false);
     if(playbackTimer) clearTimeout(playbackTimer);
-    // Pause Spotify
+    // Stop Spotify playback on our device
     if(spotifyToken){
       fetch('https://api.spotify.com/v1/me/player/pause', {
         method: 'PUT',
         headers: { 'Authorization': 'Bearer '+spotifyToken }
       }).catch(()=>{});
     }
+    // Show "tuned out" state in display
+    document.getElementById('now-playing').textContent = '○  Tuned out — broadcast continues';
   }
 });
 
