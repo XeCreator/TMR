@@ -780,7 +780,7 @@ const FORMAT_PROFILES = {
 const LENGTH_TOKENS = {short:60, medium:110, long:160};
 
 // Determines if a talk break fires at a given song index in the rotation
-const DJ_TEST_MODE = false; // Set to true to fire DJ every song for testing
+const DJ_TEST_MODE = true; // Set to true to fire DJ every song for testing
 function shouldBreakAtIndex(sid, songIdx){
   if(DJ_TEST_MODE) return true; // Fire every song in test mode
   const profile = FORMAT_PROFILES[sid] || {every:4};
