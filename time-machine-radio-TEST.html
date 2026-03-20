@@ -224,13 +224,6 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
   </div>
 </div>
 
-<!-- Mobile audio unlock overlay -->
-<div id="audio-unlock" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;display:none;">
-  <div style="font-size:36px;">📻</div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#c8a84a;letter-spacing:3px;text-transform:uppercase;">Tap to tune in</div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a4a28;letter-spacing:2px;">Time Machine Radio</div>
-</div>
-
 <div class="radio">
   <div class="top-bar">
     <div class="app-name">Time Machine Radio</div>
@@ -1437,27 +1430,11 @@ document.getElementById('quality-toggle').addEventListener('click', function(){
 });
 
 // ─── MOBILE AUDIO UNLOCK ─────────────────────────────────────────────────────
+// Audio is unlocked automatically when user presses play (user gesture)
+// No overlay needed — the play button itself is the unlock gesture
 let audioUnlocked = false;
-
-function unlockAudio(){
-  audioUnlocked = true;
-  const overlay = document.getElementById('audio-unlock');
-  overlay.style.display = 'none';
-  if(window._audioCtx && window._audioCtx.state === 'suspended'){
-    window._audioCtx.resume();
-  }
-}
-
-function checkMobileAudioLock(){
-  // Show tap-to-unlock on mobile/tablet
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile && !audioUnlocked){
-    const overlay = document.getElementById('audio-unlock');
-    overlay.style.display = 'flex';
-    overlay.addEventListener('click', unlockAudio);
-    overlay.addEventListener('touchend', unlockAudio);
-  }
-}
+function unlockAudio(){ audioUnlocked = true; }
+function checkMobileAudioLock(){ /* handled by play button */ }
 
 // ─── NEXT SONG PRE-FETCH ─────────────────────────────────────────────────────
 // Search for the next song before the current one ends to minimize silence
@@ -1496,7 +1473,6 @@ loadKeys();
 buildPlaylist();
 updateUI(false);
 updateEraAudio();
-checkMobileAudioLock();
 const total = CLASSICAL.length + Object.values(DB).reduce((a,d)=>a+d.length, 0);
 document.getElementById('total-count').textContent = total+' songs';
 document.getElementById('song-total').textContent = total+' songs';
