@@ -630,77 +630,82 @@ function showMessage(txt){
 // ─── SPOTIFY SEARCH + PLAY ────────────────────────────────────────────────────
 async function searchAndPlay(song, positionMs){
   if(!spotifyToken){ showMessage('Connect Spotify first — click Save then Connect Spotify →'); return; }
-  // Use Spotify field filters for precise matching — avoids covers, remixes, and samples
-  const query = encodeURIComponent(`track:"${song.t}" artist:"${song.a}" year:${song.y}`);
-  try {
-    const searchRes = await fetch(
-      `https://api.spotify.com/v1/search?q=${query}&type=track&limit=3`,
-      { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
-    );
-    if(searchRes.status === 401){
-      // Try refreshing the token first before giving up
-      await refreshSpotifyToken();
-      if(spotifyToken){ searchAndPlay(song, positionMs); return; }
-      setPlaying(false); return;
-    }
-    const searchData = await searchRes.json();
-    const items = searchData.tracks?.items || [];
-    if(!items.length){
-      // Fallback: broader search without quotes
-      const fallbackQuery = encodeURIComponent(song.t + ' ' + song.a + ' ' + song.y);
-      const fallbackRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${fallbackQuery}&type=track&limit=3`,
+
+  let track = null;
+
+  // Use prefetched track if available and matches
+  const songKey = song.t + song.a;
+  if(prefetchedTrack && prefetchedSongKey === songKey){
+    track = prefetchedTrack;
+    prefetchedTrack = null;
+    prefetchedSongKey = '';
+  }
+
+  // Search Spotify if no prefetched track
+  if(!track){
+    try {
+      const query = encodeURIComponent(`track:"${song.t}" artist:"${song.a}" year:${song.y}`);
+      const searchRes = await fetch(
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=3`,
         { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
       );
-      if(fallbackRes.ok){
-        const fallbackData = await fallbackRes.json();
-        items.push(...(fallbackData.tracks?.items || []));
+      if(searchRes.status === 401){
+        await refreshSpotifyToken();
+        if(spotifyToken){ searchAndPlay(song, positionMs); return; }
+        setPlaying(false); return;
       }
-    }
-      if(!items.length){ console.log('No Spotify track found for:', song.t); skipToNext(); return; }
-      // Pick the track whose release year is closest to song.y
+      const searchData = await searchRes.json();
+      let items = searchData.tracks?.items || [];
+      if(!items.length){
+        // Fallback: broader search
+        const fallbackQuery = encodeURIComponent(song.t + ' ' + song.a + ' ' + song.y);
+        const fallbackRes = await fetch(
+          `https://api.spotify.com/v1/search?q=${fallbackQuery}&type=track&limit=3`,
+          { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+        );
+        if(fallbackRes.ok){
+          const fallbackData = await fallbackRes.json();
+          items = fallbackData.tracks?.items || [];
+        }
+      }
+      if(!items.length){ console.log('No track found for:', song.t); skipToNext(); return; }
+      // Pick closest year match
       track = items.reduce((best, t) => {
         const tYear = parseInt((t.album?.release_date||'0').substring(0,4));
         const bYear = parseInt((best.album?.release_date||'0').substring(0,4));
         return Math.abs(tYear - song.y) < Math.abs(bYear - song.y) ? t : best;
       });
     } catch(e){ console.error('Search error:', e); skipToNext(); return; }
-  } // end if(!track)
+  }
 
-    // Build play body — include position_ms to join mid-song like a real radio broadcast
-    const seekMs = (positionMs !== undefined) ? positionMs : 0;
-    const playBody = { uris: [track.uri], position_ms: seekMs };
-    const playUrl = spotifyDeviceId
-      ? `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`
-      : 'https://api.spotify.com/v1/me/player/play';
+  // Play the track with position_ms for broadcast clock sync
+  const seekMs = (positionMs !== undefined) ? positionMs : 0;
+  const playBody = { uris: [track.uri], position_ms: seekMs };
+  const playUrl = spotifyDeviceId
+    ? `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`
+    : 'https://api.spotify.com/v1/me/player/play';
 
+  try {
     const playRes = await fetch(playUrl, {
       method: 'PUT',
       headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
       body: JSON.stringify(playBody)
     });
-
     if(playRes.status === 404 || playRes.status === 403){
       showMessage('Open Spotify on any device first, then press play again.');
       setPlaying(false); return;
     }
     if(playRes.status === 401){
-      spotifyToken = null; localStorage.removeItem('tmr_spotify_token');
-      updateKeyStatus(); showMessage('Spotify session expired — please reconnect.'); setPlaying(false); return;
+      await refreshSpotifyToken();
+      if(spotifyToken){ searchAndPlay(song, positionMs); return; }
+      setPlaying(false); return;
     }
-
     // Success
     setPlaying(true); updateQueue();
-    // DJ speaks at clock-defined break points only (see monitorPlayback)
-    // In test mode, fire immediately on every song
-    if(DJ_TEST_MODE) checkDJBreak(curIdx, curPlaylist[curIdx > 0 ? curIdx-1 : 0], s);
-
-    // Use real track duration for timer; fall back to default
     const remainingMs = (track.duration_ms || DEFAULT_DURATION_MS) - seekMs;
     monitorPlayback(remainingMs);
-
-  } catch(e) {
-    console.error('Spotify error:', e);
+  } catch(e){
+    console.error('Spotify play error:', e);
     showMessage('Spotify error — check console.');
     setPlaying(false);
   }
