@@ -700,10 +700,20 @@ async function searchAndPlay(song, positionMs){
       if(spotifyToken){ searchAndPlay(song, positionMs); return; }
       setPlaying(false); return;
     }
-    // Success
+    // Success — tuned in
     setPlaying(true); updateQueue();
-    const remainingMs = (track.duration_ms || DEFAULT_DURATION_MS) - seekMs;
+    curTrackId = track.id;
+    const totalMs = track.duration_ms || DEFAULT_DURATION_MS;
+    const remainingMs = totalMs - seekMs;
     monitorPlayback(remainingMs);
+
+    // Fetch audio analysis in background for smart DJ outro timing
+    fetchAudioAnalysis(track.id).then(analysis => {
+      curTrackAnalysis = analysis;
+      const prevSong = curIdx > 0 ? curPlaylist[curIdx-1] : curPlaylist[curPlaylist.length-1];
+      const nextSong = curPlaylist[(curIdx+1) % curPlaylist.length];
+      scheduleDJBreak(track, analysis, seekMs, prevSong, nextSong);
+    });
   } catch(e){
     console.error('Spotify play error:', e);
     showMessage('Spotify error — check console.');
@@ -712,77 +722,99 @@ async function searchAndPlay(song, positionMs){
 }
 
 let playbackTimer = null;
+
 function monitorPlayback(remainingMs){
   if(playbackTimer) clearTimeout(playbackTimer);
+
   // Prefetch next song 15 seconds before current ends
   const prefetchDelay = Math.max(0, remainingMs - 15000);
   setTimeout(()=>{ if(playing) prefetchNextSong(); }, prefetchDelay);
 
   playbackTimer = setTimeout(()=>{
     if(playing){
-      const prevSong = curPlaylist[curIdx];
-      const prevIdx = curIdx;
-      // Advance to next song in rotation
+      if(outroTimer){ clearTimeout(outroTimer); outroTimer = null; }
       curIdx = (curIdx + 1) % curPlaylist.length;
       updateQueue();
-      // Check if a format-clock DJ break fires at this position
-      checkDJBreak(prevIdx, prevSong, curPlaylist[curIdx]);
-      // Next song starts from beginning
       doPlay(0);
     }
-  }, remainingMs + 200); // reduced from 800ms to minimize silence
+  }, remainingMs + 200);
 }
 
+
 function skipToNext(){
-  // Skip = advance to next song at position 0
   const prevSong = curPlaylist[curIdx];
-  const prevIdx = curIdx;
   curIdx = (curIdx + 1) % curPlaylist.length;
   updateQueue();
-  if(playing){ 
-    checkDJBreak(prevIdx, prevSong, curPlaylist[curIdx]);
-    doPlay(0); 
+  if(playing){
+    checkDJBreak(prevSong, curPlaylist[curIdx], null, DEFAULT_DURATION_MS);
+    doPlay(0);
   }
 }
 
-// ─── FORMAT CLOCK ────────────────────────────────────────────────────────────
-// Defines how each station formats its broadcast — talk break frequency,
-// length, and content types. Based on how these actual station formats operated.
+// ─── STATION FORMAT PROFILES ─────────────────────────────────────────────────
+// Base talk probability per station + contextual modifiers
+// Inspired by how these actual radio formats operated
 const FORMAT_PROFILES = {
-  weaf: {every:2,lengths:["medium","long"],weather:true,time:true},
-  wsng: {every:2,lengths:["medium","long"],weather:true,time:true},
-  wcrn: {every:2,lengths:["medium","long"],weather:false,time:true},
-  kdsc: {every:2,lengths:["medium","long"],weather:false,time:true},
-  khit: {every:2,lengths:["short","medium"],weather:true,time:true},
-  kgro: {every:3,lengths:["short","medium"],weather:true,time:true},
-  wrnb: {every:3,lengths:["short","medium"],weather:false,time:true},
-  wsol: {every:3,lengths:["short","medium"],weather:false,time:true},
-  krok: {every:3,lengths:["short","medium"],weather:false,time:false},
-  kpnk: {every:3,lengths:["short"],weather:false,time:false},
-  kroq: {every:4,lengths:["short","medium"],weather:false,time:false},
-  wjazb:{every:4,lengths:["short","medium"],weather:false,time:false},
-  wflk: {every:3,lengths:["medium"],weather:false,time:false},
-  wltn: {every:3,lengths:["short","medium"],weather:false,time:true},
-  wjaz: {every:5,lengths:["short","medium"],weather:false,time:true},
-  kmet: {every:5,lengths:["short"],weather:false,time:false},
-  kdnc: {every:6,lengths:["short"],weather:false,time:false},
-  kpsy: {every:5,lengths:["medium"],weather:false,time:false},
-  khip: {every:4,lengths:["short","medium"],weather:false,time:false},
-  kwst: {every:4,lengths:["short","medium"],weather:false,time:false},
-  kbtm: {every:5,lengths:["short"],weather:false,time:false},
-  ksth: {every:4,lengths:["short"],weather:false,time:false},
-  ktrap:{every:5,lengths:["short"],weather:false,time:false},
-  kcons:{every:5,lengths:["short","medium"],weather:false,time:false},
-  wclx: {every:7,lengths:["short","medium"],weather:false,time:false},
+  // High-energy entertainment stations — DJ is part of the show
+  weaf: {prob:0.80,lengths:["medium","long"],weather:true,time:true,maxTokens:160},
+  wsng: {prob:0.75,lengths:["medium","long"],weather:true,time:true,maxTokens:150},
+  wcrn: {prob:0.70,lengths:["medium","long"],weather:false,time:true,maxTokens:150},
+  kdsc: {prob:0.72,lengths:["medium","long"],weather:false,time:true,maxTokens:150},
+  khit: {prob:0.58,lengths:["short","medium"],weather:true,time:true,maxTokens:110},
+  kgro: {prob:0.50,lengths:["short","medium"],weather:true,time:true,maxTokens:110},
+  // Music-forward stations — DJ present but restrained
+  wrnb: {prob:0.42,lengths:["short","medium"],weather:false,time:true,maxTokens:100},
+  wsol: {prob:0.40,lengths:["short","medium"],weather:false,time:true,maxTokens:100},
+  krok: {prob:0.38,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  wflk: {prob:0.35,lengths:["medium"],weather:false,time:false,maxTokens:100},
+  wltn: {prob:0.40,lengths:["short","medium"],weather:false,time:true,maxTokens:100},
+  kroq: {prob:0.32,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  wjazb:{prob:0.30,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  kpnk: {prob:0.25,lengths:["short"],weather:false,time:false,maxTokens:70},
+  // Low-talk stations — music speaks
+  wjaz: {prob:0.22,lengths:["short","medium"],weather:false,time:true,maxTokens:90},
+  khip: {prob:0.28,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  kwst: {prob:0.26,lengths:["short","medium"],weather:false,time:false,maxTokens:80},
+  kbtm: {prob:0.20,lengths:["short"],weather:false,time:false,maxTokens:70},
+  ksth: {prob:0.22,lengths:["short"],weather:false,time:false,maxTokens:70},
+  kmet: {prob:0.18,lengths:["short"],weather:false,time:false,maxTokens:70},
+  kdnc: {prob:0.15,lengths:["short"],weather:false,time:false,maxTokens:60},
+  kpsy: {prob:0.20,lengths:["medium"],weather:false,time:false,maxTokens:90},
+  ktrap:{prob:0.15,lengths:["short"],weather:false,time:false,maxTokens:60},
+  kcons:{prob:0.22,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  // Classical — very sparse, contemplative
+  wclx: {prob:0.12,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
 };
-const LENGTH_TOKENS = {short:60, medium:110, long:160};
 
-// Determines if a talk break fires at a given song index in the rotation
+const LENGTH_TOKENS = {short:65, medium:110, long:160};
+
+// ─── DJ BREAK PROBABILITY ENGINE ─────────────────────────────────────────────
 const DJ_TEST_MODE = true; // Set to true to fire DJ every song for testing
-function shouldBreakAtIndex(sid, songIdx){
-  if(DJ_TEST_MODE) return true; // Fire every song in test mode
-  const profile = FORMAT_PROFILES[sid] || {every:4};
-  return (songIdx % profile.every === profile.every - 1);
+
+function shouldTalkNow(sid, songDurationMs){
+  if(DJ_TEST_MODE) return true;
+
+  const profile = FORMAT_PROFILES[sid] || {prob:0.30};
+  let prob = profile.prob;
+
+  // Time-of-day modifiers
+  const h = new Date().getHours();
+  if(h >= 6 && h < 10) prob *= 1.35;   // Morning drive — chattiest
+  else if(h >= 16 && h < 19) prob *= 1.25; // Afternoon drive
+  else if(h >= 22 || h < 2) prob *= 0.55;  // Late night — very sparse
+  else if(h >= 2 && h < 6) prob *= 0.35;   // Overnight — almost silent
+
+  // Song length modifier — don't interrupt after very long songs
+  if(songDurationMs > 480000) prob *= 0.4;  // 8+ min piece (classical, epic rock)
+  else if(songDurationMs > 300000) prob *= 0.7; // 5+ min
+
+  // Add small random human variation (+/- 10%)
+  prob *= (0.9 + Math.random() * 0.2);
+
+  // Cap at 95% — always a small chance of silence
+  prob = Math.min(0.95, prob);
+
+  return Math.random() < prob;
 }
 
 // ─── WEATHER FETCH ────────────────────────────────────────────────────────────
@@ -1049,14 +1081,34 @@ function showDJBubble(text, djDef){
   if(elevenlabsKey) speakDJLine(text);
 }
 
-// Clock-based DJ break trigger — fires at fixed rotation positions, not per-user events
-async function checkDJBreak(songIdx, prevSong, nextSong){
+// ─── AUDIO ANALYSIS ──────────────────────────────────────────────────────────
+let currentTrackAnalysis = null;
+
+async function fetchTrackAnalysis(trackId){
+  if(!spotifyToken || !trackId) return null;
+  try {
+    const r = await fetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`, {
+      headers: { 'Authorization': 'Bearer ' + spotifyToken }
+    });
+    if(!r.ok) return null;
+    const d = await r.json();
+    return {
+      duration: d.track?.duration || 0,
+      fadeOutStart: d.track?.start_of_fade_out || (d.track?.duration * 0.85) || 0,
+      fadeInEnd: d.track?.end_of_fade_in || 5,
+    };
+  } catch(e){ return null; }
+}
+
+// ─── INTELLIGENT DJ BREAK TRIGGER ────────────────────────────────────────────
+// Fires at the song's natural fade-out point, not at a fixed interval
+async function checkDJBreak(prevSong, nextSong, trackId, trackDurationMs){
   if(!anthropicKey || djGenPending) return;
-  if(!shouldBreakAtIndex(curStation, songIdx)) return;
+  if(!shouldTalkNow(curStation, trackDurationMs)) return;
 
   djGenPending = true;
 
-  // Fetch weather if station uses it (non-blocking)
+  // Fetch weather if station uses it
   const profile = FORMAT_PROFILES[curStation];
   const weather = (profile?.weather) ? await getWeather() : null;
 
@@ -1451,7 +1503,6 @@ function unlockAudio(){ audioUnlocked = true; }
 function checkMobileAudioLock(){ /* handled by play button */ }
 
 // ─── NEXT SONG PRE-FETCH ─────────────────────────────────────────────────────
-// Search for the next song before the current one ends to minimize silence
 let prefetchedTrack = null;
 let prefetchedSongKey = '';
 
@@ -1461,7 +1512,7 @@ async function prefetchNextSong(){
   const nextSong = curPlaylist[nextIdx];
   if(!nextSong) return;
   const key = nextSong.t + nextSong.a;
-  if(prefetchedSongKey === key) return; // already prefetched
+  if(prefetchedSongKey === key) return;
   const query = encodeURIComponent(`track:"${nextSong.t}" artist:"${nextSong.a}" year:${nextSong.y}`);
   try {
     const r = await fetch(
@@ -1482,6 +1533,116 @@ async function prefetchNextSong(){
   } catch(e) {}
 }
 
+// ─── AUDIO ANALYSIS + SMART DJ TIMING ────────────────────────────────────────
+let curTrackAnalysis = null;  // Audio analysis for current track
+let curTrackId = null;        // Spotify track ID of current song
+let songsSinceLastBreak = 0;  // Consecutive songs without DJ break
+let outroTimer = null;        // Timer for outro-riding DJ entry
+
+// Base break probability per station
+const BREAK_PROBABILITY = {
+  weaf:0.70, wsng:0.70, wcrn:0.65, kdsc:0.65, khit:0.55,
+  kgro:0.50, wrnb:0.45, wsol:0.45, krok:0.40, wflk:0.40,
+  kroq:0.35, wjaz:0.35, wjazb:0.35, wltn:0.40,
+  kpnk:0.25, kmet:0.20, khip:0.35, kwst:0.30,
+  kbtm:0.25, ksth:0.28, kdnc:0.20, kpsy:0.25,
+  ktrap:0.18, kcons:0.28, wclx:0.12
+};
+
+function shouldDJBreakFire(analysis){
+  if(DJ_TEST_MODE) return true; // Always fire in test mode
+  const base = BREAK_PROBABILITY[curStation] || 0.35;
+  let prob = base;
+
+  // Time of day modifier
+  const h = new Date().getHours();
+  if(h >= 6 && h < 10) prob += 0.15;   // morning drive — chattier
+  else if(h >= 22 || h < 3) prob -= 0.20; // late night — quieter
+
+  // Consecutive songs modifier — more likely after long stretches of silence
+  prob += Math.min(songsSinceLastBreak * 0.08, 0.25);
+
+  // Just had a break — cool down
+  if(songsSinceLastBreak === 0) prob -= 0.35;
+
+  // Long outro = good entry point
+  if(analysis){
+    const sections = analysis.sections || [];
+    if(sections.length > 1){
+      const outro = sections[sections.length - 1];
+      if(outro.duration > 20) prob += 0.20;
+      if(outro.duration > 35) prob += 0.10;
+      // Quiet/slow song — less likely to interrupt
+      if(outro.loudness < -12) prob -= 0.15;
+    }
+  }
+
+  prob = Math.max(0.05, Math.min(0.95, prob));
+  const fires = Math.random() < prob;
+  console.log(`DJ break probability: ${(prob*100).toFixed(0)}% — ${fires ? 'FIRES' : 'skips'} (${songsSinceLastBreak} songs since last break)`);
+  return fires;
+}
+
+async function fetchAudioAnalysis(trackId){
+  if(!spotifyToken || !trackId) return null;
+  try {
+    const r = await fetch(
+      `https://api.spotify.com/v1/audio-analysis/${trackId}`,
+      { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+    );
+    if(!r.ok) return null;
+    return await r.json();
+  } catch(e){ return null; }
+}
+
+function getOutroStartMs(analysis, totalDurationMs){
+  if(!analysis || !analysis.sections || analysis.sections.length < 2){
+    // No analysis — estimate outro at 85% of song
+    return totalDurationMs * 0.85;
+  }
+  const sections = analysis.sections;
+  const outro = sections[sections.length - 1];
+  return outro.start * 1000; // convert seconds to ms
+}
+
+function getIntroEndMs(analysis){
+  if(!analysis || !analysis.sections || analysis.sections.length < 2) return 8000;
+  const intro = analysis.sections[0];
+  return intro.duration * 1000;
+}
+
+// Schedule DJ break to fire at the right moment
+function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
+  if(outroTimer) clearTimeout(outroTimer);
+
+  const totalMs = track.duration_ms || DEFAULT_DURATION_MS;
+  const outroStartMs = getOutroStartMs(analysis, totalMs);
+  const currentPositionMs = positionMs || 0;
+
+  // Time until outro from current position
+  const msUntilOutro = outroStartMs - currentPositionMs;
+
+  if(msUntilOutro < 3000){
+    // Already in or past the outro — skip this break opportunity
+    return;
+  }
+
+  // Check if a break should fire at all
+  if(!shouldDJBreakFire(analysis)){
+    songsSinceLastBreak++;
+    return;
+  }
+
+  // Fire DJ break when outro starts
+  outroTimer = setTimeout(async ()=>{
+    if(!playing) return;
+    songsSinceLastBreak = 0;
+    await checkDJBreak(curIdx, prevSong, nextSong);
+  }, msUntilOutro);
+
+  console.log(`DJ break scheduled in ${(msUntilOutro/1000).toFixed(1)}s (outro start)`);
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 loadKeys();
 buildPlaylist();
@@ -1492,4 +1653,13 @@ document.getElementById('total-count').textContent = total+' songs';
 document.getElementById('song-total').textContent = total+' songs';
 </script>
 </body>
-</html>
+</html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
+async function checkDJBreak(songIdx, prevSong, nextSong){
+  if(!anthropicKey || djGenPending) return;
+  const profile = FORMAT_PROFILES[curStation];
+  const weather = (profile?.weather) ? await getWeather() : null;
+  const line = await generateDJLine(prevSong, nextSong, weather);
+  if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
+}
+
+
