@@ -213,10 +213,22 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
     <div class="api-status" id="elevenlabs-status">not set</div>
   </div>
   <div class="api-row">
+    <div class="api-label">Location</div>
+    <input class="api-input" type="text" id="location-input" placeholder="City or ZIP (optional — for weather)">
+    <div class="api-status" id="location-status">not set</div>
+  </div>
+  <div class="api-row">
     <button class="api-save" id="save-keys">Save</button>
     <button class="api-save" id="spotify-auth-btn" style="display:none;border-color:#1DB954;color:#1DB954;">Connect Spotify →</button>
     <div class="api-status" id="spotify-connect-status" style="margin-left:8px;"></div>
   </div>
+</div>
+
+<!-- Mobile audio unlock overlay -->
+<div id="audio-unlock" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;" onclick="unlockAudio()">
+  <div style="font-size:36px;">📻</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#c8a84a;letter-spacing:3px;text-transform:uppercase;">Tap to tune in</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a4a28;letter-spacing:2px;">Time Machine Radio</div>
 </div>
 
 <div class="radio">
@@ -402,7 +414,7 @@ function getYTId(song){
 // ─── APP STATE ────────────────────────────────────────────────────────────────
 let curYear=1983, curStation='khit', prevYear=1983;
 let curPlaylist=[], curIdx=0, playing=false, shuffleOn=true;
-let anthropicKey='', spotifyClientId='', elevenlabsKey='';
+let anthropicKey='', spotifyClientId='', elevenlabsKey='', userLocation='';
 let djAudio=null, djGenPending=false;
 let spotifyToken=null, spotifyDeviceId=null;
 
@@ -412,9 +424,15 @@ function loadKeys(){
   anthropicKey = localStorage.getItem('tmr_anthropic')||'';
   elevenlabsKey = localStorage.getItem('tmr_elevenlabs')||'';
   spotifyToken = localStorage.getItem('tmr_spotify_token')||null;
+  userLocation = localStorage.getItem('tmr_location')||'';
   if(spotifyClientId) document.getElementById('spotify-client-id').value = spotifyClientId;
   if(anthropicKey) document.getElementById('anthropic-key').value = anthropicKey;
   if(elevenlabsKey) document.getElementById('elevenlabs-key').value = elevenlabsKey;
+  if(userLocation){ 
+    document.getElementById('location-input').value = userLocation;
+    document.getElementById('location-status').textContent = '✓ set';
+    document.getElementById('location-status').className = 'api-status ok';
+  }
   updateKeyStatus();
   // Check if we just returned from Spotify OAuth
   handleSpotifyCallback();  // async, runs in background
@@ -430,6 +448,9 @@ function saveKeys(){
   else localStorage.removeItem('tmr_anthropic');
   if(elevenlabsKey) localStorage.setItem('tmr_elevenlabs', elevenlabsKey);
   else localStorage.removeItem('tmr_elevenlabs');
+  userLocation = document.getElementById('location-input').value.trim();
+  if(userLocation){ localStorage.setItem('tmr_location', userLocation); cachedWeather=null; }
+  else localStorage.removeItem('tmr_location');
   updateKeyStatus();
 }
 
@@ -643,13 +664,15 @@ async function searchAndPlay(song, positionMs){
         items.push(...(fallbackData.tracks?.items || []));
       }
     }
-    if(!items.length){ console.log('No Spotify track found for:', song.t); skipToNext(); return; }
-    // Pick the track whose release year is closest to song.y
-    const track = items.reduce((best, t) => {
-      const tYear = parseInt((t.album?.release_date||'0').substring(0,4));
-      const bYear = parseInt((best.album?.release_date||'0').substring(0,4));
-      return Math.abs(tYear - song.y) < Math.abs(bYear - song.y) ? t : best;
-    });
+      if(!items.length){ console.log('No Spotify track found for:', song.t); skipToNext(); return; }
+      // Pick the track whose release year is closest to song.y
+      track = items.reduce((best, t) => {
+        const tYear = parseInt((t.album?.release_date||'0').substring(0,4));
+        const bYear = parseInt((best.album?.release_date||'0').substring(0,4));
+        return Math.abs(tYear - song.y) < Math.abs(bYear - song.y) ? t : best;
+      });
+    } catch(e){ console.error('Search error:', e); skipToNext(); return; }
+  } // end if(!track)
 
     // Build play body — include position_ms to join mid-song like a real radio broadcast
     const seekMs = (positionMs !== undefined) ? positionMs : 0;
@@ -691,6 +714,10 @@ async function searchAndPlay(song, positionMs){
 let playbackTimer = null;
 function monitorPlayback(remainingMs){
   if(playbackTimer) clearTimeout(playbackTimer);
+  // Prefetch next song 15 seconds before current ends
+  const prefetchDelay = Math.max(0, remainingMs - 15000);
+  setTimeout(()=>{ if(playing) prefetchNextSong(); }, prefetchDelay);
+
   playbackTimer = setTimeout(()=>{
     if(playing){
       const prevSong = curPlaylist[curIdx];
@@ -699,12 +726,11 @@ function monitorPlayback(remainingMs){
       curIdx = (curIdx + 1) % curPlaylist.length;
       updateQueue();
       // Check if a format-clock DJ break fires at this position
-      // DJ break fires BETWEEN songs — at the transition point
       checkDJBreak(prevIdx, prevSong, curPlaylist[curIdx]);
       // Next song starts from beginning
       doPlay(0);
     }
-  }, remainingMs + 800);
+  }, remainingMs + 200); // reduced from 800ms to minimize silence
 }
 
 function skipToNext(){
@@ -765,20 +791,36 @@ async function getWeather(){
   // Cache for 30 minutes
   if(cachedWeather && Date.now() - weatherFetchTime < 30 * 60 * 1000) return cachedWeather;
   try {
-    // Get user location
-    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:5000}));
-    const {latitude, longitude} = pos.coords;
+    let latitude, longitude, city;
+
+    if(userLocation){
+      // Use manually entered city or ZIP
+      const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(userLocation)}&format=json&limit=1`;
+      const geoR = await fetch(geoUrl, {headers:{'Accept-Language':'en'}});
+      const geoD = await geoR.json();
+      if(!geoD.length) throw new Error('Location not found');
+      latitude = parseFloat(geoD[0].lat);
+      longitude = parseFloat(geoD[0].lon);
+      // Extract city name from display_name
+      const parts = geoD[0].display_name.split(',');
+      city = parts[0].trim();
+    } else {
+      // Fall back to GPS
+      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:5000}));
+      latitude = pos.coords.latitude;
+      longitude = pos.coords.longitude;
+      // Reverse geocode for city name
+      const geoR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+      const geoD = await geoR.json();
+      city = geoD.address?.city || geoD.address?.town || geoD.address?.county || 'your city';
+    }
+
     // Open-Meteo: free, no key required
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=temperature_2m,weathercode&temperature_unit=fahrenheit&timezone=auto`;
     const r = await fetch(url);
     const d = await r.json();
     const temp = Math.round(d.current.temperature_2m);
-    const code = d.current.weathercode;
-    const conditions = weatherCodeToDesc(code);
-    // Get city name from coordinates
-    const geoR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-    const geoD = await geoR.json();
-    const city = geoD.address?.city || geoD.address?.town || geoD.address?.county || 'your city';
+    const conditions = weatherCodeToDesc(d.current.weathercode);
     cachedWeather = { temp, conditions, city };
     weatherFetchTime = Date.now();
     return cachedWeather;
@@ -1390,11 +1432,64 @@ document.getElementById('quality-toggle').addEventListener('click', function(){
   updateEraAudio();
 });
 
+// ─── MOBILE AUDIO UNLOCK ─────────────────────────────────────────────────────
+let audioUnlocked = false;
+
+function unlockAudio(){
+  audioUnlocked = true;
+  document.getElementById('audio-unlock').style.display = 'none';
+  // Resume any suspended audio context
+  if(window._audioCtx && window._audioCtx.state === 'suspended'){
+    window._audioCtx.resume();
+  }
+}
+
+function checkMobileAudioLock(){
+  // Show tap-to-unlock on mobile/tablet
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile && !audioUnlocked){
+    document.getElementById('audio-unlock').style.display = 'flex';
+  }
+}
+
+// ─── NEXT SONG PRE-FETCH ─────────────────────────────────────────────────────
+// Search for the next song before the current one ends to minimize silence
+let prefetchedTrack = null;
+let prefetchedSongKey = '';
+
+async function prefetchNextSong(){
+  if(!spotifyToken) return;
+  const nextIdx = (curIdx + 1) % curPlaylist.length;
+  const nextSong = curPlaylist[nextIdx];
+  if(!nextSong) return;
+  const key = nextSong.t + nextSong.a;
+  if(prefetchedSongKey === key) return; // already prefetched
+  const query = encodeURIComponent(`track:"${nextSong.t}" artist:"${nextSong.a}" year:${nextSong.y}`);
+  try {
+    const r = await fetch(
+      `https://api.spotify.com/v1/search?q=${query}&type=track&limit=3`,
+      { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+    );
+    if(!r.ok) return;
+    const d = await r.json();
+    const items = d.tracks?.items || [];
+    if(items.length){
+      prefetchedTrack = items.reduce((best, t) => {
+        const tYear = parseInt((t.album?.release_date||'0').substring(0,4));
+        const bYear = parseInt((best.album?.release_date||'0').substring(0,4));
+        return Math.abs(tYear - nextSong.y) < Math.abs(bYear - nextSong.y) ? t : best;
+      });
+      prefetchedSongKey = key;
+    }
+  } catch(e) {}
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 loadKeys();
 buildPlaylist();
 updateUI(false);
 updateEraAudio();
+checkMobileAudioLock();
 const total = CLASSICAL.length + Object.values(DB).reduce((a,d)=>a+d.length, 0);
 document.getElementById('total-count').textContent = total+' songs';
 document.getElementById('song-total').textContent = total+' songs';
