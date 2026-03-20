@@ -225,7 +225,7 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
 </div>
 
 <!-- Mobile audio unlock overlay -->
-<div id="audio-unlock" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;" onclick="unlockAudio()">
+<div id="audio-unlock" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;display:none;">
   <div style="font-size:36px;">📻</div>
   <div style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#c8a84a;letter-spacing:3px;text-transform:uppercase;">Tap to tune in</div>
   <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a4a28;letter-spacing:2px;">Time Machine Radio</div>
@@ -1441,8 +1441,8 @@ let audioUnlocked = false;
 
 function unlockAudio(){
   audioUnlocked = true;
-  document.getElementById('audio-unlock').style.display = 'none';
-  // Resume any suspended audio context
+  const overlay = document.getElementById('audio-unlock');
+  overlay.style.display = 'none';
   if(window._audioCtx && window._audioCtx.state === 'suspended'){
     window._audioCtx.resume();
   }
@@ -1452,7 +1452,10 @@ function checkMobileAudioLock(){
   // Show tap-to-unlock on mobile/tablet
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(isMobile && !audioUnlocked){
-    document.getElementById('audio-unlock').style.display = 'flex';
+    const overlay = document.getElementById('audio-unlock');
+    overlay.style.display = 'flex';
+    overlay.addEventListener('click', unlockAudio);
+    overlay.addEventListener('touchend', unlockAudio);
   }
 }
 
