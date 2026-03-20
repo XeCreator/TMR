@@ -865,22 +865,19 @@ function getDayOfWeek(){
 // Voice IDs mapped by era — each era cluster gets a voice with appropriate character
 // These are ElevenLabs stock voices available on all plans
 const ERA_VOICES = {
-  // 1920s-40s: formal, warm, slightly clipped — classic radio announcer
+  // Using only guaranteed default ElevenLabs voices available on all tiers
+  // Adam — deep, mature, classic announcer quality
   1920: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.75, similarity: 0.75 },
   1930: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.75, similarity: 0.75 },
-  1940: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.70, similarity: 0.75 },
-  // 1950s-60s: warmer, more energetic
-  1950: { id: 'yoZ06aMxZJJ28mfd3POQ', name: 'Sam',  stability: 0.65, similarity: 0.80 },
-  1960: { id: 'yoZ06aMxZJJ28mfd3POQ', name: 'Sam',  stability: 0.60, similarity: 0.80 },
-  // 1970s-80s: smooth, FM-ready
-  1970: { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', stability: 0.60, similarity: 0.80 },
-  1980: { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', stability: 0.55, similarity: 0.80 },
-  // 1990s-2000s: younger, more casual
-  1990: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.50, similarity: 0.80 },
-  2000: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.50, similarity: 0.80 },
-  // 2010s+: modern, natural
-  2010: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.45, similarity: 0.85 },
-  2020: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',  stability: 0.45, similarity: 0.85 },
+  1940: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.72, similarity: 0.75 },
+  1950: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.68, similarity: 0.78 },
+  1960: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.65, similarity: 0.78 },
+  1970: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.60, similarity: 0.80 },
+  1980: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.55, similarity: 0.80 },
+  1990: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.50, similarity: 0.82 },
+  2000: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.48, similarity: 0.82 },
+  2010: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.45, similarity: 0.85 },
+  2020: { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', stability: 0.45, similarity: 0.85 },
 };
 
 function getEraVoice(y){
