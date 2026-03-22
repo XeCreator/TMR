@@ -707,25 +707,24 @@ async function searchAndPlay(song, positionMs){
     const remainingMs = totalMs - seekMs;
     monitorPlayback(remainingMs);
 
-    // Schedule DJ break with fallback estimate immediately,
-    // then refine if audio analysis arrives in time
-    const prevSong2 = curIdx > 0 ? curPlaylist[curIdx-1] : curPlaylist[curPlaylist.length-1];
-    const nextSong2 = curPlaylist[(curIdx+1) % curPlaylist.length];
+    // Snapshot current song index so DJ references stay correct
+    const scheduledIdx = curIdx;
+    const scheduledPrev = scheduledIdx > 0 ? curPlaylist[scheduledIdx-1] : curPlaylist[curPlaylist.length-1];
+    const scheduledNext = curPlaylist[(scheduledIdx+1) % curPlaylist.length];
+    const scheduledCur = curPlaylist[scheduledIdx];
 
-    // Immediate fallback schedule using 80% rule
-    const fallbackAnalysis = null;
-    scheduleDJBreak(track, fallbackAnalysis, seekMs, prevSong2, nextSong2);
+    // Immediate schedule using fallback timing
+    scheduleDJBreak(track, null, seekMs, scheduledPrev, scheduledNext, scheduledIdx);
 
-    // Fetch real analysis and reschedule if it arrives early enough
+    // Refine with audio analysis if available
     fetchAudioAnalysis(track.id).then(analysis => {
-      if(!analysis || !playing) return;
+      if(!analysis || !playing || curIdx !== scheduledIdx) return;
       curTrackAnalysis = analysis;
       const totalMs2 = track.duration_ms || DEFAULT_DURATION_MS;
       const outroMs = getOutroStartMs(analysis, totalMs2);
       const msUntilOutro = outroMs - seekMs;
-      // Only reschedule if outro hasn't started yet and we gained meaningful info
       if(msUntilOutro > 10000){
-        scheduleDJBreak(track, analysis, seekMs, prevSong2, nextSong2);
+        scheduleDJBreak(track, analysis, seekMs, scheduledPrev, scheduledNext, scheduledIdx);
       }
     });
   } catch(e){
@@ -1080,7 +1079,7 @@ Rules:
     outro:  `You are speaking as "${prevSong?.t}" is fading out. Natural, flowing — reference the song and bridge to what's next: "${nextSong?.t}" by ${nextSong?.a}.`,
     gap:    `You are in the gap between songs. That was "${prevSong?.t}" by ${prevSong?.a}. Coming up: "${nextSong?.t}" by ${nextSong?.a}.`,
     intro:  `You are speaking over the instrumental intro of "${nextSong?.t}" by ${nextSong?.a} — the song is already playing softly underneath you. Hype it naturally before the vocals kick in.`,
-    mid:    `Drop in VERY briefly mid-song during "${prevSong?.t}". One sentence MAX — a quick station ID or energy boost. Don't interrupt the vibe.`,
+    mid:    `Drop in VERY briefly mid-song. One sentence MAX — a quick station ID, shout-out, or energy line. Do NOT mention what song is coming next. Just stamp the station.`,
     bridge: `You are bridging from "${prevSong?.t}" which is fading out, into "${nextSong?.t}" by ${nextSong?.a} which is about to start. Your words span both songs — flowing naturally from the ending of one into the beginning of the next. This is a proper DJ transition.`
   };
   const modeInstruction = modeInstructions[entryMode] || modeInstructions.gap;
@@ -1971,7 +1970,7 @@ function pickEntryMode(analysis, totalMs, seekMs){
 }
 
 // Schedule DJ break using selected entry mode
-function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
+function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, scheduledIdx){
   if(outroTimer) clearTimeout(outroTimer);
 
   // Check if a break should fire at all (probability model)
@@ -1998,15 +1997,25 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
   if(mode === 'outro'){
     const outroDurationMs = totalMs - outroStartMs;
     let outroEntryMs = msUntilOutro;
+    // For long outros, enter partway in
     if(outroDurationMs > 60000){
       outroEntryMs = msUntilOutro + (outroDurationMs * (0.10 + Math.random() * 0.15));
     }
-    // Capture song refs now — will still be valid when timer fires (same song)
+    // Never fire with less than 30s left in the song — too close to transition
+    const msUntilEnd = songRemaining;
+    const msAtEntry = outroEntryMs;
+    const msLeftAfterEntry = msUntilEnd - msAtEntry;
+    if(msLeftAfterEntry < 30000){
+      // Not enough outro left — skip outro mode, let gap handle it
+      console.log(`DJ outro: only ${(msLeftAfterEntry/1000).toFixed(0)}s left after entry — skipping`);
+      songsSinceLastBreak++;
+      return;
+    }
+    // Capture song refs at this moment
     const _prevSong = prevSong, _nextSong = nextSong;
-    console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s`);
+    console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s, ${(msLeftAfterEntry/1000).toFixed(0)}s before end`);
     outroTimer = setTimeout(async ()=>{
-      if(!playing) return;
-      // Use captured refs — don't rely on curPlaylist which may have advanced
+      if(!playing || (scheduledIdx !== undefined && curIdx !== scheduledIdx && curIdx !== scheduledIdx + 1)) return;
       await checkDJBreak(curIdx, _prevSong, _nextSong, 'outro');
       outroTimer = null;
     }, Math.max(0, outroEntryMs));
