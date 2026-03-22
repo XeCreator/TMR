@@ -1305,10 +1305,12 @@ async function fetchSpotifyCatalog(sid, y){
 
   // Spotify search — use multiple offset calls to get diverse results
   // Year filter works reliably; genre is used as a keyword hint
+  // Spotify requires at least one keyword — can't use field filters alone
+  // Use genre name as keyword + year filter for best results
   const queries = [
-    `genre:${genres[0]} year:${y0}-${y1}`,
-    genres[1] ? `genre:${genres[1]} year:${y0}-${y1}` : null,
-    `year:${y0}-${y1}`, // broad fallback to fill gaps
+    `${genres[0]} year:${y0}-${y1}`,
+    genres[1] ? `${genres[1]} year:${y0}-${y1}` : null,
+    `music year:${y0}-${y1}`, // broad fallback
   ].filter(Boolean);
 
   for(const q of queries){
