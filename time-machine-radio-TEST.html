@@ -707,12 +707,26 @@ async function searchAndPlay(song, positionMs){
     const remainingMs = totalMs - seekMs;
     monitorPlayback(remainingMs);
 
-    // Fetch audio analysis in background for smart DJ outro timing
+    // Schedule DJ break with fallback estimate immediately,
+    // then refine if audio analysis arrives in time
+    const prevSong2 = curIdx > 0 ? curPlaylist[curIdx-1] : curPlaylist[curPlaylist.length-1];
+    const nextSong2 = curPlaylist[(curIdx+1) % curPlaylist.length];
+
+    // Immediate fallback schedule using 80% rule
+    const fallbackAnalysis = null;
+    scheduleDJBreak(track, fallbackAnalysis, seekMs, prevSong2, nextSong2);
+
+    // Fetch real analysis and reschedule if it arrives early enough
     fetchAudioAnalysis(track.id).then(analysis => {
+      if(!analysis || !playing) return;
       curTrackAnalysis = analysis;
-      const prevSong = curIdx > 0 ? curPlaylist[curIdx-1] : curPlaylist[curPlaylist.length-1];
-      const nextSong = curPlaylist[(curIdx+1) % curPlaylist.length];
-      scheduleDJBreak(track, analysis, seekMs, prevSong, nextSong);
+      const totalMs2 = track.duration_ms || DEFAULT_DURATION_MS;
+      const outroMs = getOutroStartMs(analysis, totalMs2);
+      const msUntilOutro = outroMs - seekMs;
+      // Only reschedule if outro hasn't started yet and we gained meaningful info
+      if(msUntilOutro > 10000){
+        scheduleDJBreak(track, analysis, seekMs, prevSong2, nextSong2);
+      }
     });
   } catch(e){
     console.error('Spotify play error:', e);
@@ -1807,8 +1821,8 @@ async function fetchAudioAnalysis(trackId){
 
 function getOutroStartMs(analysis, totalDurationMs){
   if(!analysis || !analysis.sections || analysis.sections.length < 2){
-    // No analysis — estimate outro at 85% of song
-    return totalDurationMs * 0.85;
+    // No analysis — estimate outro at 78% of song (catches most long outros)
+    return totalDurationMs * 0.78;
   }
   const sections = analysis.sections;
   const outro = sections[sections.length - 1];
@@ -1836,22 +1850,26 @@ async function setSpotifyVolume(pct){
 
 async function duckVolume(){
   if(!spotifyToken||!playing) return;
-  preDuckVolume=100;
-  for(let i=1;i<=8;i++){
-    const vol=100-((100-22)*(i/8));
-    setTimeout(()=>setSpotifyVolume(vol), i*100);
+  preDuckVolume = 100;
+  // Duck to 55% — music audible underneath, DJ clearly on top
+  const targetVol = 55;
+  for(let i=1;i<=6;i++){
+    const vol = 100 - ((100-targetVol)*(i/6));
+    setTimeout(()=>setSpotifyVolume(vol), i*80);
   }
 }
 
 function restoreVolume(delayMs){
   if(duckTimer) clearTimeout(duckTimer);
+  // Restore starts immediately after DJ finishes — no gap
   duckTimer=setTimeout(()=>{
     if(!spotifyToken||!playing) return;
-    for(let i=1;i<=10;i++){
-      const vol=22+((preDuckVolume-22)*(i/10));
-      setTimeout(()=>setSpotifyVolume(vol), i*120);
+    const targetVol = 55;
+    for(let i=1;i<=8;i++){
+      const vol = targetVol + ((100-targetVol)*(i/8));
+      setTimeout(()=>setSpotifyVolume(vol), i*80);
     }
-  }, delayMs);
+  }, Math.max(0, delayMs - 400)); // start restore 400ms before DJ finishes
 }
 
 // ─── DJ ENTRY MODE SELECTION ─────────────────────────────────────────────────
