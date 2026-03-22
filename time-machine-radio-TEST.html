@@ -1017,8 +1017,9 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap'){
 
   // Build context for the DJ
   const timeStr = profile.time ? `The local time is ${getTimeOfDay()} on a ${getDayOfWeek()}.` : '';
-  const weatherStr = (profile.weather && weatherData) 
-    ? `Local weather: ${weatherData.conditions}, ${weatherData.temp}°F in ${weatherData.city}.` 
+  // Weather referenced ~30% of the time even on weather-enabled stations
+  const weatherStr = (profile.weather && weatherData && (DJ_TEST_MODE || Math.random() < 0.30))
+    ? `Local weather right now: ${weatherData.conditions}, ${weatherData.temp}°F in ${weatherData.city}.`
     : '';
 
   // Pick break type based on what's available
@@ -1046,10 +1047,11 @@ Rules:
 
   // Entry mode shapes what the DJ says
   const modeInstructions = {
-    outro: `You are speaking as the current song "${prevSong?.t}" is fading out. Reference the song ending and tease what's coming next: "${nextSong?.t}" by ${nextSong?.a}.`,
-    gap:   `You are speaking in the brief gap between songs. That was "${prevSong?.t}" by ${prevSong?.a}. Coming up: "${nextSong?.t}" by ${nextSong?.a}.`,
-    intro: `You are speaking over the instrumental intro of "${nextSong?.t}" by ${nextSong?.a} before the vocals kick in. Hype it up briefly — the song is already playing under you.`,
-    mid:   `You are dropping in BRIEFLY mid-song during "${prevSong?.t}". This is a quick station ID or shout-out — MAX 1 sentence, very short. Don't interrupt the vibe, just stamp the station.`
+    outro:  `You are speaking as "${prevSong?.t}" is fading out. Natural, flowing — reference the song and bridge to what's next: "${nextSong?.t}" by ${nextSong?.a}.`,
+    gap:    `You are in the gap between songs. That was "${prevSong?.t}" by ${prevSong?.a}. Coming up: "${nextSong?.t}" by ${nextSong?.a}.`,
+    intro:  `You are speaking over the instrumental intro of "${nextSong?.t}" by ${nextSong?.a} — the song is already playing softly underneath you. Hype it naturally before the vocals kick in.`,
+    mid:    `Drop in VERY briefly mid-song during "${prevSong?.t}". One sentence MAX — a quick station ID or energy boost. Don't interrupt the vibe.`,
+    bridge: `You are bridging from "${prevSong?.t}" which is fading out, into "${nextSong?.t}" by ${nextSong?.a} which is about to start. Your words span both songs — flowing naturally from the ending of one into the beginning of the next. This is a proper DJ transition.`
   };
   const modeInstruction = modeInstructions[entryMode] || modeInstructions.gap;
 
@@ -1680,15 +1682,15 @@ function restoreVolume(delayMs){
 // Station personality weights for entry modes
 // [outro, gap, intro, mid_song] — must sum to 1.0
 const ENTRY_MODE_WEIGHTS = {
-  weaf:  [0.70, 0.25, 0.05, 0.00],
-  wsng:  [0.65, 0.20, 0.10, 0.05],
+  weaf:  [0.50, 0.20, 0.05, 0.00, 0.25],
+  wsng:  [0.45, 0.15, 0.10, 0.05, 0.25],
   wcrn:  [0.60, 0.35, 0.05, 0.00],
   kdsc:  [0.60, 0.15, 0.15, 0.10],
-  khit:  [0.50, 0.20, 0.20, 0.10],
-  kgro:  [0.55, 0.30, 0.15, 0.00],
+  khit:  [0.35, 0.15, 0.15, 0.10, 0.25],
+  kgro:  [0.40, 0.25, 0.15, 0.00, 0.20],
   wrnb:  [0.40, 0.35, 0.15, 0.10],
-  wsol:  [0.35, 0.45, 0.15, 0.05],
-  krok:  [0.35, 0.20, 0.35, 0.10],
+  wsol:  [0.25, 0.40, 0.15, 0.05, 0.15],
+  krok:  [0.25, 0.15, 0.30, 0.10, 0.20],
   kpnk:  [0.25, 0.25, 0.35, 0.15],
   kroq:  [0.30, 0.25, 0.35, 0.10],
   wjazb: [0.25, 0.55, 0.15, 0.05],
@@ -1724,8 +1726,10 @@ function pickEntryMode(analysis, totalMs, seekMs){
   };
 
   // Filter weights to available modes only and re-normalize
-  const modes = ['outro', 'gap', 'intro', 'mid'];
-  let filtered = modes.map((m, i) => available[m] ? weights[i] : 0);
+  const modes = ['outro', 'gap', 'intro', 'mid', 'bridge'];
+  // Bridge available only when outro is long enough and next song has intro space
+  available.bridge = msUntilOutro > 15000 && totalMs - outroStartMs > 25000;
+  let filtered = modes.map((m, i) => available[m] ? (weights[i]||0) : 0);
   const total = filtered.reduce((a, b) => a + b, 0);
   if(total === 0) return 'gap'; // fallback
   filtered = filtered.map(w => w / total);
@@ -1766,11 +1770,17 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
   songsSinceLastBreak = 0;
 
   if(mode === 'outro'){
-    // Fire when outro starts
+    // For very long outros (>60s), enter 10-25% in rather than right at start
+    const outroDurationMs = totalMs - outroStartMs;
+    let outroEntryMs = msUntilOutro;
+    if(outroDurationMs > 60000){
+      outroEntryMs = msUntilOutro + (outroDurationMs * (0.10 + Math.random() * 0.15));
+    }
+    console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s`);
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
       await checkDJBreak(curIdx, prevSong, nextSong, 'outro');
-    }, Math.max(0, msUntilOutro));
+    }, Math.max(0, outroEntryMs));
 
   } else if(mode === 'gap'){
     // Fire at song transition (handled by monitorPlayback advancing to next song)
@@ -1794,6 +1804,16 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
       if(!playing) return;
       await checkDJBreak(curIdx, prevSong, nextSong, 'mid');
     }, Math.max(0, msUntilMid));
+
+  } else if(mode === 'bridge'){
+    // Bridge mode — DJ starts on outro and keeps talking into next song's intro
+    // Enter slightly before the end of the song
+    const bridgeEntryMs = Math.max(0, songRemaining - 20000);
+    outroTimer = setTimeout(async ()=>{
+      if(!playing) return;
+      await checkDJBreak(curIdx, prevSong, nextSong, 'bridge');
+    }, bridgeEntryMs);
+    console.log(`DJ bridge entry in ${(bridgeEntryMs/1000).toFixed(1)}s`);
   }
 }
 
