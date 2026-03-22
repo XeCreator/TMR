@@ -1794,10 +1794,8 @@ const BREAK_PROBABILITY = {
   ktrap:0.18, kcons:0.28, wclx:0.12
 };
 
-// Test mode: cycle through entry modes in order
 const TEST_MODES = ['outro', 'gap', 'intro', 'mid', 'bridge'];
 let testModeIdx = 0;
-
 function shouldDJBreakFire(analysis){
   if(DJ_TEST_MODE) return true; // Always fire in test mode
   const base = BREAK_PROBABILITY[curStation] || 0.35;
@@ -2033,7 +2031,10 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, _prevSong, _nextSong, 'gap');
+      const _cur = curPlaylist[curIdx];
+      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
+      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
+      await checkDJBreak(curIdx, _prev, _next, 'gap');
       outroTimer = null;
     }, Math.max(0, songRemaining - 300));
 
@@ -2041,7 +2042,10 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, _prevSong, _nextSong, 'intro');
+      const _cur = curPlaylist[curIdx];
+      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
+      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
+      await checkDJBreak(curIdx, _prev, _next, 'intro');
       outroTimer = null;
     }, Math.max(0, songRemaining + 100));
 
@@ -2049,7 +2053,9 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, _prevSong, _nextSong, 'mid');
+      const _cur = curPlaylist[curIdx];
+      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
+      await checkDJBreak(curIdx, _cur, _next, 'mid');
       outroTimer = null;
     }, Math.max(0, msUntilMid));
 
@@ -2058,7 +2064,10 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, _prevSong, _nextSong, 'bridge');
+      const _cur = curPlaylist[curIdx];
+      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
+      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
+      await checkDJBreak(curIdx, _prev, _next, 'bridge');
       outroTimer = null;
     }, bridgeEntryMs);
     console.log(`DJ bridge entry in ${(bridgeEntryMs/1000).toFixed(1)}s`);
@@ -2078,7 +2087,7 @@ document.getElementById('song-total').textContent = total+' songs';
 </html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
 async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
   if(!anthropicKey || djGenPending) return;
-  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" curIdx=${curIdx} curSong="${curPlaylist[curIdx]?.t||'none'}"`);
+  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" curIdx=${curIdx} playing="${curPlaylist[curIdx]?.t||'none'}"`);
   const profile = FORMAT_PROFILES[curStation];
   const weather = (profile?.weather) ? await getWeather() : null;
   const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap');
