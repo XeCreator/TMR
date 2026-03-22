@@ -986,11 +986,17 @@ async function speakDJLine(text){
       }
     }
 
-    await audio.play();
-    audio.onended = () => { 
-      currentDJAudio = null;
-      URL.revokeObjectURL(audioUrl);
-    };
+    return new Promise((resolve) => {
+      audio.play().then(()=>{
+        audio.onended = () => {
+          currentDJAudio = null;
+          URL.revokeObjectURL(audioUrl);
+          resolve();
+        };
+        // Fallback resolve in case onended doesn't fire
+        setTimeout(resolve, (audio.duration || 10) * 1000 + 500);
+      }).catch(e => { console.warn('Audio play failed:', e); resolve(); });
+    });
 
   } catch(e) {
     console.warn('DJ voice error:', e);
@@ -998,15 +1004,16 @@ async function speakDJLine(text){
 }
 
 // ─── DJ BRAIN ────────────────────────────────────────────────────────────────
-async function generateDJLine(prevSong, nextSong, weatherData){
+async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap'){
   if(!anthropicKey) return null;
   const dj = DJ_PERSONALITIES[curStation] || DJ_PERSONALITIES['khit'];
   const stationDef = SDEFS[curStation] || {name:curStation, call:curStation};
   const profile = FORMAT_PROFILES[curStation] || {every:4, lengths:["short"], weather:false, time:false};
 
-  // Pick break length
-  const lengthKey = profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
-  const maxTokens = LENGTH_TOKENS[lengthKey] || 80;
+  // Pick break length — mid-song drops are always short
+  const lengthKey = entryMode === 'mid' ? 'short' 
+    : profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
+  const maxTokens = entryMode === 'mid' ? 40 : (LENGTH_TOKENS[lengthKey] || 80);
 
   // Build context for the DJ
   const timeStr = profile.time ? `The local time is ${getTimeOfDay()} on a ${getDayOfWeek()}.` : '';
@@ -1037,8 +1044,17 @@ Rules:
 - ${profile.weather && weatherStr ? 'You may naturally weave in the weather.' : ''}
 - Output ONLY the DJ spoken words. No quotes, labels, or stage directions.`;
 
+  // Entry mode shapes what the DJ says
+  const modeInstructions = {
+    outro: `You are speaking as the current song "${prevSong?.t}" is fading out. Reference the song ending and tease what's coming next: "${nextSong?.t}" by ${nextSong?.a}.`,
+    gap:   `You are speaking in the brief gap between songs. That was "${prevSong?.t}" by ${prevSong?.a}. Coming up: "${nextSong?.t}" by ${nextSong?.a}.`,
+    intro: `You are speaking over the instrumental intro of "${nextSong?.t}" by ${nextSong?.a} before the vocals kick in. Hype it up briefly — the song is already playing under you.`,
+    mid:   `You are dropping in BRIEFLY mid-song during "${prevSong?.t}". This is a quick station ID or shout-out — MAX 1 sentence, very short. Don't interrupt the vibe, just stamp the station.`
+  };
+  const modeInstruction = modeInstructions[entryMode] || modeInstructions.gap;
+
   const userMsg = hasSongContext
-    ? `Talk break after "${prevSong.t}" by ${prevSong.a} (${prevSong.y}). Next up: "${nextSong.t}" by ${nextSong.a} (${nextSong.y}). You may reference either song, or just do station patter — your call.`
+    ? modeInstruction
     : `Talk break on ${stationDef.call}. Do a natural station patter break.`;
 
   try {
@@ -1078,7 +1094,23 @@ function showDJBubble(text, djDef){
   setTimeout(()=>{ if(bubble.classList.contains('show')) bubble.className='dj-bubble'; }, displayMs);
 
   // Speak the line if ElevenLabs is configured
-  if(elevenlabsKey) speakDJLine(text);
+  if(elevenlabsKey){
+    // Duck music volume while DJ speaks
+    duckVolume();
+    speakDJLine(text).then(()=>{
+      // Restore volume after DJ finishes — estimate duration from text length
+      // (~120 words per minute = 2 chars per second roughly)
+      const estimatedDurationMs = Math.max(3000, text.length * 55);
+      restoreVolume(estimatedDurationMs);
+    });
+  } else {
+    // No voice — still duck briefly to signal DJ is speaking
+    // (only if music is playing)
+    if(playing){
+      duckVolume();
+      restoreVolume(Math.max(4000, text.length * 60));
+    }
+  }
 }
 
 // ─── AUDIO ANALYSIS ──────────────────────────────────────────────────────────
@@ -1611,36 +1643,158 @@ function getIntroEndMs(analysis){
   return intro.duration * 1000;
 }
 
-// Schedule DJ break to fire at the right moment
+// ─── VOLUME DUCKING ───────────────────────────────────────────────────────────
+let preDuckVolume = 100;
+let duckTimer = null;
+
+async function setSpotifyVolume(pct){
+  if(!spotifyToken) return;
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${Math.round(pct)}`, {
+      method:'PUT', headers:{'Authorization':'Bearer '+spotifyToken}
+    });
+  } catch(e){}
+}
+
+async function duckVolume(){
+  if(!spotifyToken||!playing) return;
+  preDuckVolume=100;
+  for(let i=1;i<=8;i++){
+    const vol=100-((100-22)*(i/8));
+    setTimeout(()=>setSpotifyVolume(vol), i*100);
+  }
+}
+
+function restoreVolume(delayMs){
+  if(duckTimer) clearTimeout(duckTimer);
+  duckTimer=setTimeout(()=>{
+    if(!spotifyToken||!playing) return;
+    for(let i=1;i<=10;i++){
+      const vol=22+((preDuckVolume-22)*(i/10));
+      setTimeout(()=>setSpotifyVolume(vol), i*120);
+    }
+  }, delayMs);
+}
+
+// ─── DJ ENTRY MODE SELECTION ─────────────────────────────────────────────────
+// Station personality weights for entry modes
+// [outro, gap, intro, mid_song] — must sum to 1.0
+const ENTRY_MODE_WEIGHTS = {
+  weaf:  [0.70, 0.25, 0.05, 0.00],
+  wsng:  [0.65, 0.20, 0.10, 0.05],
+  wcrn:  [0.60, 0.35, 0.05, 0.00],
+  kdsc:  [0.60, 0.15, 0.15, 0.10],
+  khit:  [0.50, 0.20, 0.20, 0.10],
+  kgro:  [0.55, 0.30, 0.15, 0.00],
+  wrnb:  [0.40, 0.35, 0.15, 0.10],
+  wsol:  [0.35, 0.45, 0.15, 0.05],
+  krok:  [0.35, 0.20, 0.35, 0.10],
+  kpnk:  [0.25, 0.25, 0.35, 0.15],
+  kroq:  [0.30, 0.25, 0.35, 0.10],
+  wjazb: [0.25, 0.55, 0.15, 0.05],
+  wflk:  [0.30, 0.55, 0.10, 0.05],
+  wltn:  [0.40, 0.25, 0.20, 0.15],
+  wjaz:  [0.20, 0.60, 0.15, 0.05],
+  kmet:  [0.30, 0.20, 0.40, 0.10],
+  kdnc:  [0.25, 0.15, 0.20, 0.40],
+  kpsy:  [0.25, 0.55, 0.15, 0.05],
+  khip:  [0.15, 0.15, 0.20, 0.50],  // heavy mid-song drops
+  kwst:  [0.15, 0.15, 0.25, 0.45],
+  kbtm:  [0.15, 0.20, 0.20, 0.45],
+  ksth:  [0.20, 0.20, 0.20, 0.40],
+  ktrap: [0.10, 0.15, 0.20, 0.55],  // most mid-song drops
+  kcons: [0.20, 0.30, 0.25, 0.25],
+  wclx:  [0.20, 0.65, 0.15, 0.00],  // no mid-song on classical
+};
+
+function pickEntryMode(analysis, totalMs, seekMs){
+  const weights = ENTRY_MODE_WEIGHTS[curStation] || [0.35, 0.30, 0.25, 0.10];
+  const outroStartMs = getOutroStartMs(analysis, totalMs);
+  const introEndMs = getIntroEndMs(analysis);
+  const currentPos = seekMs || 0;
+  const msUntilOutro = outroStartMs - currentPos;
+  const msUntilIntroEnd = introEndMs; // intro of NEXT song (relevant for next transition)
+
+  // Determine which modes are actually available
+  const available = {
+    outro: msUntilOutro > 8000,      // outro must be >8s away
+    gap:   true,                      // always available
+    intro: true,                      // will check next song's intro at transition
+    mid:   (totalMs - currentPos) > 45000  // need >45s left in song for mid-drop
+  };
+
+  // Filter weights to available modes only and re-normalize
+  const modes = ['outro', 'gap', 'intro', 'mid'];
+  let filtered = modes.map((m, i) => available[m] ? weights[i] : 0);
+  const total = filtered.reduce((a, b) => a + b, 0);
+  if(total === 0) return 'gap'; // fallback
+  filtered = filtered.map(w => w / total);
+
+  // Weighted random selection
+  const r = Math.random();
+  let cumulative = 0;
+  for(let i = 0; i < modes.length; i++){
+    cumulative += filtered[i];
+    if(r < cumulative) return modes[i];
+  }
+  return 'gap';
+}
+
+// Schedule DJ break using selected entry mode
 function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
   if(outroTimer) clearTimeout(outroTimer);
 
-  const totalMs = track.duration_ms || DEFAULT_DURATION_MS;
-  const outroStartMs = getOutroStartMs(analysis, totalMs);
-  const currentPositionMs = positionMs || 0;
-
-  // Time until outro from current position
-  const msUntilOutro = outroStartMs - currentPositionMs;
-
-  if(msUntilOutro < 3000){
-    // Already in or past the outro — skip this break opportunity
-    return;
-  }
-
-  // Check if a break should fire at all
+  // Check if a break should fire at all (probability model)
   if(!shouldDJBreakFire(analysis)){
     songsSinceLastBreak++;
     return;
   }
 
-  // Fire DJ break when outro starts
-  outroTimer = setTimeout(async ()=>{
-    if(!playing) return;
-    songsSinceLastBreak = 0;
-    await checkDJBreak(curIdx, prevSong, nextSong);
-  }, msUntilOutro);
+  const totalMs = track.duration_ms || DEFAULT_DURATION_MS;
+  const seekMs = positionMs || 0;
+  const mode = pickEntryMode(analysis, totalMs, seekMs);
+  const outroStartMs = getOutroStartMs(analysis, totalMs);
+  const msUntilOutro = outroStartMs - seekMs;
 
-  console.log(`DJ break scheduled in ${(msUntilOutro/1000).toFixed(1)}s (outro start)`);
+  // Mid-song drop: fires at a random point between 30% and 60% through the song
+  const songRemaining = totalMs - seekMs;
+  const midDropMs = seekMs + (songRemaining * (0.30 + Math.random() * 0.30));
+  const msUntilMid = midDropMs - seekMs;
+
+  console.log(`DJ entry mode: ${mode} | outro in ${(msUntilOutro/1000).toFixed(1)}s | song remaining: ${(songRemaining/1000).toFixed(0)}s`);
+
+  songsSinceLastBreak = 0;
+
+  if(mode === 'outro'){
+    // Fire when outro starts
+    outroTimer = setTimeout(async ()=>{
+      if(!playing) return;
+      await checkDJBreak(curIdx, prevSong, nextSong, 'outro');
+    }, Math.max(0, msUntilOutro));
+
+  } else if(mode === 'gap'){
+    // Fire at song transition (handled by monitorPlayback advancing to next song)
+    // We schedule it to fire 500ms after the song ends
+    outroTimer = setTimeout(async ()=>{
+      if(!playing) return;
+      await checkDJBreak(curIdx, prevSong, nextSong, 'gap');
+    }, Math.max(0, songRemaining - 500));
+
+  } else if(mode === 'intro'){
+    // Fire at song transition — DJ rides next song's intro
+    // Schedule just as the song ends, DJ will speak over next song's intro
+    outroTimer = setTimeout(async ()=>{
+      if(!playing) return;
+      await checkDJBreak(curIdx, prevSong, nextSong, 'intro');
+    }, Math.max(0, songRemaining));
+
+  } else if(mode === 'mid'){
+    // Mid-song drop — short burst during the song
+    outroTimer = setTimeout(async ()=>{
+      if(!playing) return;
+      await checkDJBreak(curIdx, prevSong, nextSong, 'mid');
+    }, Math.max(0, msUntilMid));
+  }
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
@@ -1654,11 +1808,11 @@ document.getElementById('song-total').textContent = total+' songs';
 </script>
 </body>
 </html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
-async function checkDJBreak(songIdx, prevSong, nextSong){
+async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
   if(!anthropicKey || djGenPending) return;
   const profile = FORMAT_PROFILES[curStation];
   const weather = (profile?.weather) ? await getWeather() : null;
-  const line = await generateDJLine(prevSong, nextSong, weather);
+  const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap');
   if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
 }
 
