@@ -754,9 +754,9 @@ function monitorPlayback(remainingMs){
       // outroTimer will self-cancel after firing
       curIdx = (curIdx + 1) % curPlaylist.length;
       updateQueue();
-      doPlay(0);
+      doPlay(1500); // skip 1.5s of leading silence on next track
     }
-  }, remainingMs + 50); // reduced gap
+  }, remainingMs + 50);
 }
 
 
@@ -1126,20 +1126,17 @@ function showDJBubble(text, djDef){
 
   // Speak the line if ElevenLabs is configured
   if(elevenlabsKey){
-    // Duck music volume while DJ speaks
     duckVolume();
     speakDJLine(text).then(()=>{
-      // Restore volume after DJ finishes — estimate duration from text length
-      // (~120 words per minute = 2 chars per second roughly)
-      const estimatedDurationMs = Math.max(3000, text.length * 55);
-      restoreVolume(estimatedDurationMs);
+      // Restore immediately when audio finishes — no delay
+      restoreVolumeNow();
     });
   } else {
-    // No voice — still duck briefly to signal DJ is speaking
-    // (only if music is playing)
     if(playing){
       duckVolume();
-      restoreVolume(Math.max(4000, text.length * 60));
+      // No voice — restore based on reading time estimate
+      const readMs = Math.max(4000, text.length * 55);
+      restoreVolume(readMs);
     }
   }
 }
@@ -1797,6 +1794,10 @@ const BREAK_PROBABILITY = {
   ktrap:0.18, kcons:0.28, wclx:0.12
 };
 
+// Test mode: cycle through entry modes in order
+const TEST_MODES = ['outro', 'gap', 'intro', 'mid', 'bridge'];
+let testModeIdx = 0;
+
 function shouldDJBreakFire(analysis){
   if(DJ_TEST_MODE) return true; // Always fire in test mode
   const base = BREAK_PROBABILITY[curStation] || 0.35;
@@ -1883,7 +1884,7 @@ async function duckVolume(){
   if(!spotifyToken||!playing) return;
   preDuckVolume = 100;
   // Duck to 55% — music audible underneath, DJ clearly on top
-  const targetVol = 65;
+  const targetVol = 70;
   for(let i=1;i<=6;i++){
     const vol = 100 - ((100-targetVol)*(i/6));
     setTimeout(()=>setSpotifyVolume(vol), i*80);
@@ -1892,15 +1893,17 @@ async function duckVolume(){
 
 function restoreVolume(delayMs){
   if(duckTimer) clearTimeout(duckTimer);
-  // Restore starts immediately after DJ finishes — no gap
-  duckTimer=setTimeout(()=>{
-    if(!spotifyToken||!playing) return;
-    const targetVol = 65;
-    for(let i=1;i<=8;i++){
-      const vol = targetVol + ((100-targetVol)*(i/8));
-      setTimeout(()=>setSpotifyVolume(vol), i*80);
-    }
-  }, Math.max(0, delayMs - 400)); // start restore 400ms before DJ finishes
+  duckTimer=setTimeout(()=>{ restoreVolumeNow(); }, Math.max(0, delayMs));
+}
+
+function restoreVolumeNow(){
+  if(duckTimer) clearTimeout(duckTimer);
+  if(!spotifyToken||!playing) return;
+  // Fast 400ms fade back to full
+  for(let i=1;i<=4;i++){
+    const vol = 70 + ((100-70)*(i/4));
+    setTimeout(()=>setSpotifyVolume(vol), i*100);
+  }
 }
 
 // ─── DJ ENTRY MODE SELECTION ─────────────────────────────────────────────────
@@ -1935,6 +1938,12 @@ const ENTRY_MODE_WEIGHTS = {
 };
 
 function pickEntryMode(analysis, totalMs, seekMs){
+  if(DJ_TEST_MODE){
+    const mode = TEST_MODES[testModeIdx % TEST_MODES.length];
+    testModeIdx++;
+    console.log(`TEST MODE: forcing entry mode "${mode}"`);
+    return mode;
+  }
   const weights = ENTRY_MODE_WEIGHTS[curStation] || [0.35, 0.30, 0.25, 0.10];
   const outroStartMs = getOutroStartMs(analysis, totalMs);
   const introEndMs = getIntroEndMs(analysis);
@@ -2069,6 +2078,7 @@ document.getElementById('song-total').textContent = total+' songs';
 </html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
 async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
   if(!anthropicKey || djGenPending) return;
+  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" curIdx=${curIdx} curSong="${curPlaylist[curIdx]?.t||'none'}"`);
   const profile = FORMAT_PROFILES[curStation];
   const weather = (profile?.weather) ? await getWeather() : null;
   const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap');
