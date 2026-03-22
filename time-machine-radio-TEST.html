@@ -1035,6 +1035,7 @@ Catchphrase (use occasionally, not always): "${dj.catchphrase}"
 
 ${timeStr}
 ${weatherStr}
+${newSongStr}
 
 Rules:
 - This is a BROADCAST talk break. You are speaking to everyone listening, not to a specific user.
@@ -1054,6 +1055,15 @@ Rules:
     bridge: `You are bridging from "${prevSong?.t}" which is fading out, into "${nextSong?.t}" by ${nextSong?.a} which is about to start. Your words span both songs — flowing naturally from the ending of one into the beginning of the next. This is a proper DJ transition.`
   };
   const modeInstruction = modeInstructions[entryMode] || modeInstructions.gap;
+
+  // Detect if next song is "new" relative to dial year
+  const nextIsNew = nextSong && isSongNew(nextSong, curYear);
+  const prevIsNew = prevSong && isSongNew(prevSong, curYear);
+  const newSongStr = nextIsNew
+    ? `IMPORTANT: "${nextSong.t}" by ${nextSong.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
+    : prevIsNew
+    ? `IMPORTANT: "${prevSong.t}" by ${prevSong.a} was just released recently — it's a new record. Mention that if natural.`
+    : '';
 
   const userMsg = hasSongContext
     ? modeInstruction
@@ -1205,7 +1215,145 @@ function getSongs(sid, y){
   return [];
 }
 
+// ─── DYNAMIC SPOTIFY CATALOG ─────────────────────────────────────────────────
+// Pulls songs from Spotify's full catalog instead of our hardcoded DB
+// Caches results per station+decade in localStorage (24h expiry)
+
+const STATION_GENRES = {
+  weaf:  ['big band','jazz standards','swing'],
+  wsng:  ['swing','big band'],
+  wcrn:  ['crooner','vocal jazz','traditional pop'],
+  wjaz:  ['jazz','bebop','cool jazz'],
+  wjazb: ['bebop','jazz'],
+  wrnb:  ['r&b','rhythm and blues','soul'],
+  khit:  ['pop'],
+  krok:  ['rock','classic rock','rock and roll'],
+  kmet:  ['hard rock','metal','heavy metal'],
+  wsol:  ['soul','motown','funk'],
+  wflk:  ['folk','folk rock'],
+  kpsy:  ['psychedelic rock','psychedelic'],
+  kdsc:  ['disco'],
+  kpnk:  ['punk','new wave','punk rock'],
+  kroq:  ['alternative rock','indie rock','alternative'],
+  kdnc:  ['dance','electronic','house'],
+  khip:  ['hip-hop','rap'],
+  kwst:  ['hip-hop','rap','g-funk'],
+  kbtm:  ['hip-hop','southern hip hop'],
+  ksth:  ['hip-hop','southern hip hop','trap'],
+  ktrap: ['trap','hip-hop'],
+  kcons: ['hip-hop','rap'],
+  wltn:  ['latin','latin pop','reggaeton'],
+  kgro:  ['country','country pop'],
+  wclx:  ['classical','classical performance'],
+};
+
+const CATALOG_CACHE_KEY = (sid, decade) => `tmr_cat_${sid}_${decade}`;
+const CATALOG_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function getCachedCatalog(sid, decade){
+  try {
+    const raw = localStorage.getItem(CATALOG_CACHE_KEY(sid, decade));
+    if(!raw) return null;
+    const {ts, songs} = JSON.parse(raw);
+    if(Date.now() - ts > CATALOG_TTL) return null;
+    return songs;
+  } catch(e){ return null; }
+}
+
+function setCachedCatalog(sid, decade, songs){
+  try {
+    localStorage.setItem(CATALOG_CACHE_KEY(sid, decade), JSON.stringify({ts: Date.now(), songs}));
+  } catch(e){
+    // localStorage full — clear old catalog caches
+    Object.keys(localStorage).filter(k=>k.startsWith('tmr_cat_')).forEach(k=>localStorage.removeItem(k));
+  }
+}
+
+async function fetchSpotifyCatalog(sid, y){
+  if(!spotifyToken) return null;
+  const genres = STATION_GENRES[sid];
+  if(!genres) return null;
+
+  const decade = Math.floor(y/10)*10;
+  const y0 = Math.max(decade - 3, 1900); // 3 years before decade start for context
+  const y1 = Math.min(y, 2025);          // up to current dial year
+
+  // Check cache first
+  const cached = getCachedCatalog(sid, decade);
+  if(cached){
+    // Filter cached results to year <= y
+    return cached.filter(s => s.y <= y);
+  }
+
+  // Build search queries — one per genre, merge results
+  const allTracks = [];
+  const seenIds = new Set();
+
+  for(const genre of genres.slice(0, 2)){ // max 2 genres to avoid too many calls
+    const query = encodeURIComponent(`genre:"${genre}" year:${y0}-${y1}`);
+    try {
+      const r = await fetch(
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50&market=US`,
+        { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+      );
+      if(!r.ok) continue;
+      const d = await r.json();
+      const tracks = d.tracks?.items || [];
+      for(const t of tracks){
+        if(seenIds.has(t.id)) continue;
+        seenIds.add(t.id);
+        const releaseYear = parseInt((t.album?.release_date||'0').substring(0,4));
+        if(releaseYear < 1900 || releaseYear > 2025) continue;
+        allTracks.push({
+          t: t.name,
+          a: t.artists.map(a=>a.name).join(', '),
+          y: releaseYear,
+          uri: t.uri,
+          id: t.id,
+          p: t.popularity,
+          duration_ms: t.duration_ms,
+          st: [sid],
+          // Store release date for "new song" detection
+          release_date: t.album?.release_date || String(releaseYear)
+        });
+      }
+    } catch(e){ console.warn('Catalog fetch error:', e); }
+  }
+
+  if(allTracks.length === 0) return null;
+
+  // Sort by popularity desc, then cache the full decade result
+  allTracks.sort((a,b) => b.p - a.p);
+  setCachedCatalog(sid, decade, allTracks);
+
+  // Return filtered to current year
+  return allTracks.filter(s => s.y <= y);
+}
+
+// Determines if a song is "new" relative to the dial year (within 60 days)
+function isSongNew(song, dialYear){
+  if(!song.release_date) return false;
+  const parts = song.release_date.split('-');
+  const releaseMs = new Date(
+    parseInt(parts[0]),
+    parts[1] ? parseInt(parts[1]) - 1 : 0,
+    parts[2] ? parseInt(parts[2]) : 1
+  ).getTime();
+  const dialMs = new Date(dialYear, 11, 31).getTime(); // end of dial year
+  const ageMs = dialMs - releaseMs;
+  return ageMs >= 0 && ageMs < 60 * 24 * 60 * 60 * 1000; // within 60 days
+}
+
+// Enhanced getSongs — tries dynamic catalog first, falls back to hardcoded DB
+async function getSongsDynamic(sid, y){
+  const dynamic = await fetchSpotifyCatalog(sid, y);
+  if(dynamic && dynamic.length >= 5) return dynamic;
+  // Fallback to hardcoded DB
+  return getSongs(sid, y);
+}
+
 // ─── BROADCAST CLOCK ────────────────────────────────────────────────────────
+
 // Each station runs a continuous loop synced to real time.
 // Everyone tuning in at the same moment hears the same song at the same position.
 const STATION_SEEDS = {
@@ -1219,24 +1367,44 @@ const STATION_SEEDS = {
 // Estimated duration per song in ms (used before we get real Spotify duration)
 const DEFAULT_DURATION_MS = 210000; // 3.5 minutes
 
-function getBroadcastPlaylist(sid, y){
-  // Get songs sorted chronologically — filter to only songs released by year y
-  let songs = getSongs(sid, y);
-  if(!songs.length){
-    const active = getActiveStations(y);
-    if(active.length) songs = getSongs(active[0].id, y);
-  }
-  // Only play songs that exist at this point in time
+// Cache for current broadcast playlist per station
+const broadcastPlaylistCache = {};
+
+async function getBroadcastPlaylistAsync(sid, y){
+  const cacheKey = `${sid}_${y}`;
+  if(broadcastPlaylistCache[cacheKey]) return broadcastPlaylistCache[cacheKey];
+
+  // Try dynamic catalog first
+  let songs = await getSongsDynamic(sid, y);
+
+  // Filter to songs that existed at dial year
   songs = songs.filter(s => s.y <= y);
-  // If filtering leaves us with too few songs, relax by 2 years
+
   if(songs.length < 3){
-    songs = getSongs(sid, y).filter(s => s.y <= y + 2);
+    // Fallback to hardcoded DB with relaxed year filter
+    songs = getSongs(sid, y).filter(s => s.y <= y + 1);
   }
+
+  const sorted = [...songs].sort((a,b) => a.y - b.y || a.t.localeCompare(b.t));
+  broadcastPlaylistCache[cacheKey] = sorted;
+  return sorted;
+}
+
+// Synchronous fallback for immediate use (before async loads)
+function getBroadcastPlaylist(sid, y){
+  // Use hardcoded DB synchronously — dynamic catalog loads in background
+  let songs = getSongs(sid, y).filter(s => s.y <= y);
+  if(songs.length < 3) songs = getSongs(sid, y).filter(s => s.y <= y + 1);
   return [...songs].sort((a,b) => a.y - b.y || a.t.localeCompare(b.t));
 }
 
 function getBroadcastPosition(sid, y){
   // Returns {song, positionMs, idx} for the current moment in time
+  // Triggers async catalog load in background for next call
+  getBroadcastPlaylistAsync(sid, y).then(songs => {
+    const cacheKey = `${sid}_${y}`;
+    broadcastPlaylistCache[cacheKey] = songs;
+  }).catch(()=>{});
   const playlist = getBroadcastPlaylist(sid, y);
   if(!playlist.length) return null;
 
@@ -1335,6 +1503,8 @@ function selectStation(sid){
   curStation = sid;
   document.querySelectorAll('.preset').forEach(el=>el.classList.toggle('active', el.dataset.sid===sid));
   buildPlaylist(); updateUI(false);
+  // Clear cached playlist for fresh catalog on station switch
+  Object.keys(broadcastPlaylistCache).filter(k=>k.startsWith(sid+'_')).forEach(k=>delete broadcastPlaylistCache[k]);
   if(playing){ if(playbackTimer) clearTimeout(playbackTimer); doPlay(); }
   // Don't trigger DJ on every station click — only on era changes and between songs
 }
