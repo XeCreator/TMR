@@ -1303,44 +1303,52 @@ async function fetchSpotifyCatalog(sid, y){
   const allTracks = [];
   const seenIds = new Set();
 
-  // Spotify genre search — use keyword style (genre: tag doesn't work well via API)
-  // Strategy: search by year range only, then filter by artist genre on client
-  // This is more reliable than genre: filter which requires exact Spotify genre strings
-  for(const genre of genres.slice(0, 2)){
-    // Use simpler query: just year range + genre keyword (not field filter)
-    const query = encodeURIComponent(`${genre} year:${y0}-${y1}`);
-    try {
-      const r = await fetch(
-        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50&market=US`,
-        { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
-      );
-      if(!r.ok){
-        console.warn(`Catalog search failed: ${r.status} for ${genre} ${y0}-${y1}`);
-        continue;
-      }
-      const d = await r.json();
-      const tracks = d.tracks?.items || [];
-      for(const t of tracks){
-        if(seenIds.has(t.id)) continue;
-        seenIds.add(t.id);
-        const releaseYear = parseInt((t.album?.release_date||'0').substring(0,4));
-        if(releaseYear < 1900 || releaseYear > 2025) continue;
-        // Only include tracks with decent popularity (avoids obscure covers)
-        if(t.popularity < 20) continue;
-        allTracks.push({
-          t: t.name,
-          a: t.artists.map(a=>a.name).join(', '),
-          y: releaseYear,
-          uri: t.uri,
-          id: t.id,
-          p: t.popularity,
-          duration_ms: t.duration_ms,
-          st: [sid],
-          release_date: t.album?.release_date || String(releaseYear)
-        });
-      }
-      console.log(`Catalog: ${tracks.length} tracks for "${genre}" ${y0}-${y1}`);
-    } catch(e){ console.warn('Catalog fetch error:', e); }
+  // Spotify search — use multiple offset calls to get diverse results
+  // Year filter works reliably; genre is used as a keyword hint
+  const queries = [
+    `genre:${genres[0]} year:${y0}-${y1}`,
+    genres[1] ? `genre:${genres[1]} year:${y0}-${y1}` : null,
+    `year:${y0}-${y1}`, // broad fallback to fill gaps
+  ].filter(Boolean);
+
+  for(const q of queries){
+    // Try two offsets to get more variety
+    for(const offset of [0, 50]){
+      const query = encodeURIComponent(q);
+      try {
+        const r = await fetch(
+          `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50&offset=${offset}&market=US`,
+          { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
+        );
+        if(!r.ok){
+          console.warn(`Catalog: ${r.status} for "${q}" offset=${offset}`);
+          break; // don't try offset 50 if offset 0 failed
+        }
+        const d = await r.json();
+        const tracks = d.tracks?.items || [];
+        for(const t of tracks){
+          if(seenIds.has(t.id)) continue;
+          seenIds.add(t.id);
+          const releaseYear = parseInt((t.album?.release_date||'0').substring(0,4));
+          if(releaseYear < 1900 || releaseYear > 2025) continue;
+          if(t.popularity < 25) continue; // skip obscure tracks
+          allTracks.push({
+            t: t.name,
+            a: t.artists.map(a=>a.name).join(', '),
+            y: releaseYear,
+            uri: t.uri,
+            id: t.id,
+            p: t.popularity,
+            duration_ms: t.duration_ms,
+            st: [sid],
+            release_date: t.album?.release_date || String(releaseYear)
+          });
+        }
+        if(tracks.length < 50) break; // no more results at this offset
+        console.log(`Catalog: +${tracks.length} tracks for "${q}" offset=${offset}`);
+      } catch(e){ console.warn('Catalog fetch error:', e); break; }
+    }
+    if(allTracks.length >= 100) break; // enough songs, stop fetching
   }
 
   if(allTracks.length === 0) return null;
@@ -1816,13 +1824,20 @@ function shouldDJBreakFire(analysis){
   return fires;
 }
 
+let audioAnalysisAvailable = true; // assume available until proven otherwise
+
 async function fetchAudioAnalysis(trackId){
-  if(!spotifyToken || !trackId) return null;
+  if(!spotifyToken || !trackId || !audioAnalysisAvailable) return null;
   try {
     const r = await fetch(
       `https://api.spotify.com/v1/audio-analysis/${trackId}`,
       { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
     );
+    if(r.status === 403){
+      console.log('Audio analysis not available — using timing estimates');
+      audioAnalysisAvailable = false; // stop trying
+      return null;
+    }
     if(!r.ok) return null;
     return await r.json();
   } catch(e){ return null; }
