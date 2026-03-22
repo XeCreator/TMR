@@ -1040,6 +1040,15 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap'){
   // Always include song context since we have it
   const hasSongContext = prevSong && nextSong;
 
+  // Detect if next song is "new" relative to dial year
+  const nextIsNew = nextSong && isSongNew(nextSong, curYear);
+  const prevIsNew = prevSong && isSongNew(prevSong, curYear);
+  const newSongStr = nextIsNew
+    ? `IMPORTANT: "${nextSong.t}" by ${nextSong.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
+    : prevIsNew
+    ? `IMPORTANT: "${prevSong.t}" by ${prevSong.a} was just released recently — it is a new record. Mention that if natural.`
+    : '';
+
   const systemPrompt = `You are ${dj.name}, known as "${dj.handle}", the DJ of ${stationDef.call} (${stationDef.name}) in the year ${curYear}.
 
 Personality: ${dj.persona}
@@ -1069,15 +1078,6 @@ Rules:
     bridge: `You are bridging from "${prevSong?.t}" which is fading out, into "${nextSong?.t}" by ${nextSong?.a} which is about to start. Your words span both songs — flowing naturally from the ending of one into the beginning of the next. This is a proper DJ transition.`
   };
   const modeInstruction = modeInstructions[entryMode] || modeInstructions.gap;
-
-  // Detect if next song is "new" relative to dial year
-  const nextIsNew = nextSong && isSongNew(nextSong, curYear);
-  const prevIsNew = prevSong && isSongNew(prevSong, curYear);
-  const newSongStr = nextIsNew
-    ? `IMPORTANT: "${nextSong.t}" by ${nextSong.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
-    : prevIsNew
-    ? `IMPORTANT: "${prevSong.t}" by ${prevSong.a} was just released recently — it's a new record. Mention that if natural.`
-    : '';
 
   const userMsg = hasSongContext
     ? modeInstruction
@@ -1303,14 +1303,21 @@ async function fetchSpotifyCatalog(sid, y){
   const allTracks = [];
   const seenIds = new Set();
 
-  for(const genre of genres.slice(0, 2)){ // max 2 genres to avoid too many calls
-    const query = encodeURIComponent(`genre:"${genre}" year:${y0}-${y1}`);
+  // Spotify genre search — use keyword style (genre: tag doesn't work well via API)
+  // Strategy: search by year range only, then filter by artist genre on client
+  // This is more reliable than genre: filter which requires exact Spotify genre strings
+  for(const genre of genres.slice(0, 2)){
+    // Use simpler query: just year range + genre keyword (not field filter)
+    const query = encodeURIComponent(`${genre} year:${y0}-${y1}`);
     try {
       const r = await fetch(
         `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50&market=US`,
         { headers: { 'Authorization': 'Bearer ' + spotifyToken } }
       );
-      if(!r.ok) continue;
+      if(!r.ok){
+        console.warn(`Catalog search failed: ${r.status} for ${genre} ${y0}-${y1}`);
+        continue;
+      }
       const d = await r.json();
       const tracks = d.tracks?.items || [];
       for(const t of tracks){
@@ -1318,6 +1325,8 @@ async function fetchSpotifyCatalog(sid, y){
         seenIds.add(t.id);
         const releaseYear = parseInt((t.album?.release_date||'0').substring(0,4));
         if(releaseYear < 1900 || releaseYear > 2025) continue;
+        // Only include tracks with decent popularity (avoids obscure covers)
+        if(t.popularity < 20) continue;
         allTracks.push({
           t: t.name,
           a: t.artists.map(a=>a.name).join(', '),
@@ -1327,10 +1336,10 @@ async function fetchSpotifyCatalog(sid, y){
           p: t.popularity,
           duration_ms: t.duration_ms,
           st: [sid],
-          // Store release date for "new song" detection
           release_date: t.album?.release_date || String(releaseYear)
         });
       }
+      console.log(`Catalog: ${tracks.length} tracks for "${genre}" ${y0}-${y1}`);
     } catch(e){ console.warn('Catalog fetch error:', e); }
   }
 
