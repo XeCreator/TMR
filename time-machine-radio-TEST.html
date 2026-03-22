@@ -741,17 +741,23 @@ function monitorPlayback(remainingMs){
   if(playbackTimer) clearTimeout(playbackTimer);
 
   // Prefetch next song 15 seconds before current ends
-  const prefetchDelay = Math.max(0, remainingMs - 15000);
+  // Prefetch aggressively — 25 seconds before end to minimize gap
+  const prefetchDelay = Math.max(0, remainingMs - 25000);
   setTimeout(()=>{ if(playing) prefetchNextSong(); }, prefetchDelay);
+  // Second prefetch attempt at 10s in case first was too early
+  const prefetchDelay2 = Math.max(0, remainingMs - 10000);
+  setTimeout(()=>{ if(playing && !prefetchedTrack) prefetchNextSong(); }, prefetchDelay2);
 
   playbackTimer = setTimeout(()=>{
     if(playing){
-      if(outroTimer){ clearTimeout(outroTimer); outroTimer = null; }
+      // Don't cancel outroTimer here — if DJ scheduled on outro/bridge,
+      // let it fire even as we advance to next song
+      // outroTimer will self-cancel after firing
       curIdx = (curIdx + 1) % curPlaylist.length;
       updateQueue();
       doPlay(0);
     }
-  }, remainingMs + 200);
+  }, remainingMs + 50); // reduced gap
 }
 
 
@@ -1990,48 +1996,52 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong){
   songsSinceLastBreak = 0;
 
   if(mode === 'outro'){
-    // For very long outros (>60s), enter 10-25% in rather than right at start
     const outroDurationMs = totalMs - outroStartMs;
     let outroEntryMs = msUntilOutro;
     if(outroDurationMs > 60000){
       outroEntryMs = msUntilOutro + (outroDurationMs * (0.10 + Math.random() * 0.15));
     }
+    // Capture song refs now — will still be valid when timer fires (same song)
+    const _prevSong = prevSong, _nextSong = nextSong;
     console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s`);
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, prevSong, nextSong, 'outro');
+      // Use captured refs — don't rely on curPlaylist which may have advanced
+      await checkDJBreak(curIdx, _prevSong, _nextSong, 'outro');
+      outroTimer = null;
     }, Math.max(0, outroEntryMs));
 
   } else if(mode === 'gap'){
-    // Fire at song transition (handled by monitorPlayback advancing to next song)
-    // We schedule it to fire 500ms after the song ends
+    const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, prevSong, nextSong, 'gap');
-    }, Math.max(0, songRemaining - 500));
+      await checkDJBreak(curIdx, _prevSong, _nextSong, 'gap');
+      outroTimer = null;
+    }, Math.max(0, songRemaining - 300));
 
   } else if(mode === 'intro'){
-    // Fire at song transition — DJ rides next song's intro
-    // Schedule just as the song ends, DJ will speak over next song's intro
+    const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, prevSong, nextSong, 'intro');
-    }, Math.max(0, songRemaining));
+      await checkDJBreak(curIdx, _prevSong, _nextSong, 'intro');
+      outroTimer = null;
+    }, Math.max(0, songRemaining + 100));
 
   } else if(mode === 'mid'){
-    // Mid-song drop — short burst during the song
+    const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, prevSong, nextSong, 'mid');
+      await checkDJBreak(curIdx, _prevSong, _nextSong, 'mid');
+      outroTimer = null;
     }, Math.max(0, msUntilMid));
 
   } else if(mode === 'bridge'){
-    // Bridge mode — DJ starts on outro and keeps talking into next song's intro
-    // Enter slightly before the end of the song
     const bridgeEntryMs = Math.max(0, songRemaining - 20000);
+    const _prevSong = prevSong, _nextSong = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      await checkDJBreak(curIdx, prevSong, nextSong, 'bridge');
+      await checkDJBreak(curIdx, _prevSong, _nextSong, 'bridge');
+      outroTimer = null;
     }, bridgeEntryMs);
     console.log(`DJ bridge entry in ${(bridgeEntryMs/1000).toFixed(1)}s`);
   }
