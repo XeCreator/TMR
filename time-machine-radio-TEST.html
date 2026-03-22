@@ -1220,11 +1220,17 @@ const STATION_SEEDS = {
 const DEFAULT_DURATION_MS = 210000; // 3.5 minutes
 
 function getBroadcastPlaylist(sid, y){
-  // Get songs sorted chronologically (oldest first) — stable, predictable order
+  // Get songs sorted chronologically — filter to only songs released by year y
   let songs = getSongs(sid, y);
   if(!songs.length){
     const active = getActiveStations(y);
     if(active.length) songs = getSongs(active[0].id, y);
+  }
+  // Only play songs that exist at this point in time
+  songs = songs.filter(s => s.y <= y);
+  // If filtering leaves us with too few songs, relax by 2 years
+  if(songs.length < 3){
+    songs = getSongs(sid, y).filter(s => s.y <= y + 2);
   }
   return [...songs].sort((a,b) => a.y - b.y || a.t.localeCompare(b.t));
 }
