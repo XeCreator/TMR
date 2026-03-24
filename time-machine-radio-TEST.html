@@ -1590,28 +1590,51 @@ function setPlaying(p){
   btn.title = p ? 'Tune out' : 'Tune in';
 }
 
-function doPlay(overridePositionMs){
-  // Get current broadcast position for this station
-  const pos = getBroadcastPosition(curStation, curYear);
-  if(!pos){ showMessage('No songs available for this station/era.'); return; }
-
+async function doPlay(overridePositionMs){
   if(overridePositionMs !== undefined){
-    // Explicit position override (e.g. skip to next song at 0)
-    // Keep current playlist index, just use the given position
+    // Explicit position — just play current song at given position
     const s = curPlaylist[curIdx];
-    if(!s) return;
+    if(!s){ showMessage('No songs available for this station/era.'); return; }
     updateQueue();
     searchAndPlay(s, overridePositionMs);
-  } else {
-    // TUNE IN — always sync to live broadcast clock position
-    // This is what happens when user presses play after tuning out
-    curIdx = pos.idx;
-    curPlaylist = pos.playlist;
-    const s = curPlaylist[curIdx];
-    if(!s) return;
-    updateQueue();
-    searchAndPlay(s, pos.positionMs);
+    return;
   }
+
+  // TUNE IN — load dynamic catalog first, then sync to broadcast clock
+  // Try dynamic catalog (may be cached already)
+  let playlist = await getBroadcastPlaylistAsync(curStation, curYear);
+  if(!playlist || playlist.length === 0){
+    // Fall back to hardcoded DB
+    playlist = getBroadcastPlaylist(curStation, curYear);
+  }
+  if(!playlist || playlist.length === 0){
+    showMessage('No songs available for this station/era.');
+    return;
+  }
+
+  // Compute broadcast clock position using loaded playlist with real durations
+  const seed = STATION_SEEDS[curStation] || 0;
+  const now = Date.now() + seed;
+  const totalMs = playlist.reduce((sum, s) => sum + (s.duration_ms || DEFAULT_DURATION_MS), 0);
+  const posInLoop = now % totalMs;
+
+  let elapsed = 0;
+  let idx = 0;
+  let positionMs = 0;
+  for(let i = 0; i < playlist.length; i++){
+    const dur = playlist[i].duration_ms || DEFAULT_DURATION_MS;
+    if(posInLoop < elapsed + dur){
+      idx = i;
+      positionMs = Math.floor(posInLoop - elapsed);
+      break;
+    }
+    elapsed += dur;
+  }
+
+  curPlaylist = playlist;
+  curIdx = idx;
+  updateQueue();
+  searchAndPlay(curPlaylist[curIdx], positionMs);
 }
 
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
@@ -2087,7 +2110,7 @@ document.getElementById('song-total').textContent = total+' songs';
 </html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
 async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
   if(!anthropicKey || djGenPending) return;
-  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" curIdx=${curIdx} playing="${curPlaylist[curIdx]?.t||'none'}"`);
+  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" playing="${curPlaylist[curIdx]?.t||'none'}"`);
   const profile = FORMAT_PROFILES[curStation];
   const weather = (profile?.weather) ? await getWeather() : null;
   const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap');
