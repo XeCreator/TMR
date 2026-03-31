@@ -182,6 +182,13 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
   .radio,.api-setup{padding:16px 14px 20px;}
   .preset{flex:0 0 calc(33.333% - 5px);}
 }
+
+  /* Developer Panel */
+  .dev-toggle { color:#8a7a58; cursor:pointer; display:flex; align-items:center; gap:4px; }
+  .dev-toggle input { accent-color:#c8a84a; cursor:pointer; }
+  .dev-btn { background:none; border:1px solid #2a1a08; color:#8a7a58; padding:5px 8px; border-radius:3px; cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; width:100%; text-align:left; transition:all .15s; }
+  .dev-btn:hover { border-color:#c8a84a; color:#c8a84a; }
+
 </style>
 </head>
 <body>
@@ -324,6 +331,61 @@ input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translat
     <a id="yt-link" href="#" target="_blank" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;border:1px solid #3a5a1a;border-radius:4px;padding:4px 10px;color:#6ab84a;text-decoration:none;font-family:'Share Tech Mono',monospace;white-space:nowrap;">▶ Open YouTube</a>
   </div>
 
+  <!-- Developer Panel — toggle with Ctrl+Shift+D -->
+  <div id="dev-panel" style="display:none;position:fixed;bottom:0;right:0;width:320px;background:#0a0a0a;border:1px solid #2a1a08;border-radius:8px 0 0 0;padding:16px;z-index:9999;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a7a58;max-height:80vh;overflow-y:auto;">
+    <div style="color:#c8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-size:12px;">⚙ Dev Panel <span style="float:right;cursor:pointer;color:#5a4a28;" onclick="document.getElementById('dev-panel').style.display='none'">✕</span></div>
+
+    <!-- DJ Content Toggles -->
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">DJ CONTENT</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+      <label class="dev-toggle"><input type="checkbox" id="dj-weather" checked> Weather</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-timeofday" checked> Time of day</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-songrefs" checked> Song refs</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-newsong" checked> New song alerts</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-eracontext" checked> Era context</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-stationid" checked> Station IDs</label>
+    </div>
+
+    <!-- DJ Frequency -->
+    <div style="color:#c8a84a;margin-bottom:6px;letter-spacing:1px;">DJ FREQUENCY</div>
+    <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+      <input type="range" id="dj-freq" min="0" max="100" value="50" style="flex:1;accent-color:#c8a84a;">
+      <span id="dj-freq-val" style="width:30px;text-align:right;">50%</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;color:#3a2a10;font-size:9px;margin-bottom:14px;"><span>sparse</span><span>frequent</span></div>
+
+    <!-- Entry Mode Filters -->
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">ENTRY MODES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+      <label class="dev-toggle"><input type="checkbox" id="mode-outro" checked> Outro ride</label>
+      <label class="dev-toggle"><input type="checkbox" id="mode-gap" checked> Gap</label>
+      <label class="dev-toggle"><input type="checkbox" id="mode-intro" checked> Intro ride</label>
+      <label class="dev-toggle"><input type="checkbox" id="mode-mid" checked> Mid-song</label>
+      <label class="dev-toggle"><input type="checkbox" id="mode-bridge" checked> Bridge</label>
+    </div>
+
+    <!-- Break Length -->
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">BREAK LENGTH</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <label class="dev-toggle"><input type="radio" name="break-len" value="short"> Short</label>
+      <label class="dev-toggle"><input type="radio" name="break-len" value="medium"> Medium</label>
+      <label class="dev-toggle"><input type="radio" name="break-len" value="long"> Long</label>
+      <label class="dev-toggle"><input type="radio" name="break-len" value="mixed" checked> Mixed</label>
+    </div>
+
+    <!-- Test Controls -->
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">TEST CONTROLS</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+      <button class="dev-btn" onclick="forceDJBreak()">▶ Force DJ Break Now</button>
+      <button class="dev-btn" onclick="forceNextMode()">⟳ Cycle Entry Mode (<span id="cur-mode-display">auto</span>)</button>
+      <button class="dev-btn" onclick="clearCatalogCache()">⌫ Clear Catalog Cache</button>
+    </div>
+
+    <!-- Debug Log -->
+    <div style="color:#c8a84a;margin-bottom:6px;letter-spacing:1px;">DEBUG LOG <label class="dev-toggle" style="float:right"><input type="checkbox" id="dj-debuglog"> show</label></div>
+    <div id="dj-debug" style="display:none;background:#050505;border:1px solid #1a1a0a;padding:8px;border-radius:4px;font-size:9px;color:#5a7a48;max-height:120px;overflow-y:auto;"></div>
+  </div>
+
   <div class="bottom-strip">
     <div class="signal-dots">
       <div class="dot on"></div><div class="dot on"></div>
@@ -349,7 +411,7 @@ const DJ_PERSONALITIES = {
   wjaz:{name:"Memphis Blue",handle:"The Midnight Professor",tone:"cool, knowing, world-weary, hip",persona:"A cool jazz cat who sounds like he's been everywhere and heard everything. Speaks in short poetic bursts. Think late-night jazz radio.",vocab:"dig it, cool, hip, the changes, cats, laid back, tasty, swinging",catchphrase:"Dig it. Just... dig it."},
   wjazb:{name:"Professor Charlie B",handle:"The Bebop Philosopher",tone:"intellectual, excited, bebop energy",persona:"A bebop evangelist who can barely contain his excitement about Bird and Dizzy. Speaks quickly when excited, slows down for emphasis.",vocab:"crazy, Bird, the changes, angular, hip cats, blowing, far out",catchphrase:"That's Bird, baby. Nobody plays like Bird."},
   wrnb:{name:"Big Mama Sweet",handle:"The Queen of the Night",tone:"warm, soulful, powerful, church-house energy",persona:"A big-voiced R&B host who grew up in church. Deeply knowledgeable about blues roots. Laughs easily and loudly. Calls listeners honey.",vocab:"honey, sugar, feel it, in your soul, the groove, come on now, testify",catchphrase:"That right there'll heal what ails you."},
-  khit:{name:"Rick Wilde",handle:"The Hitmaker",tone:"upbeat, crowd-pleasing, professional Top 40",persona:"The classic Top 40 DJ. Always professional, always excited, always selling the hits. Vocabulary shifts with each decade but relentless positivity never changes.",vocab:"number one, hottest, smash hit, the charts, coming up, right now",catchphrase:"Number one, and we're just getting started."},
+  khit:{name:"Rick Wilde",handle:"The Hitmaker",tone:"high energy, warm, classic NYC Top 40 — sounds like he owns the room",persona:"Rick Wilde is New York City's favorite Top 40 DJ on K-HIT. Smooth but never slick, enthusiastic but never exhausting. He knows every song's story, references the charts naturally, and makes you feel like you're in on something. Been on the air since 1975 and owns this city.",vocab:"smokin hot, number one with a bullet, chart-buster, rockin the five boroughs, that's a smash, spinning the hits, stay tuned",catchphrase:"You're tuned to K-HIT — New York's number one for hits!"},
   krok:{name:"Daddy Thunders",handle:"The Axe Man",tone:"gravelly, enthusiastic, guitar-worshipping",persona:"A rock and roll true believer. Gets visibly excited about guitar solos. Embraces every era of rock with equal passion.",vocab:"raw, smokin, killer riff, turned it up, cranked, heavy, solid gold",catchphrase:"Turn. It. Up."},
   kmet:{name:"Iron Rex",handle:"The Lord of Riffs",tone:"dark, intense, reverential, speaks in metal metaphors",persona:"A metal purist who believes heavy music is spiritual. Serious, intense. Gets philosophical about distortion and human emotion.",vocab:"heavy, crushing, riff, brutal, blistering, dark, relentless, headbang",catchphrase:"This riff will haunt you."},
   wsol:{name:"Velvet Jones",handle:"The Soul Preacher",tone:"smooth, soulful, preacher energy, deeply emotional",persona:"Half DJ, half preacher. Talks about soul music the way a minister talks about scripture. Voice drops to a whisper for the emotional parts.",vocab:"feel it, soul, the real thing, deep, truth, testify, beautiful, in your chest",catchphrase:"Feel it in your chest. Let it move you."},
@@ -379,7 +441,40 @@ const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blu
 
 const CLASSICAL=[{t:"Symphony No 5",a:"Beethoven",y:1808,st:["wclx"],p:99,q:"Beethoven Symphony No 5 Karajan"},{t:"Ode to Joy",a:"Beethoven",y:1824,st:["wclx"],p:99,q:"Beethoven Ode to Joy Symphony 9"},{t:"The Four Seasons Spring",a:"Vivaldi",y:1725,st:["wclx"],p:97,q:"Vivaldi Four Seasons Spring"},{t:"Clair de lune",a:"Debussy",y:1905,st:["wclx"],p:97,q:"Debussy Clair de lune"},{t:"Moonlight Sonata",a:"Beethoven",y:1801,st:["wclx"],p:97,q:"Beethoven Moonlight Sonata"},{t:"Rhapsody in Blue",a:"Gershwin",y:1924,st:["wclx"],p:96,q:"Gershwin Rhapsody in Blue Bernstein"},{t:"Swan Lake Suite",a:"Tchaikovsky",y:1877,st:["wclx"],p:96,q:"Tchaikovsky Swan Lake Suite"},{t:"Canon in D",a:"Pachelbel",y:1694,st:["wclx"],p:96,q:"Pachelbel Canon in D"},{t:"Bolero",a:"Ravel",y:1928,st:["wclx"],p:95,q:"Ravel Bolero"},{t:"Symphony No 40",a:"Mozart",y:1788,st:["wclx"],p:95,q:"Mozart Symphony No 40"},{t:"Gymnopedie No 1",a:"Satie",y:1888,st:["wclx"],p:94,q:"Satie Gymnopedie No 1"},{t:"Air on the G String",a:"Bach",y:1731,st:["wclx"],p:94,q:"Bach Air on G String"},{t:"New World Symphony",a:"Dvorak",y:1893,st:["wclx"],p:95,q:"Dvorak New World Symphony"},{t:"Adagio for Strings",a:"Barber",y:1936,st:["wclx"],p:95,q:"Barber Adagio for Strings"},{t:"Schindlers List Theme",a:"John Williams",y:1993,st:["wclx"],p:96,q:"Schindlers List Theme John Williams"},{t:"Interstellar Main Theme",a:"Hans Zimmer",y:2014,st:["wclx"],p:94,q:"Interstellar Main Theme Hans Zimmer"},{t:"On the Nature of Daylight",a:"Max Richter",y:2004,st:["wclx"],p:93,q:"Max Richter On the Nature of Daylight"}];
 
-const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["wgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["wgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"},{t:"Like a Prayer",a:"Madonna",y:1989,st:["khit","kdnc"],p:97,q:"Like a Prayer Madonna 1989"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:97,q:"Every Breath You Take The Police 1983"},{t:"Purple Rain",a:"Prince",y:1984,st:["khit","wsol"],p:97,q:"Purple Rain Prince 1984"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:95,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Dont Stop Believin",a:"Journey",y:1981,st:["krok","khit"],p:96,q:"Don't Stop Believin Journey 1981"},{t:"Sweet Child O Mine",a:"Guns N Roses",y:1988,st:["krok","khit"],p:97,q:"Sweet Child O Mine Guns N Roses 1988"},{t:"Master of Puppets",a:"Metallica",y:1986,st:["kmet"],p:96,q:"Master of Puppets Metallica 1986"},{t:"Back in Black",a:"ACDC",y:1980,st:["kmet"],p:96,q:"Back in Black AC DC 1980"},{t:"Dont You Forget About Me",a:"Simple Minds",y:1985,st:["kroq","khit"],p:94,q:"Don't You Forget About Me Simple Minds 1985"},{t:"Blue Monday",a:"New Order",y:1983,st:["kroq","kdnc"],p:93,q:"Blue Monday New Order 1983"},{t:"Sweet Dreams",a:"Eurythmics",y:1983,st:["kdnc","khit"],p:93,q:"Sweet Dreams Eurythmics 1983"},{t:"Fight the Power",a:"Public Enemy",y:1989,st:["khip"],p:94,q:"Fight the Power Public Enemy 1989"},{t:"Straight Outta Compton",a:"NWA",y:1988,st:["khip"],p:94,q:"Straight Outta Compton NWA 1988"},{t:"The Message",a:"Grandmaster Flash",y:1982,st:["khip"],p:92,q:"The Message Grandmaster Flash 1982"},{t:"When Doves Cry",a:"Prince",y:1984,st:["wrnb","khit"],p:97,q:"When Doves Cry Prince 1984"},{t:"Islands in the Stream",a:"Kenny Rogers and Dolly Parton",y:1983,st:["kgro","khit"],p:94,q:"Islands in the Stream Kenny Rogers Dolly Parton 1983"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious BIG",y:1994,st:["khip"],p:96,q:"Juicy Notorious BIG 1994"},{t:"CREAM",a:"Wu-Tang Clan",y:1993,st:["khip"],p:95,q:"C.R.E.A.M. Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["khip"],p:95,q:"NY State of Mind Nas 1994"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis Kind of Blue"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["khip"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["khip"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["khip"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},{t:"Gasolina",a:"Daddy Yankee",y:2004,st:["wltn"],p:94,q:"Gasolina Daddy Yankee 2004"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["khip","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Despacito",a:"Luis Fonsi ft Daddy Yankee",y:2017,st:["wltn","khit"],p:99,q:"Despacito Luis Fonsi Daddy Yankee 2017"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["khip","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
+const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["wgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["wgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"}
+,{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit"],p:99,q:"Billie Jean Michael Jackson 1983"}
+,{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Beat It Michael Jackson 1983"}
+,{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"}
+,{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"}
+,{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"}
+,{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"}
+,{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"}
+,{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"}
+,{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit"],p:94,q:"Tainted Love Soft Cell 1981"}
+,{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"}
+,{t:"Ebony and Ivory",a:"Paul McCartney and Stevie Wonder",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney Stevie Wonder"}
+,{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"}
+,{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"}
+,{t:"Centerfold",a:"J. Geils Band",y:1981,st:["khit"],p:93,q:"Centerfold J Geils Band 1981"}
+,{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"}
+,{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"}
+,{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"}
+,{t:"Rosanna",a:"Toto",y:1982,st:["khit"],p:92,q:"Rosanna Toto 1982"}
+,{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}
+,{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"}
+,{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"}
+,{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"}
+,{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"}
+,{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"}
+,{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"}
+,{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"}
+,{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"}
+,{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"}
+,{t:"Let's Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"}
+,{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"}
+,{t:"It's a Mistake",a:"Men at Work",y:1983,st:["khit"],p:88,q:"Its a Mistake Men at Work 1983"}
+,{t:"She Blinded Me with Science",a:"Thomas Dolby",y:1982,st:["khit"],p:90,q:"She Blinded Me with Science Thomas Dolby"}
+,{t:"Take On Me",a:"a-ha",y:1983,st:["khit"],p:96,q:"Take On Me a-ha 1983"},{t:"Like a Prayer",a:"Madonna",y:1989,st:["khit","kdnc"],p:97,q:"Like a Prayer Madonna 1989"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:97,q:"Every Breath You Take The Police 1983"},{t:"Purple Rain",a:"Prince",y:1984,st:["khit","wsol"],p:97,q:"Purple Rain Prince 1984"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:95,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Dont Stop Believin",a:"Journey",y:1981,st:["krok","khit"],p:96,q:"Don't Stop Believin Journey 1981"},{t:"Sweet Child O Mine",a:"Guns N Roses",y:1988,st:["krok","khit"],p:97,q:"Sweet Child O Mine Guns N Roses 1988"},{t:"Master of Puppets",a:"Metallica",y:1986,st:["kmet"],p:96,q:"Master of Puppets Metallica 1986"},{t:"Back in Black",a:"ACDC",y:1980,st:["kmet"],p:96,q:"Back in Black AC DC 1980"},{t:"Dont You Forget About Me",a:"Simple Minds",y:1985,st:["kroq","khit"],p:94,q:"Don't You Forget About Me Simple Minds 1985"},{t:"Blue Monday",a:"New Order",y:1983,st:["kroq","kdnc"],p:93,q:"Blue Monday New Order 1983"},{t:"Sweet Dreams",a:"Eurythmics",y:1983,st:["kdnc","khit"],p:93,q:"Sweet Dreams Eurythmics 1983"},{t:"Fight the Power",a:"Public Enemy",y:1989,st:["khip"],p:94,q:"Fight the Power Public Enemy 1989"},{t:"Straight Outta Compton",a:"NWA",y:1988,st:["khip"],p:94,q:"Straight Outta Compton NWA 1988"},{t:"The Message",a:"Grandmaster Flash",y:1982,st:["khip"],p:92,q:"The Message Grandmaster Flash 1982"},{t:"When Doves Cry",a:"Prince",y:1984,st:["wrnb","khit"],p:97,q:"When Doves Cry Prince 1984"},{t:"Islands in the Stream",a:"Kenny Rogers and Dolly Parton",y:1983,st:["kgro","khit"],p:94,q:"Islands in the Stream Kenny Rogers Dolly Parton 1983"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious BIG",y:1994,st:["khip"],p:96,q:"Juicy Notorious BIG 1994"},{t:"CREAM",a:"Wu-Tang Clan",y:1993,st:["khip"],p:95,q:"C.R.E.A.M. Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["khip"],p:95,q:"NY State of Mind Nas 1994"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis Kind of Blue"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["khip"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["khip"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["khip"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},{t:"Gasolina",a:"Daddy Yankee",y:2004,st:["wltn"],p:94,q:"Gasolina Daddy Yankee 2004"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["khip","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Despacito",a:"Luis Fonsi ft Daddy Yankee",y:2017,st:["wltn","khit"],p:99,q:"Despacito Luis Fonsi Daddy Yankee 2017"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["khip","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
 
 // ─── YOUTUBE ID MAP ───────────────────────────────────────────────────────────
 const YT={
@@ -1029,15 +1124,17 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap'){
   const stationDef = SDEFS[curStation] || {name:curStation, call:curStation};
   const profile = FORMAT_PROFILES[curStation] || {every:4, lengths:["short"], weather:false, time:false};
 
-  // Pick break length — mid-song drops are always short
-  const lengthKey = entryMode === 'mid' ? 'short' 
-    : profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
+  // Pick break length — mid-song drops always short; dev panel overrides
+  let lengthKey;
+  if(entryMode === 'mid') lengthKey = 'short';
+  else if(DEV.breakLen !== 'mixed') lengthKey = DEV.breakLen;
+  else lengthKey = profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
   const maxTokens = entryMode === 'mid' ? 40 : (LENGTH_TOKENS[lengthKey] || 80);
 
   // Build context for the DJ
-  const timeStr = profile.time ? `The local time is ${getTimeOfDay()} on a ${getDayOfWeek()}.` : '';
-  // Weather referenced ~30% of the time even on weather-enabled stations
-  const weatherStr = (profile.weather && weatherData && (DJ_TEST_MODE || Math.random() < 0.30))
+  const timeStr = (profile.time && DEV.timeofday) ? `The local time is ${getTimeOfDay()} on a ${getDayOfWeek()}.` : '';
+  // Weather referenced based on dev setting and 30% chance
+  const weatherStr = (profile.weather && weatherData && DEV.weather && (DJ_TEST_MODE || Math.random() < 0.30))
     ? `Local weather right now: ${weatherData.conditions}, ${weatherData.temp}°F in ${weatherData.city}.`
     : '';
 
@@ -1048,11 +1145,16 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap'){
   // Detect if next song is "new" relative to dial year
   const nextIsNew = nextSong && isSongNew(nextSong, curYear);
   const prevIsNew = prevSong && isSongNew(prevSong, curYear);
-  const newSongStr = nextIsNew
-    ? `IMPORTANT: "${nextSong.t}" by ${nextSong.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
-    : prevIsNew
-    ? `IMPORTANT: "${prevSong.t}" by ${prevSong.a} was just released recently — it is a new record. Mention that if natural.`
+  const newSongStr = DEV.newsong && nextIsNew
+    ? `IMPORTANT: "${nextSong?.t}" by ${nextSong?.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
+    : DEV.newsong && prevIsNew
+    ? `IMPORTANT: "${prevSong?.t}" by ${prevSong?.a} was just released recently — it is a new record. Mention that if natural.`
     : '';
+
+  // Build era context for richer DJ lines
+  const eraContext = DEV.eracontext && curStation === 'khit' && curYear >= 1980 && curYear <= 1989
+    ? `You are broadcasting from New York City in ${curYear}. Michael Jackson's Thriller is the biggest album in history. MTV just launched in 1981 and is changing everything. The charts are dominated by pop, new wave, and early hip hop. Your listeners are young New Yorkers glued to their radios.`
+    : `You are broadcasting in ${curYear}.`;
 
   const systemPrompt = `You are ${dj.name}, known as "${dj.handle}", the DJ of ${stationDef.call} (${stationDef.name}) in the year ${curYear}.
 
@@ -1061,17 +1163,18 @@ Tone: ${dj.tone}
 Vocabulary: ${dj.vocab}
 Catchphrase (use occasionally, not always): "${dj.catchphrase}"
 
+Era context: ${eraContext}
 ${timeStr}
 ${weatherStr}
 ${newSongStr}
 
 Rules:
 - This is a BROADCAST talk break. You are speaking to everyone listening, not to a specific user.
-- Be era-accurate. Use language, references, and sensibility from ${curYear} only.
+- Be era-accurate. Use ONLY language, slang, and cultural references from ${curYear}. Nothing from after ${curYear}.
 - ${lengthKey === 'short' ? 'Keep it to 1-2 sentences maximum.' : lengthKey === 'medium' ? '2-3 sentences.' : '3-4 sentences, with natural flow.'}
-- Sound like a real radio DJ from ${curYear}, not an AI assistant.
-- ${profile.time && timeStr ? 'You may naturally reference the time of day.' : ''}
-- ${profile.weather && weatherStr ? 'You may naturally weave in the weather.' : ''}
+- Sound like a real radio DJ from ${curYear}. Warm, confident, in the moment.
+- Never say "I" — speak as if into a microphone to thousands of listeners.
+- Reference songs by title and artist naturally when relevant.
 - Output ONLY the DJ spoken words. No quotes, labels, or stage directions.`;
 
   // Entry mode shapes what the DJ says
@@ -1242,7 +1345,7 @@ const STATION_GENRES = {
   wjaz:  ['jazz','bebop','cool jazz'],
   wjazb: ['bebop','jazz'],
   wrnb:  ['r&b','rhythm and blues','soul'],
-  khit:  ['pop'],
+  khit:  ['pop','top 40','80s pop'],
   krok:  ['rock','classic rock','rock and roll'],
   kmet:  ['hard rock','metal','heavy metal'],
   wsol:  ['soul','motown','funk'],
@@ -1847,9 +1950,12 @@ function shouldDJBreakFire(analysis){
     }
   }
 
-  prob = Math.max(0.05, Math.min(0.95, prob));
+  // Apply dev panel frequency multiplier
+  prob = prob * (DEV.freq / 50); // 50 = normal, 100 = double, 0 = silent
+  prob = Math.max(0.02, Math.min(0.98, prob));
   const fires = Math.random() < prob;
-  console.log(`DJ break probability: ${(prob*100).toFixed(0)}% — ${fires ? 'FIRES' : 'skips'} (${songsSinceLastBreak} songs since last break)`);
+  devLog(`DJ prob: ${(prob*100).toFixed(0)}% → ${fires ? 'FIRES' : 'skips'} (${songsSinceLastBreak} songs silent)`);
+  console.log(`DJ break probability: ${(prob*100).toFixed(0)}% — ${fires ? 'FIRES' : 'skips'}`);
   return fires;
 }
 
@@ -1965,6 +2071,11 @@ function pickEntryMode(analysis, totalMs, seekMs){
     console.log(`TEST MODE: forcing entry mode "${mode}"`);
     return mode;
   }
+  // Dev panel forced mode
+  if(DEV.forcedMode){
+    devLog(`Entry mode forced: ${DEV.forcedMode}`);
+    return DEV.forcedMode;
+  }
   const weights = ENTRY_MODE_WEIGHTS[curStation] || [0.35, 0.30, 0.25, 0.10];
   const outroStartMs = getOutroStartMs(analysis, totalMs);
   const introEndMs = getIntroEndMs(analysis);
@@ -1974,10 +2085,11 @@ function pickEntryMode(analysis, totalMs, seekMs){
 
   // Determine which modes are actually available
   const available = {
-    outro: msUntilOutro > 8000,      // outro must be >8s away
-    gap:   true,                      // always available
-    intro: true,                      // will check next song's intro at transition
-    mid:   (totalMs - currentPos) > 45000  // need >45s left in song for mid-drop
+    outro: msUntilOutro > 8000 && DEV.modes.outro,
+    gap:   DEV.modes.gap,
+    intro: DEV.modes.intro,
+    mid:   (totalMs - currentPos) > 45000 && DEV.modes.mid,
+    bridge: DEV.modes.bridge,
   };
 
   // Filter weights to available modes only and re-normalize
@@ -2045,8 +2157,11 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     const _prevSong = prevSong, _nextSong = nextSong;
     console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s, ${(msLeftAfterEntry/1000).toFixed(0)}s before end`);
     outroTimer = setTimeout(async ()=>{
-      if(!playing || (scheduledIdx !== undefined && curIdx !== scheduledIdx && curIdx !== scheduledIdx + 1)) return;
-      await checkDJBreak(curIdx, _prevSong, _nextSong, 'outro');
+      if(!playing) return;
+      const _cur = curPlaylist[curIdx];
+      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
+      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
+      await checkDJBreak(curIdx, _prev, _next, 'outro');
       outroTimer = null;
     }, Math.max(0, outroEntryMs));
 
@@ -2097,11 +2212,99 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
   }
 }
 
+// ─── DEVELOPER PANEL ─────────────────────────────────────────────────────────
+const DEV = {
+  weather: true, timeofday: true, songrefs: true, newsong: true,
+  eracontext: true, stationid: true,
+  freq: 50,       // 0-100 probability multiplier
+  modes: { outro:true, gap:true, intro:true, mid:true, bridge:true },
+  breakLen: 'mixed',
+  debugLog: false,
+  forcedMode: null, // null = auto
+};
+
+let devModeIdx = 0;
+const DEV_MODE_CYCLE = ['outro','gap','intro','mid','bridge','auto'];
+
+function initDevPanel(){
+  // Keyboard shortcut: Ctrl+Shift+D
+  document.addEventListener('keydown', e => {
+    if(e.ctrlKey && e.shiftKey && e.key === 'D'){
+      const panel = document.getElementById('dev-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+  });
+
+  // Wire up controls
+  document.getElementById('dj-freq').addEventListener('input', function(){
+    DEV.freq = parseInt(this.value);
+    document.getElementById('dj-freq-val').textContent = DEV.freq + '%';
+  });
+
+  ['weather','timeofday','songrefs','newsong','eracontext','stationid'].forEach(key => {
+    document.getElementById('dj-'+key).addEventListener('change', function(){
+      DEV[key] = this.checked;
+    });
+  });
+
+  ['outro','gap','intro','mid','bridge'].forEach(mode => {
+    document.getElementById('mode-'+mode).addEventListener('change', function(){
+      DEV.modes[mode] = this.checked;
+    });
+  });
+
+  document.querySelectorAll('input[name="break-len"]').forEach(r => {
+    r.addEventListener('change', function(){ DEV.breakLen = this.value; });
+  });
+
+  document.getElementById('dj-debuglog').addEventListener('change', function(){
+    DEV.debugLog = this.checked;
+    document.getElementById('dj-debug').style.display = this.checked ? 'block' : 'none';
+  });
+}
+
+function devLog(msg){
+  if(!DEV.debugLog) return;
+  const log = document.getElementById('dj-debug');
+  if(!log) return;
+  const line = document.createElement('div');
+  line.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+  // Keep max 50 lines
+  while(log.children.length > 50) log.removeChild(log.firstChild);
+}
+
+function forceDJBreak(){
+  if(!playing){ devLog('Not playing'); return; }
+  devLog('Forcing DJ break...');
+  const prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
+  const next = curPlaylist[(curIdx+1) % curPlaylist.length];
+  const mode = DEV.forcedMode || 'gap';
+  checkDJBreak(curIdx, prev, next, mode);
+}
+
+function forceNextMode(){
+  devModeIdx = (devModeIdx + 1) % DEV_MODE_CYCLE.length;
+  const mode = DEV_MODE_CYCLE[devModeIdx];
+  DEV.forcedMode = mode === 'auto' ? null : mode;
+  document.getElementById('cur-mode-display').textContent = mode;
+  devLog('Entry mode set to: ' + mode);
+}
+
+function clearCatalogCache(){
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('tmr_cat_'));
+  keys.forEach(k=>localStorage.removeItem(k));
+  Object.keys(broadcastPlaylistCache).forEach(k=>delete broadcastPlaylistCache[k]);
+  devLog(`Cleared ${keys.length} catalog cache entries`);
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 loadKeys();
 buildPlaylist();
 updateUI(false);
 updateEraAudio();
+initDevPanel();
 const total = CLASSICAL.length + Object.values(DB).reduce((a,d)=>a+d.length, 0);
 document.getElementById('total-count').textContent = total+' songs';
 document.getElementById('song-total').textContent = total+' songs';
