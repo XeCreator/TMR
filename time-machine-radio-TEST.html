@@ -1439,6 +1439,9 @@ function showDJBubble(text, djDef){
   const nameEl = document.getElementById('dj-name');
   const textEl = document.getElementById('dj-text');
   nameEl.textContent = (djDef?.name||'DJ') + ' · ' + (djDef?.handle||'');
+  // Clean up any encoding artifacts or special characters
+  text = text.replace(/[^ -~–—‘’“”…]/g, '')
+             .replace(/\s+/g, ' ').trim();
   textEl.textContent = '';
   textEl.classList.add('typing');
   bubble.className = 'dj-bubble show';
@@ -1492,19 +1495,28 @@ async function fetchTrackAnalysis(trackId){
 
 // ─── INTELLIGENT DJ BREAK TRIGGER ────────────────────────────────────────────
 // Fires at the song's natural fade-out point, not at a fixed interval
-async function checkDJBreak(prevSong, nextSong, trackId, trackDurationMs){
+async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
   if(!anthropicKey || djGenPending) return;
-  if(!shouldTalkNow(curStation, trackDurationMs)) return;
-
   djGenPending = true;
 
-  // Fetch weather if station uses it
-  const profile = FORMAT_PROFILES[curStation];
-  const weather = (profile?.weather) ? await getWeather() : null;
+  devLog(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" playing="${curPlaylist[curIdx]?.t||'none'}"`);
+  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" playing="${curPlaylist[curIdx]?.t||'none'}"`);
 
-  const line = await generateDJLine(prevSong, nextSong, weather);
-  djGenPending = false;
-  if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
+  try {
+    const profile = FORMAT_PROFILES[curStation];
+    const dialDate = getDialDate(curYear);
+    const artistToLookup = nextSong?.a || prevSong?.a || curPlaylist[curIdx]?.a;
+    const [weather, artistFacts] = await Promise.all([
+      (profile?.weather) ? getWeather() : Promise.resolve(null),
+      artistToLookup ? getWikipediaArtistBio(artistToLookup, dialDate) : Promise.resolve(null)
+    ]);
+    devLog(`Artist: ${artistToLookup} → ${artistFacts ? 'found facts' : 'no facts'}`);
+    devLog(`Date: ${dialDate?.full}`);
+    const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap', dialDate, artistFacts);
+    if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
+  } finally {
+    djGenPending = false;
+  }
 }
 
 document.getElementById('dj-skip').addEventListener('click', ()=>{
@@ -1639,10 +1651,12 @@ async function fetchSpotifyCatalog(sid, y){
   // Year filter works reliably; genre is used as a keyword hint
   // Spotify requires at least one keyword — can't use field filters alone
   // Use genre name as keyword + year filter for best results
+  // Try multiple query formats — Spotify search can be picky about year ranges
+  const queryDecade = Math.floor(y1/10)*10;
   const queries = [
-    `${genres[0]} year:${y0}-${y1}`,
-    genres[1] ? `${genres[1]} year:${y0}-${y1}` : null,
-    `music year:${y0}-${y1}`, // broad fallback
+    `${genres[0]} ${queryDecade}s`,           // e.g. "pop 1980s"  
+    genres[1] ? `${genres[1]} ${queryDecade}s` : null,
+    `${genres[0]}`,                       // just genre, broad fallback
   ].filter(Boolean);
 
   for(const q of queries){
