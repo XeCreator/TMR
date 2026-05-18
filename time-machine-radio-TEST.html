@@ -1127,6 +1127,13 @@ function generateCodeVerifier(){
 
 async function startSpotifyAuth(){
   if(!spotifyClientId){ alert('Enter your Spotify Client ID first and click Save.'); return; }
+  // Save all keys before redirecting so they survive the page reload
+  const anthVal = document.getElementById('anthropic-key').value.trim();
+  const elVal = document.getElementById('elevenlabs-key').value.trim();
+  const locVal = document.getElementById('location-input').value.trim();
+  if(anthVal){ anthropicKey = anthVal; localStorage.setItem('tmr_anthropic', anthVal); }
+  if(elVal){ elevenlabsKey = elVal; localStorage.setItem('tmr_elevenlabs', elVal); }
+  if(locVal){ userLocation = locVal; localStorage.setItem('tmr_location', locVal); }
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
   localStorage.setItem('spotify_pkce_verifier', verifier);
