@@ -328,7 +328,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .now-playing::before { content: '▶  '; color: var(--amber); }
   .queue-section { border-top: 1px solid rgba(232,150,10,0.1); padding-top: 8px; }
   .queue-label {
     font-size: 8px;
@@ -496,48 +495,14 @@
   }
 
   /* ── SPEAKER GRILLE & STATION PRESETS ───────────────────── */
-  .presets-section {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-    align-items: start;
-  }
-
-  /* Speaker grille */
-  .speaker-grille {
-    width: 80px;
-    height: 120px;
-    background: var(--fabric);
-    border: 2px solid var(--wood-grain);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-  }
-  .grille-dots {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 5px;
-    padding: 10px 8px;
-    height: 100%;
-  }
-  .grille-dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.8);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,0.9);
-  }
-
   /* Station presets */
   .presets-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 6px;
+    margin-bottom: 16px;
   }
-  .preset-btn {
+  .preset {
     background: linear-gradient(180deg, rgba(42,26,8,0.8) 0%, rgba(20,12,4,0.9) 100%);
     border: 1px solid var(--wood-grain);
     border-radius: 4px;
@@ -548,16 +513,16 @@
     position: relative;
     overflow: hidden;
   }
-  .preset-btn:hover {
+  .preset:hover {
     border-color: var(--amber-dim);
     background: rgba(42,26,8,0.95);
   }
-  .preset-btn.active {
+  .preset.active {
     border-color: var(--amber);
     background: linear-gradient(180deg, rgba(60,36,10,0.9) 0%, rgba(32,18,4,0.95) 100%);
     box-shadow: 0 0 8px rgba(232,150,10,0.15), inset 0 0 8px rgba(232,150,10,0.05);
   }
-  .preset-btn.active::before {
+  .preset.active::before {
     content: '';
     position: absolute;
     left: 0; top: 0; bottom: 0;
@@ -757,8 +722,6 @@
     .year-readout { font-size: 22px; }
     .presets-grid { grid-template-columns: repeat(2, 1fr); }
     .radio-brand { font-size: 18px; }
-    .speaker-grille { display: none; }
-    .presets-section { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -831,6 +794,13 @@
     <div class="dial-scale"></div>
   </div>
 
+  <!-- Tuning indicator -->
+  <div style="display:flex;justify-content:center;gap:6px;margin:-4px 0 10px;opacity:0.5;">
+    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-deep);"></div>
+    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-dim);"></div>
+    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-deep);"></div>
+  </div>
+
   <!-- Station Display Window -->
   <div class="station-window">
     <div class="station-row">
@@ -839,7 +809,7 @@
       </div>
       <div class="era-chip" id="era-chip">1980–89</div>
     </div>
-    <div class="now-playing" id="now-playing">Select an era and press play</div>
+    <div class="now-playing" id="now-playing">Press play to tune in</div>
     <div class="queue-section">
       <div class="queue-label">Up Next</div>
       <div class="queue-item next" id="q1">—</div>
@@ -879,15 +849,8 @@
     </div>
   </div>
 
-  <!-- Speaker + Station Presets -->
-  <div class="presets-section">
-    <!-- Speaker Grille -->
-    <div class="speaker-grille">
-      <div class="grille-dots" id="grille-dots"></div>
-    </div>
-    <!-- Station Presets -->
-    <div class="presets-grid" id="presets-grid"></div>
-  </div>
+  <!-- Station Presets -->
+  <div class="presets-grid" id="presets-grid"></div>
 
   <!-- Transport Controls -->
   <div class="transport">
@@ -3117,10 +3080,6 @@ buildPlaylist();
 updateUI(false);
 updateEraAudio();
 initDevPanel();
-
-// Generate speaker grille dots
-const grille = document.getElementById('grille-dots');
-if(grille){ for(let i=0;i<48;i++){ const d=document.createElement('div'); d.className='grille-dot'; grille.appendChild(d); } }
 
 // Animate VU meter independently
 setInterval(()=>{
