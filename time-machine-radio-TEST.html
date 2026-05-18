@@ -2610,7 +2610,7 @@ document.getElementById('btn-prev').addEventListener('click', function(){
 });
 
 // Shuffle disabled in broadcast mode — stations run in fixed rotation
-document.getElementById('shuffle-btn').style.display = 'none';
+const _sb = document.getElementById('shuffle-btn'); if(_sb) _sb.style.display = 'none';
 
 // ─── ERA AUDIO QUALITY ───────────────────────────────────────────────────────
 // Applies era-accurate audio filtering to DJ voice output
@@ -3130,8 +3130,8 @@ setInterval(()=>{
   });
 }, 150);
 const total = CLASSICAL.length + Object.values(DB).reduce((a,d)=>a+d.length, 0);
-document.getElementById('total-count').textContent = total+' songs';
-document.getElementById('song-total').textContent = total+' songs';
+const _tc = document.getElementById('total-count'); if(_tc) _tc.textContent = total+' songs';
+const _st = document.getElementById('song-total'); if(_st) _st.textContent = total+' songs';
 </script>
 </body>
 </html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
