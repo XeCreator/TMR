@@ -309,6 +309,16 @@
     letter-spacing: 4px;
     text-shadow: 0 0 20px rgba(245,184,66,0.5), 0 0 40px rgba(232,150,10,0.2);
     line-height: 1;
+    display: block;
+  }
+  .station-fullname {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--amber-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 2px;
   }
   .era-chip {
     background: rgba(232,150,10,0.12);
@@ -548,11 +558,7 @@
     text-overflow: ellipsis;
   }
   .preset-count {
-    font-size: 8px;
-    color: #3a2a10;
-    letter-spacing: 1px;
-    display: block;
-    margin-top: 2px;
+    display: none;
   }
 
   /* ── TRANSPORT CONTROLS ──────────────────────────────────── */
@@ -644,9 +650,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 12px;
-    margin-top: 4px;
-    border-top: 1px solid rgba(232,150,10,0.08);
+    padding-top: 14px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(232,150,10,0.1);
   }
   .signal-dots { display: flex; gap: 4px; align-items: center; }
   .dot {
@@ -794,18 +800,12 @@
     <div class="dial-scale"></div>
   </div>
 
-  <!-- Tuning indicator -->
-  <div style="display:flex;justify-content:center;gap:6px;margin:-4px 0 10px;opacity:0.5;">
-    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-deep);"></div>
-    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-dim);"></div>
-    <div style="width:3px;height:3px;border-radius:50%;background:var(--amber-deep);"></div>
-  </div>
-
   <!-- Station Display Window -->
   <div class="station-window">
     <div class="station-row">
       <div class="station-readout" id="station-readout">
-        <span class="station-name">K-HIT</span>
+        <span class="station-name" id="station-call">K-HIT</span>
+        <span class="station-fullname" id="station-fullname">Top 40</span>
       </div>
       <div class="era-chip" id="era-chip">1980–89</div>
     </div>
@@ -1339,12 +1339,13 @@ function monitorPlayback(remainingMs){
   if(playbackTimer) clearTimeout(playbackTimer);
 
   // Prefetch next song 15 seconds before current ends
-  // Prefetch aggressively — 25 seconds before end to minimize gap
-  const prefetchDelay = Math.max(0, remainingMs - 25000);
+  // Prefetch aggressively to minimize gap
+  const prefetchDelay = Math.max(0, remainingMs - 30000);
   setTimeout(()=>{ if(playing) prefetchNextSong(); }, prefetchDelay);
-  // Second prefetch attempt at 10s in case first was too early
-  const prefetchDelay2 = Math.max(0, remainingMs - 10000);
+  const prefetchDelay2 = Math.max(0, remainingMs - 15000);
   setTimeout(()=>{ if(playing && !prefetchedTrack) prefetchNextSong(); }, prefetchDelay2);
+  const prefetchDelay3 = Math.max(0, remainingMs - 5000);
+  setTimeout(()=>{ if(playing && !prefetchedTrack) prefetchNextSong(); }, prefetchDelay3);
 
   playbackTimer = setTimeout(()=>{
     if(playing){
@@ -1355,7 +1356,7 @@ function monitorPlayback(remainingMs){
       updateQueue();
       doPlay(1500); // skip 1.5s of leading silence on next track
     }
-  }, remainingMs + 50);
+  }, Math.max(0, remainingMs - 500));  // start transition 500ms before song truly ends
 }
 
 
@@ -2433,7 +2434,8 @@ function updateUI(checkT){
   document.getElementById('status-badge').textContent = 'TUNED · '+curYear;
   const stations = getActiveStations(curYear);
   const stn = stations.find(s=>s.id===curStation);
-  document.querySelector('#station-readout .station-name').textContent = stn ? stn.call+' · '+stn.name : '—';
+  document.getElementById('station-call').textContent = stn ? stn.call : '—';
+  document.getElementById('station-fullname').textContent = stn ? stn.name : '';
   document.getElementById('mode-tag').textContent = eraLabel(curYear)+(stn?' · '+stn.call:'');
   updateEraAudio();
   let newIds = null;
