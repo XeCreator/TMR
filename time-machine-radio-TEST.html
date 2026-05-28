@@ -623,27 +623,7 @@
     to { opacity: 1; }
   }
 
-  /* Volume knob */
-  .vol-row { display: flex; align-items: center; gap: 8px; }
-  .vol-label { font-size: 8px; color: var(--amber-deep); letter-spacing: 2px; }
-  .vol-knob {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--chrome-bright), var(--chrome), var(--wood-dark));
-    border: 1px solid var(--chrome);
-    position: relative;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.1);
-  }
-  .vol-marker {
-    position: absolute;
-    top: 4px; left: 50%;
-    width: 2px; height: 6px;
-    background: var(--amber);
-    border-radius: 1px;
-    transform: translateX(-50%);
-    box-shadow: 0 0 4px var(--amber);
-  }
+
 
   /* ── BOTTOM STATUS STRIP ─────────────────────────────────── */
   .bottom-strip {
@@ -829,23 +809,40 @@
 
   <div class="transition-banner" id="transition-banner"></div>
 
-  <!-- Timeline -->
+  <!-- Timeline + Tuner Knob -->
   <div class="timeline-section">
-    <div class="timeline-top">
-      <div class="timeline-label">Timeline</div>
-      <div class="year-readout" id="year-readout">1983</div>
-    </div>
-    <div class="slider-wrap">
-      <div class="slider-track">
-        <div class="slider-fill" id="slider-fill" style="width:50%"></div>
+    <div class="tuner-row">
+      <!-- Tuner Knob -->
+      <div class="tuner-knob-wrap">
+        <div class="tuner-knob" id="tuner-knob">
+          <div class="tuner-ring"></div>
+          <div class="tuner-face">
+            <div class="tuner-indicator" id="tuner-indicator"></div>
+            <div class="tuner-center"></div>
+          </div>
+          <div class="tuner-notch"></div>
+        </div>
+        <div class="tuner-label">TUNE</div>
       </div>
-      <input type="range" id="era-slider" min="1920" max="2025" value="1983" step="1">
-      <div class="slider-thumb" id="slider-thumb" style="left:50%"></div>
-    </div>
-    <div class="era-marks">
-      <span class="era-mark">1920</span><span class="era-mark">1940</span>
-      <span class="era-mark">1960</span><span class="era-mark">1980</span>
-      <span class="era-mark">2000</span><span class="era-mark">NOW</span>
+      <!-- Timeline -->
+      <div class="timeline-right">
+        <div class="timeline-top">
+          <div class="timeline-label">Timeline</div>
+          <div class="year-readout" id="year-readout">1983</div>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-track">
+            <div class="slider-fill" id="slider-fill" style="width:50%"></div>
+          </div>
+          <input type="range" id="era-slider" min="1920" max="2025" value="1983" step="1">
+          <div class="slider-thumb" id="slider-thumb" style="left:50%"></div>
+        </div>
+        <div class="era-marks">
+          <span class="era-mark">1920</span><span class="era-mark">1940</span>
+          <span class="era-mark">1960</span><span class="era-mark">1980</span>
+          <span class="era-mark">2000</span><span class="era-mark">NOW</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -874,11 +871,7 @@
       <div class="wb" style="height:6px"></div><div class="wb" style="height:11px"></div>
     </div>
 
-    <!-- Volume -->
-    <div class="vol-row">
-      <div class="vol-label">Vol</div>
-      <div class="vol-knob" id="vol-knob"><div class="vol-marker"></div></div>
-    </div>
+
   </div>
 
   <!-- Bottom Status Strip -->
@@ -3082,6 +3075,101 @@ buildPlaylist();
 updateUI(false);
 updateEraAudio();
 initDevPanel();
+// ─── TUNER KNOB ──────────────────────────────────────────────────────────────
+(function(){
+  const knob = document.getElementById('tuner-knob');
+  const indicator = document.getElementById('tuner-indicator');
+  const slider = document.getElementById('era-slider');
+  if(!knob || !slider) return;
+
+  let isDragging = false;
+  let lastAngle = 0;
+  let currentRotation = 0;
+  const MIN_YEAR = 1920, MAX_YEAR = 2025;
+
+  function getAngle(e, rect){
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
+  }
+
+  function setKnobRotation(deg){
+    currentRotation = deg;
+    knob.style.transform = `rotate(${deg}deg)`;
+    // Keep indicator pointing up visually (counter-rotate)
+    if(indicator) indicator.style.transform = `translateX(-50%) rotate(${-deg}deg)`;
+  }
+
+  function yearToRotation(year){
+    const pct = (year - MIN_YEAR) / (MAX_YEAR - MIN_YEAR);
+    return pct * 360 * 3; // 3 full rotations across full range
+  }
+
+  function rotationToYear(rot){
+    const pct = (rot % (360*3)) / (360*3);
+    return Math.round(MIN_YEAR + pct * (MAX_YEAR - MIN_YEAR));
+  }
+
+  // Init knob at current year
+  setKnobRotation(yearToRotation(parseInt(slider.value)));
+
+  knob.addEventListener('mousedown', startDrag);
+  knob.addEventListener('touchstart', startDrag, {passive:true});
+
+  function startDrag(e){
+    isDragging = true;
+    const rect = knob.getBoundingClientRect();
+    lastAngle = getAngle(e, rect);
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchmove', onDrag, {passive:false});
+    document.addEventListener('touchend', stopDrag);
+    e.preventDefault && e.preventDefault();
+  }
+
+  function onDrag(e){
+    if(!isDragging) return;
+    e.preventDefault && e.preventDefault();
+    const rect = knob.getBoundingClientRect();
+    const angle = getAngle(e, rect);
+    let delta = angle - lastAngle;
+    // Handle wraparound
+    if(delta > 180) delta -= 360;
+    if(delta < -180) delta += 360;
+    lastAngle = angle;
+    currentRotation += delta;
+    // Clamp to valid range
+    const minRot = yearToRotation(MIN_YEAR);
+    const maxRot = yearToRotation(MAX_YEAR);
+    currentRotation = Math.max(minRot, Math.min(maxRot, currentRotation));
+    setKnobRotation(currentRotation);
+    // Update slider and year
+    const newYear = rotationToYear(currentRotation);
+    slider.value = newYear;
+    slider.dispatchEvent(new Event('input'));
+  }
+
+  function stopDrag(){
+    if(!isDragging) return;
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('touchend', stopDrag);
+    // Snap to final year on mouseup
+    slider.dispatchEvent(new Event('change'));
+  }
+
+  // Keep knob in sync when slider changes externally (e.g. click on track)
+  slider.addEventListener('input', function(){
+    const rot = yearToRotation(parseInt(this.value));
+    if(!isDragging) setKnobRotation(rot);
+  });
+})();
+
+
 
 // Animate VU meter independently
 setInterval(()=>{
