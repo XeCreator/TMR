@@ -709,51 +709,27 @@
     .presets-grid { grid-template-columns: repeat(2, 1fr); }
     .radio-brand { font-size: 18px; }
   }
-  /* ── TUNER KNOB ──────────────────────────────────────────────────────────────── */
+  /* ── TUNER KNOB (Pioneer-style) ─────────────────────────────────────────────── */
   .tuner-row { display:flex; align-items:center; gap:20px; }
   .timeline-right { flex:1; }
-  .tuner-knob-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; }
+  .tuner-knob-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; }
   .tuner-label { font-size:8px; letter-spacing:3px; color:var(--amber-deep); text-transform:uppercase; }
+
   .tuner-knob {
-    width:72px; height:72px; border-radius:50%; position:relative;
-    cursor:grab; user-select:none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7));
   }
-  .tuner-knob:active { cursor:grabbing; }
-  .tuner-ring {
-    position:absolute; inset:0; border-radius:50%;
-    background: conic-gradient(
-      from 0deg,
-      #5a4a3a 0deg, #9a8a78 15deg, #7a6a58 30deg, #4a3a2a 45deg,
-      #8a7a68 60deg, #6a5a48 75deg, #9a8a78 90deg, #5a4a3a 105deg,
-      #7a6a58 120deg, #9a8a78 135deg, #4a3a2a 150deg, #8a7a68 165deg,
-      #6a5a48 180deg, #9a8a78 195deg, #5a4a3a 210deg, #7a6a58 225deg,
-      #9a8a78 240deg, #4a3a2a 255deg, #8a7a68 270deg, #6a5a48 285deg,
-      #9a8a78 300deg, #5a4a3a 315deg, #7a6a58 330deg, #9a8a78 345deg,
-      #5a4a3a 360deg
-    );
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.8),
-      inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.4);
+  .tuner-knob:active { cursor: grabbing; }
+  .tuner-knob svg { 
+    display: block;
   }
-  .tuner-face {
-    position:absolute; inset:8px; border-radius:50%;
-    background:radial-gradient(circle at 35% 35%, #4a3a28, #1a0e06);
-    box-shadow:inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 2px rgba(255,255,255,0.08);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .tuner-indicator {
-    position:absolute; top:5px; left:50%;
-    width:2px; height:10px;
-    background:linear-gradient(180deg, var(--amber-glow), var(--amber));
-    border-radius:1px;
-    transform:translateX(-50%);
-    box-shadow:0 0 6px var(--amber), 0 0 12px rgba(232,150,10,0.4);
-    transform-origin:50% calc(100% + 20px);
-  }
-  .tuner-center {
-    width:8px; height:8px; border-radius:50%;
-    background:radial-gradient(circle at 40% 40%, var(--chrome-bright), var(--chrome));
-    box-shadow:0 1px 3px rgba(0,0,0,0.6);
-    position:absolute;
+  #knob-body {
+    transition: transform 0.03s linear;
   }
 
   </style>
@@ -862,12 +838,48 @@
       <!-- Tuner Knob -->
       <div class="tuner-knob-wrap">
         <div class="tuner-knob" id="tuner-knob">
-          <div class="tuner-ring"></div>
-          <div class="tuner-face">
-            <div class="tuner-indicator" id="tuner-indicator"></div>
-            <div class="tuner-center"></div>
-          </div>
-          <div class="tuner-notch"></div>
+          <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="kFace" cx="38%" cy="34%" r="60%">
+                <stop offset="0%" stop-color="#d8d0c0"/>
+                <stop offset="30%" stop-color="#a8a098"/>
+                <stop offset="65%" stop-color="#686058"/>
+                <stop offset="100%" stop-color="#282018"/>
+              </radialGradient>
+              <radialGradient id="kCap" cx="35%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#f0e8d8"/>
+                <stop offset="50%" stop-color="#c0b8a8"/>
+                <stop offset="100%" stop-color="#807870"/>
+              </radialGradient>
+              <filter id="kShadow">
+                <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.7)"/>
+              </filter>
+            </defs>
+            <!-- Rotating body group — everything except indicator -->
+            <g id="knob-body" style="transform-origin:40px 40px">
+              <!-- Outer knurled ring -->
+              <circle cx="40" cy="40" r="39" fill="#706860" filter="url(#kShadow)"/>
+              <!-- Knurling ridges -->
+              <g id="knurls"></g>
+              <!-- Chrome rim highlight -->
+              <circle cx="40" cy="40" r="39" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+              <circle cx="40" cy="40" r="37" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+              <!-- Domed face -->
+              <circle cx="40" cy="40" r="30" fill="url(#kFace)"/>
+              <!-- Face rim -->
+              <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/>
+              <circle cx="40" cy="40" r="29" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+              <!-- Center cap -->
+              <circle cx="40" cy="40" r="7" fill="url(#kCap)"/>
+              <circle cx="40" cy="40" r="7" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+              <circle cx="37" cy="37" r="2" fill="rgba(255,255,255,0.4)" rx="2"/>
+            </g>
+            <!-- Indicator line — fixed in place, does NOT rotate -->
+            <g id="tuner-indicator">
+              <line x1="40" y1="13" x2="40" y2="22" stroke="#e8960a" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="40" y1="13" x2="40" y2="18" stroke="#f5b842" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+            </g>
+          </svg>
         </div>
         <div class="tuner-label">TUNE</div>
       </div>
@@ -935,6 +947,11 @@
   <!-- Developer Panel -->
   <div id="dev-panel" style="display:none;position:fixed;bottom:0;right:0;width:320px;background:#0a0a0a;border:1px solid #2a1a08;border-radius:8px 0 0 0;padding:16px;z-index:9999;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a7a58;max-height:80vh;overflow-y:auto;">
     <div style="color:#c8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-size:12px;">⚙ Dev Panel <span style="float:right;cursor:pointer;color:#5a4a28;" onclick="document.getElementById('dev-panel').style.display='none'">✕</span></div>
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">ERA AUDIO FILTER</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+      <label class="dev-toggle"><input type="checkbox" id="dev-era-audio" checked> Era filter on</label>
+    </div>
+    <div style="color:#3a2a10;font-size:9px;margin-bottom:14px;line-height:1.5;">Filters DJ voice by era (AM/FM/digital chain). Spotify audio can't be filtered — it routes through your external player.</div>
     <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">DJ CONTENT</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
       <label class="dev-toggle"><input type="checkbox" id="dj-weather" checked> Weather</label>
@@ -996,7 +1013,7 @@ const DJ_PERSONALITIES = {
   kpnk:{name:"Johnny Wreck",handle:"The Wrecker",tone:"confrontational, fast, anti-establishment, genuine anger",persona:"A genuine punk who believes in the music as revolution. Short sentences. Hates prog rock. In the 90s he mellows slightly into pop-punk.",vocab:"raw, real, sell out, the system, loud, fast, three chords, truth",catchphrase:"No gods, no masters, no ballads."},
   kroq:{name:"Sarah Static",handle:"The Frequency",tone:"cool, indie, slightly detached, genuinely knowledgeable",persona:"The alt-radio voice. Knowledgeable without being pretentious. In the 80s she plays New Wave imports. In the 90s she's the Nirvana era gatekeeper.",vocab:"deep cut, b-side, import, the scene, honest, underground, sonically",catchphrase:"You heard it here first."},
   kdnc:{name:"DJ Axis",handle:"The Floor Controller",tone:"minimal, cool, club-professional",persona:"A proper club DJ who has played every warehouse in Chicago, Detroit, and Manchester. Economical with words. Lets the music breathe.",vocab:"drop, floor, the mix, vibes, locked in, body, move, underground, warehouse",catchphrase:"Feel the drop."},
-  khip:{name:"Supreme Allah",handle:"The Word Doctor",tone:"authoritative, respectful of the culture, knowledge-dropping",persona:"A hip hop historian and cultural ambassador. Always giving context about where samples came from, what the beef was, why this record mattered.",vocab:"peace, word, real talk, knowledge, the culture, respect, lyrical, the craft",catchphrase:"Real talk — that record changed the culture."},
+  wbdx:{name:"DJ Cipher",handle:"The Architect",tone:"authoritative, cool, Brooklyn-grounded, treats hip hop as living history",persona:"DJ Cipher is from Bed-Stuy, Brooklyn — been holding down KHIT since 1988 when hip hop radio was still fighting for legitimacy. He watched the genre go from the block to the world and never lost his reverence for it. Calm, measured, never shouting — when Cipher speaks you lean in. He drops knowledge the way a master drops bars: precise, purposeful, nothing wasted. In 1988 he's a true believer documenting a revolution. By 1993 he's in his prime and this is HIS era. In 1996 he's standing at the center of history being made and knows the weight of it. Always Brooklyn, always the culture first.",vocab:"word is bond, the science, real talk, no question, the culture, the five boroughs, that's the God MC, straight up, BK all day, the craft",catchphrase:"You're locked in to KHIT — where the culture lives."},
   kwst:{name:"DJ West",handle:"The Left Coast",tone:"laid back, gangsta-cool, Compton energy",persona:"West Coast through and through. Chill but with an edge. Deeply loyal to the G-funk era. Speaks slowly and confidently.",vocab:"real, the west, homie, straight, bangin, the coast, legit",catchphrase:"West side, all day."},
   kbtm:{name:"Dirty Slab",handle:"The Southern Oracle",tone:"syrupy slow, Houston lean, southern pride, hypnotic",persona:"H-Town energy. Speaks slowly — influenced by DJ Screw's chopped-and-screwed aesthetic. Deep southern pride. Never rushing, never loud.",vocab:"slab, swangin, the south, chopped, screwed, candy paint, Houston",catchphrase:"The South runs this. Always did."},
   ksth:{name:"Lil Buck",handle:"The Trap Door",tone:"street, energetic, Atlanta pre-trap",persona:"Pre-trap era Atlanta energy. Young, hungry, represents the block. The voice that bridged Southern rap into modern trap.",vocab:"street, real, hustle, grind, ATL, the block, stackin",catchphrase:"ATL all day. On God."},
@@ -1010,13 +1027,13 @@ const DJ_PERSONALITIES = {
 // ERA_VOICES defined in ElevenLabs voice synthesis section below
 
 // ─── STATION / TIMELINE / DB (reuse from base file) ───────────────────────
-const SDEFS={weaf:{name:"Big Band",call:"WEAF",color:"amber"},wjaz:{name:"Jazz & Blues",call:"WJAZ",color:"amber"},wgro:{name:"Country",call:"WGRO",color:"green"},wsng:{name:"Swing",call:"WSNG",color:"amber"},wcrn:{name:"Crooner",call:"WCRN",color:"amber"},wrnb:{name:"R&B",call:"WRNB",color:"coral"},wjazb:{name:"Jazz",call:"WJAZ",color:"amber"},khit:{name:"K-HIT",call:"K-HIT",color:"amber"},krok:{name:"Rocktop",call:"KROK",color:"red"},wsol:{name:"Soul FM",call:"WSOL",color:"coral"},kmet:{name:"Hard Rock",call:"KMET",color:"red"},kgro:{name:"Country",call:"KGRO",color:"green"},wflk:{name:"Folk",call:"WFLK",color:"teal"},kpsy:{name:"Psych",call:"KPSY",color:"purple"},kdsc:{name:"Disco·54",call:"KDSC",color:"purple"},kpnk:{name:"Punk",call:"KPNK",color:"red"},kroq:{name:"Alternative",call:"KROQ",color:"teal"},kdnc:{name:"Dance FM",call:"KDNC",color:"teal"},khip:{name:"Hip·Hop",call:"KHIP",color:"purple"},kwst:{name:"West Coast",call:"KWST",color:"purple"},kbtm:{name:"South Rap",call:"KBTM",color:"purple"},ktrap:{name:"Trap",call:"KTRAP",color:"purple"},kcons:{name:"Conscious",call:"KCONS",color:"purple"},ksth:{name:"South Hip Hop",call:"KSTH",color:"purple"},wltn:{name:"Latin·FM",call:"WLTN",color:"coral"},wclx:{name:"Classical",call:"WCLX",color:"blue"}};
-const TIMELINE=[{range:[1920,1929],stations:[{id:"wjaz"},{id:"weaf"},{id:"wclx"}]},{range:[1930,1939],stations:[{id:"wsng"},{id:"wjaz"},{id:"wcrn"},{id:"wgro"},{id:"wclx"}]},{range:[1940,1949],stations:[{id:"wsng"},{id:"wcrn"},{id:"wrnb",appearsAt:1942},{id:"wgro"},{id:"wjazb"},{id:"wclx"}]},{range:[1950,1959],stations:[{id:"khit"},{id:"krok",appearsAt:1954},{id:"wrnb"},{id:"kgro"},{id:"wjaz"},{id:"kmet",appearsAt:1958},{id:"wclx"}]},{range:[1960,1969],stations:[{id:"khit"},{id:"krok"},{id:"wsol",appearsAt:1962},{id:"wrnb"},{id:"kmet"},{id:"kgro"},{id:"wjaz"},{id:"wflk",appearsAt:1962},{id:"kpsy",appearsAt:1967},{id:"wclx"}]},{range:[1970,1979],stations:[{id:"khit"},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"kdsc",appearsAt:1974,disappearsAt:1981},{id:"kgro"},{id:"wjaz"},{id:"kpnk",appearsAt:1977},{id:"wclx"}]},{range:[1980,1989],stations:[{id:"khit"},{id:"kroq",appearsAt:1980},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"khip",appearsAt:1988},{id:"kgro"},{id:"kdnc",appearsAt:1983},{id:"wjaz"},{id:"wclx"}]},{range:[1990,1999],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"kpnk"},{id:"khip"},{id:"kwst",appearsAt:1992},{id:"kbtm",appearsAt:1995},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn",appearsAt:1996},{id:"wjaz"},{id:"wclx"}]},{range:[2000,2009],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ksth"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2010,2019],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ktrap",appearsAt:2012},{id:"kcons",appearsAt:2012},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2020,2029],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"khip"},{id:"ktrap"},{id:"kcons"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]}];
-const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blues is born"},{year:1954,id:"krok",label:"New signal: KROK — Rock & Roll just changed everything"},{year:1958,id:"kmet",label:"New signal: KMET — Hard rock is coming"},{year:1962,id:"wsol",label:"New signal: WSOL — Soul music finds its voice"},{year:1962,id:"wflk",label:"New signal: WFLK — Folk & protest on the air"},{year:1967,id:"kpsy",label:"New signal: KPSY — Turn on, tune in"},{year:1974,id:"kdsc",label:"New signal: KDSC — The dancefloor is open"},{year:1977,id:"kpnk",label:"New signal: KPNK — Punk is not dead"},{year:1980,id:"kroq",label:"New signal: KROQ — Alternative is here"},{year:1981,id:"kdsc",label:"Signal lost: KDSC — Disco is dead. Long live disco.",disappears:true},{year:1983,id:"kdnc",label:"New signal: KDNC — House music all night long"},{year:1988,id:"khip",label:"New signal: KHIP — Hip Hop is now on the air"},{year:1992,id:"kwst",label:"New signal: KWST — West Coast in the house"},{year:1995,id:"kbtm",label:"New signal: KBTM — The South is about to run this"},{year:1996,id:"wltn",label:"New signal: WLTN — Latin radio has arrived"},{year:2012,id:"ktrap",label:"New signal: KTRAP — Atlanta takes over"},{year:2012,id:"kcons",label:"New signal: KCONS — Real hip hop never left"}];
+const SDEFS={weaf:{name:"Big Band",call:"WEAF",color:"amber"},wjaz:{name:"Jazz & Blues",call:"WJAZ",color:"amber"},wgro:{name:"Country",call:"WGRO",color:"green"},wsng:{name:"Swing",call:"WSNG",color:"amber"},wcrn:{name:"Crooner",call:"WCRN",color:"amber"},wrnb:{name:"R&B",call:"WRNB",color:"coral"},wjazb:{name:"Jazz",call:"WJAZ",color:"amber"},khit:{name:"K-HIT",call:"K-HIT",color:"amber"},krok:{name:"Rocktop",call:"KROK",color:"red"},wsol:{name:"Soul FM",call:"WSOL",color:"coral"},kmet:{name:"Hard Rock",call:"KMET",color:"red"},kgro:{name:"Country",call:"KGRO",color:"green"},wflk:{name:"Folk",call:"WFLK",color:"teal"},kpsy:{name:"Psych",call:"KPSY",color:"purple"},kdsc:{name:"Disco·54",call:"KDSC",color:"purple"},kpnk:{name:"Punk",call:"KPNK",color:"red"},kroq:{name:"Alternative",call:"KROQ",color:"teal"},kdnc:{name:"Dance FM",call:"KDNC",color:"teal"},wbdx:{name:"Hip·Hop",call:"WBDX",color:"purple"},kwst:{name:"West Coast",call:"KWST",color:"purple"},kbtm:{name:"South Rap",call:"KBTM",color:"purple"},ktrap:{name:"Trap",call:"KTRAP",color:"purple"},kcons:{name:"Conscious",call:"KCONS",color:"purple"},ksth:{name:"South Hip Hop",call:"KSTH",color:"purple"},wltn:{name:"Latin·FM",call:"WLTN",color:"coral"},wclx:{name:"Classical",call:"WCLX",color:"blue"}};
+const TIMELINE=[{range:[1920,1929],stations:[{id:"wjaz"},{id:"weaf"},{id:"wclx"}]},{range:[1930,1939],stations:[{id:"wsng"},{id:"wjaz"},{id:"wcrn"},{id:"wgro"},{id:"wclx"}]},{range:[1940,1949],stations:[{id:"wsng"},{id:"wcrn"},{id:"wrnb",appearsAt:1942},{id:"wgro"},{id:"wjazb"},{id:"wclx"}]},{range:[1950,1959],stations:[{id:"khit"},{id:"krok",appearsAt:1954},{id:"wrnb"},{id:"kgro"},{id:"wjaz"},{id:"kmet",appearsAt:1958},{id:"wclx"}]},{range:[1960,1969],stations:[{id:"khit"},{id:"krok"},{id:"wsol",appearsAt:1962},{id:"wrnb"},{id:"kmet"},{id:"kgro"},{id:"wjaz"},{id:"wflk",appearsAt:1962},{id:"kpsy",appearsAt:1967},{id:"wclx"}]},{range:[1970,1979],stations:[{id:"khit"},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"kdsc",appearsAt:1974,disappearsAt:1981},{id:"kgro"},{id:"wjaz"},{id:"kpnk",appearsAt:1977},{id:"wclx"}]},{range:[1980,1989],stations:[{id:"khit"},{id:"kroq",appearsAt:1980},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"wbdx",appearsAt:1988},{id:"kgro"},{id:"kdnc",appearsAt:1983},{id:"wjaz"},{id:"wclx"}]},{range:[1990,1999],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"kpnk"},{id:"wbdx"},{id:"kwst",appearsAt:1992},{id:"kbtm",appearsAt:1995},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn",appearsAt:1996},{id:"wjaz"},{id:"wclx"}]},{range:[2000,2009],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ksth"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2010,2019],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap",appearsAt:2012},{id:"kcons",appearsAt:2012},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2020,2029],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap"},{id:"kcons"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]}];
+const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blues is born"},{year:1954,id:"krok",label:"New signal: KROK — Rock & Roll just changed everything"},{year:1958,id:"kmet",label:"New signal: KMET — Hard rock is coming"},{year:1962,id:"wsol",label:"New signal: WSOL — Soul music finds its voice"},{year:1962,id:"wflk",label:"New signal: WFLK — Folk & protest on the air"},{year:1967,id:"kpsy",label:"New signal: KPSY — Turn on, tune in"},{year:1974,id:"kdsc",label:"New signal: KDSC — The dancefloor is open"},{year:1977,id:"kpnk",label:"New signal: KPNK — Punk is not dead"},{year:1980,id:"kroq",label:"New signal: KROQ — Alternative is here"},{year:1981,id:"kdsc",label:"Signal lost: KDSC — Disco is dead. Long live disco.",disappears:true},{year:1983,id:"kdnc",label:"New signal: KDNC — House music all night long"},{year:1988,id:"wbdx",label:"New signal: WBDX — Hip Hop has its own station now"},{year:1992,id:"kwst",label:"New signal: KWST — West Coast in the house"},{year:1995,id:"kbtm",label:"New signal: KBTM — The South is about to run this"},{year:1996,id:"wltn",label:"New signal: WLTN — Latin radio has arrived"},{year:2012,id:"ktrap",label:"New signal: KTRAP — Atlanta takes over"},{year:2012,id:"kcons",label:"New signal: KCONS — Real hip hop never left"}];
 
 const CLASSICAL=[{t:"Symphony No 5",a:"Beethoven",y:1808,st:["wclx"],p:99,q:"Beethoven Symphony No 5 Karajan"},{t:"Ode to Joy",a:"Beethoven",y:1824,st:["wclx"],p:99,q:"Beethoven Ode to Joy Symphony 9"},{t:"The Four Seasons Spring",a:"Vivaldi",y:1725,st:["wclx"],p:97,q:"Vivaldi Four Seasons Spring"},{t:"Clair de lune",a:"Debussy",y:1905,st:["wclx"],p:97,q:"Debussy Clair de lune"},{t:"Moonlight Sonata",a:"Beethoven",y:1801,st:["wclx"],p:97,q:"Beethoven Moonlight Sonata"},{t:"Rhapsody in Blue",a:"Gershwin",y:1924,st:["wclx"],p:96,q:"Gershwin Rhapsody in Blue Bernstein"},{t:"Swan Lake Suite",a:"Tchaikovsky",y:1877,st:["wclx"],p:96,q:"Tchaikovsky Swan Lake Suite"},{t:"Canon in D",a:"Pachelbel",y:1694,st:["wclx"],p:96,q:"Pachelbel Canon in D"},{t:"Bolero",a:"Ravel",y:1928,st:["wclx"],p:95,q:"Ravel Bolero"},{t:"Symphony No 40",a:"Mozart",y:1788,st:["wclx"],p:95,q:"Mozart Symphony No 40"},{t:"Gymnopedie No 1",a:"Satie",y:1888,st:["wclx"],p:94,q:"Satie Gymnopedie No 1"},{t:"Air on the G String",a:"Bach",y:1731,st:["wclx"],p:94,q:"Bach Air on G String"},{t:"New World Symphony",a:"Dvorak",y:1893,st:["wclx"],p:95,q:"Dvorak New World Symphony"},{t:"Adagio for Strings",a:"Barber",y:1936,st:["wclx"],p:95,q:"Barber Adagio for Strings"},{t:"Schindlers List Theme",a:"John Williams",y:1993,st:["wclx"],p:96,q:"Schindlers List Theme John Williams"},{t:"Interstellar Main Theme",a:"Hans Zimmer",y:2014,st:["wclx"],p:94,q:"Interstellar Main Theme Hans Zimmer"},{t:"On the Nature of Daylight",a:"Max Richter",y:2004,st:["wclx"],p:93,q:"Max Richter On the Nature of Daylight"}];
 
-const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["wgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["wgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious BIG",y:1994,st:["khip"],p:96,q:"Juicy Notorious BIG 1994"},{t:"CREAM",a:"Wu-Tang Clan",y:1993,st:["khip"],p:95,q:"C.R.E.A.M. Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["khip"],p:95,q:"NY State of Mind Nas 1994"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis Kind of Blue"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["khip"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["khip"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["khip"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},{t:"Gasolina",a:"Daddy Yankee",y:2004,st:["wltn"],p:94,q:"Gasolina Daddy Yankee 2004"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["khip","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Despacito",a:"Luis Fonsi ft Daddy Yankee",y:2017,st:["wltn","khit"],p:99,q:"Despacito Luis Fonsi Daddy Yankee 2017"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["khip","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
+const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["wgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["wgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:96,q:"Juicy Notorious BIG 1994"},{t:"Big Poppa",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:95,q:"Big Poppa Notorious BIG 1994"},{t:"One More Chance",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:94,q:"One More Chance Notorious BIG 1995"},{t:"C.R.E.A.M.",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:95,q:"CREAM Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["wbdx"],p:95,q:"NY State of Mind Nas 1994"},{t:"The World Is Yours",a:"Nas",y:1994,st:["wbdx"],p:94,q:"The World Is Yours Nas 1994"},{t:"Illmatic",a:"Nas",y:1994,st:["wbdx"],p:93,q:"Illmatic Nas 1994"},{t:"Dead Presidents II",a:"Jay-Z",y:1996,st:["wbdx"],p:93,q:"Dead Presidents II Jay-Z 1996"},{t:"Ain't No Nigga",a:"Jay-Z ft Foxy Brown",y:1996,st:["wbdx"],p:92,q:"Ain't No Nigga Jay-Z Foxy Brown 1996"},{t:"Mass Appeal",a:"Gang Starr",y:1994,st:["wbdx"],p:91,q:"Mass Appeal Gang Starr 1994"},{t:"I Got a Man",a:"Positive K",y:1992,st:["wbdx"],p:88,q:"I Got a Man Positive K 1992"},{t:"Scenario",a:"A Tribe Called Quest",y:1991,st:["wbdx"],p:93,q:"Scenario A Tribe Called Quest 1991"},{t:"Electric Relaxation",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:94,q:"Electric Relaxation A Tribe Called Quest 1993"},{t:"Award Tour",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:93,q:"Award Tour A Tribe Called Quest 1993"},{t:"I Used to Love H.E.R.",a:"Common",y:1994,st:["wbdx"],p:91,q:"I Used to Love HER Common 1994"},{t:"Deja Vu (Uptown Baby)",a:"Lord Tariq and Peter Gunz",y:1996,st:["wbdx"],p:89,q:"Deja Vu Uptown Baby Lord Tariq Peter Gunz"},{t:"Shook Ones Pt II",a:"Mobb Deep",y:1995,st:["wbdx"],p:94,q:"Shook Ones Part II Mobb Deep 1995"},{t:"Survival of the Fittest",a:"Mobb Deep",y:1995,st:["wbdx"],p:92,q:"Survival of the Fittest Mobb Deep 1995"},{t:"Method Man",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:93,q:"Method Man Wu-Tang Clan 1993"},{t:"Protect Ya Neck",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:92,q:"Protect Ya Neck Wu-Tang Clan 1993"},{t:"Passin Me By",a:"The Pharcyde",y:1992,st:["wbdx"],p:91,q:"Passin Me By The Pharcyde 1992"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst","wbdx"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis Kind of Blue"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["wbdx"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["wbdx"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["wbdx"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},{t:"Gasolina",a:"Daddy Yankee",y:2004,st:["wltn"],p:94,q:"Gasolina Daddy Yankee 2004"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["wbdx","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Despacito",a:"Luis Fonsi ft Daddy Yankee",y:2017,st:["wltn","khit"],p:99,q:"Despacito Luis Fonsi Daddy Yankee 2017"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["wbdx","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
 
 // ─── YOUTUBE ID MAP ───────────────────────────────────────────────────────────
 const YT={
@@ -1432,7 +1449,7 @@ const FORMAT_PROFILES = {
   kpnk: {prob:0.25,lengths:["short"],weather:false,time:false,maxTokens:70},
   // Low-talk stations — music speaks
   wjaz: {prob:0.22,lengths:["short","medium"],weather:false,time:true,maxTokens:90},
-  khip: {prob:0.28,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
+  wbdx: {prob:0.42,lengths:["short","medium"],weather:true,time:true,maxTokens:110},
   kwst: {prob:0.26,lengths:["short","medium"],weather:false,time:false,maxTokens:80},
   kbtm: {prob:0.20,lengths:["short"],weather:false,time:false,maxTokens:70},
   ksth: {prob:0.22,lengths:["short"],weather:false,time:false,maxTokens:70},
@@ -1456,12 +1473,19 @@ function shouldTalkNow(sid, songDurationMs){
   const profile = FORMAT_PROFILES[sid] || {prob:0.30};
   let prob = profile.prob;
 
-  // Time-of-day modifiers
-  const h = new Date().getHours();
-  if(h >= 6 && h < 10) prob *= 1.35;   // Morning drive — chattiest
-  else if(h >= 16 && h < 19) prob *= 1.25; // Afternoon drive
-  else if(h >= 22 || h < 2) prob *= 0.55;  // Late night — very sparse
-  else if(h >= 2 && h < 6) prob *= 0.35;   // Overnight — almost silent
+  // Time slot modifiers — keyed to getTimeSlot()
+  const slot = getTimeSlot();
+  const SLOT_MODIFIERS = {
+    morning_drive:      1.40,  // Chattiest — commuters, time checks
+    weekend_morning:    1.10,  // Warm but not pushy
+    midday:             1.00,  // Neutral
+    afternoon_drive:    1.25,  // Picks back up
+    weekend_afternoon:  0.90,  // Relaxed, music-first
+    evening:            0.70,  // Smooth, fewer breaks
+    night:              0.50,  // Sparse
+    late_night:         0.30,  // Almost silent
+  };
+  prob *= (SLOT_MODIFIERS[slot] || 1.0);
 
   // Song length modifier — don't interrupt after very long songs
   if(songDurationMs > 480000) prob *= 0.4;  // 8+ min piece (classical, epic rock)
@@ -1547,6 +1571,88 @@ function getTimeOfDay(){
   if(h < 21) return 'evening';
   return 'night';
 }
+
+// ─── TIME SLOT SYSTEM ────────────────────────────────────────────────────────
+// 6 broadcast dayparts — each shapes DJ behavior meaningfully
+function getTimeSlot(){
+  const h = new Date().getHours();
+  const isWeekend = [0,6].includes(new Date().getDay());
+  if(h >= 6 && h < 10 && !isWeekend)  return 'morning_drive';
+  if(h >= 6 && h < 10 && isWeekend)   return 'weekend_morning';
+  if(h >= 10 && h < 15)               return 'midday';
+  if(h >= 15 && h < 19 && !isWeekend) return 'afternoon_drive';
+  if(h >= 15 && h < 19 && isWeekend)  return 'weekend_afternoon';
+  if(h >= 19 && h < 22)               return 'evening';
+  if(h >= 22 || h < 2)                return 'night';
+  return 'late_night'; // 2am–6am
+}
+
+const TIME_SLOT_CONTEXT = {
+  morning_drive: {
+    label: 'Morning Drive',
+    energy: 'high',
+    chattiness: 'talkative',
+    timeChecks: true,
+    weatherChecks: true,
+    djNote: `It's morning drive time (6–10am weekday). Listeners are commuting or getting ready for work. Energy is HIGH. Be upbeat, punchy. Do time checks naturally — people need to know the time. Mention the weather like a helpful friend. Keep breaks tight — people are rushing.`,
+  },
+  weekend_morning: {
+    label: 'Weekend Morning',
+    energy: 'medium',
+    chattiness: 'relaxed',
+    timeChecks: false,
+    weatherChecks: true,
+    djNote: `It's a weekend morning. Listeners are waking up slowly, maybe having coffee. Ease into the day with them — warmer tone, no rush. Can be a little more playful and conversational than a weekday. No need for tight time checks.`,
+  },
+  midday: {
+    label: 'Midday',
+    energy: 'medium',
+    chattiness: 'moderate',
+    timeChecks: false,
+    weatherChecks: false,
+    djNote: `Midday broadcast (10am–3pm). Mixed audience — some at work, some running errands. Casual, friendly tone. No rush, no urgency. Let the music do more work. Breaks can breathe a little.`,
+  },
+  afternoon_drive: {
+    label: 'Afternoon Drive',
+    energy: 'high',
+    chattiness: 'talkative',
+    timeChecks: true,
+    weatherChecks: false,
+    djNote: `Afternoon drive (3–7pm weekday). Listeners are heading home, decompressing from work. Energy picks back up — be warm and fun, like a friend they're happy to see. Can be slightly more casual and jokey than morning drive.`,
+  },
+  weekend_afternoon: {
+    label: 'Weekend Afternoon',
+    energy: 'medium',
+    chattiness: 'relaxed',
+    timeChecks: false,
+    weatherChecks: false,
+    djNote: `Weekend afternoon. Relaxed, free feeling — listeners might be at a barbecue, driving around, or just hanging out. Looser energy. Can run longer breaks if the moment calls for it. More storytelling, less urgency.`,
+  },
+  evening: {
+    label: 'Evening',
+    energy: 'medium-low',
+    chattiness: 'smooth',
+    timeChecks: false,
+    weatherChecks: false,
+    djNote: `Evening (7–10pm). The day is winding down. Tone gets smoother, more musical. Let the music breathe — fewer interruptions, longer gaps between talk. When you do break in, it should feel like a reward, not a jolt.`,
+  },
+  night: {
+    label: 'Night',
+    energy: 'low',
+    chattiness: 'sparse',
+    timeChecks: false,
+    weatherChecks: false,
+    djNote: `Night shift (10pm–2am). Intimate and sparse. Talk less, let the music carry more weight. When you speak, it's a quiet observation or a moment of connection — never hyped, never rushed. Some listeners are alone with you. Honor that.`,
+  },
+  late_night: {
+    label: 'Late Night',
+    energy: 'low',
+    chattiness: 'minimal',
+    timeChecks: false,
+    weatherChecks: false,
+    djNote: `Late night (2–6am). Almost no one's listening — and the ones who are, need the company. Keep it intimate and warm. Very sparse breaks. You might go 2–3 songs without a word. When you do speak, make it count.`,
+  },
+};
 
 function getDayOfWeek(){
   return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
@@ -1655,27 +1761,74 @@ async function speakDJLine(text){
     audio.crossOrigin = 'anonymous';
     currentDJAudio = audio;
 
-    // Web Audio processing for era feel
-    if(eraAudioOn && curYear < 1960){
-      // Pre-FM: narrow frequency, warmth, slight crackle feel
+    // ── Era audio processing via Web Audio API ──────────────────────────────
+    // Applied to DJ voice (ElevenLabs audio) — we control this, unlike Spotify
+    // Each era gets a characteristic filter chain matching broadcast tech of the time
+    if(eraAudioOn){
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        djAudioContext = ctx;
         const source = ctx.createMediaElementSource(audio);
-        // Bandpass filter — simulates AM radio frequency range
-        const bandpass = ctx.createBiquadFilter();
-        bandpass.type = 'bandpass';
-        bandpass.frequency.value = curYear < 1940 ? 1200 : 1800;
-        bandpass.Q.value = curYear < 1940 ? 0.8 : 0.5;
-        // Slight gain boost to compensate
-        const gain = ctx.createGain();
-        gain.gain.value = 1.4;
-        source.connect(bandpass);
-        bandpass.connect(gain);
-        gain.connect(ctx.destination);
-      } catch(e) {
-        // Fallback if Web Audio fails
-        audio.play();
-        return;
+        const era = Math.floor(curYear / 10) * 10;
+
+        if(era <= 1929){
+          // Acoustic/early electrical recording — very narrow, mid-honky, low fidelity
+          const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=400; hp.Q.value=0.7;
+          const lp = ctx.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=2800; lp.Q.value=0.6;
+          const mid = ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=1000; mid.gain.value=5; mid.Q.value=1.2;
+          const gain = ctx.createGain(); gain.gain.value=1.5;
+          source.connect(hp); hp.connect(lp); lp.connect(mid); mid.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 1949){
+          // AM radio golden age — warm but narrow, classic announcer sound
+          const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=250; hp.Q.value=0.5;
+          const lp = ctx.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=3500; lp.Q.value=0.5;
+          const presence = ctx.createBiquadFilter(); presence.type='peaking'; presence.frequency.value=2000; presence.gain.value=3; presence.Q.value=1.0;
+          const gain = ctx.createGain(); gain.gain.value=1.3;
+          source.connect(hp); hp.connect(lp); lp.connect(presence); presence.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 1959){
+          // Late AM / early hi-fi — wider range, still warm roll-off on top
+          const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=180; hp.Q.value=0.4;
+          const lp = ctx.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=6000; lp.Q.value=0.4;
+          const air = ctx.createBiquadFilter(); air.type='peaking'; air.frequency.value=3500; air.gain.value=2; air.Q.value=1.5;
+          const gain = ctx.createGain(); gain.gain.value=1.2;
+          source.connect(hp); hp.connect(lp); lp.connect(air); air.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 1969){
+          // Early FM — wider frequency, slight warmth, mild compression character
+          const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=100; hp.Q.value=0.4;
+          const warmth = ctx.createBiquadFilter(); warmth.type='peaking'; warmth.frequency.value=250; warmth.gain.value=2; warmth.Q.value=1.0;
+          const presence = ctx.createBiquadFilter(); presence.type='peaking'; presence.frequency.value=4000; presence.gain.value=1.5; presence.Q.value=1.2;
+          const gain = ctx.createGain(); gain.gain.value=1.1;
+          source.connect(hp); hp.connect(warmth); warmth.connect(presence); presence.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 1979){
+          // Classic FM — full range, smooth, warm low mids, that 70s radio sound
+          const warmth = ctx.createBiquadFilter(); warmth.type='peaking'; warmth.frequency.value=300; warmth.gain.value=2.5; warmth.Q.value=0.8;
+          const smooth = ctx.createBiquadFilter(); smooth.type='lowshelf'; smooth.frequency.value=8000; smooth.gain.value=-1.5;
+          const gain = ctx.createGain(); gain.gain.value=1.05;
+          source.connect(warmth); warmth.connect(smooth); smooth.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 1989){
+          // 80s FM — clean, bright, processed, slight top-end sparkle
+          const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=60; hp.Q.value=0.5;
+          const bright = ctx.createBiquadFilter(); bright.type='highshelf'; bright.frequency.value=8000; bright.gain.value=2;
+          const gain = ctx.createGain(); gain.gain.value=1.0;
+          source.connect(hp); hp.connect(bright); bright.connect(gain); gain.connect(ctx.destination);
+
+        } else if(era <= 2009){
+          // 90s–2000s digital radio — essentially transparent, very slight presence boost
+          const presence = ctx.createBiquadFilter(); presence.type='peaking'; presence.frequency.value=5000; presence.gain.value=1; presence.Q.value=1.5;
+          source.connect(presence); presence.connect(ctx.destination);
+
+        } else {
+          // 2010s+ streaming era — completely clean, pass-through
+          source.connect(ctx.destination);
+        }
+      } catch(e){
+        // Web Audio failed (CORS, autoplay policy, etc.) — play unfiltered
+        console.warn('Era audio filter failed, playing clean:', e);
       }
     }
 
@@ -1765,54 +1918,688 @@ const KNOWLEDGE_1983 = [
   { from:'1983-12-24', cat:'culture', fact:`Christmas Eve — and Thriller is set to be the best-selling album of the year by a mile.` },
 ];
 
-const ARTIST_KNOWLEDGE = [
-  { artist:'Michael Jackson', from:'1958-08-29', fact:`Born August 29, 1958 in Gary, Indiana. Started performing with his brothers as the Jackson 5 at age 8.` },
-  { artist:'Michael Jackson', from:'1972-01-01', fact:`Has been recording solo since 1972 alongside his work with the Jackson 5.` },
-  { artist:'Michael Jackson', from:'1979-08-10', fact:`His solo album Off the Wall came out in 1979 and produced four top ten hits — a first for any solo artist.` },
-  { artist:'Michael Jackson', from:'1982-12-01', fact:`His new album Thriller was produced by Quincy Jones — the same team behind Off the Wall.` },
-  { artist:'Michael Jackson', from:'1983-03-25', fact:`His performance of Billie Jean on the Motown 25 TV special, where he debuted the moonwalk, is the talk of the country.` },
-  { artist:'Michael Jackson', from:'1983-11-19', fact:`The Thriller music video is 14 minutes long — more like a short film. Directed by John Landis who did An American Werewolf in London.` },
+// ─── ARTIST LIBRARY 1983 ─────────────────────────────────────────────────────
+// Pre-baked knowledge for the top 25 K-HIT 1983 artists.
+// Schema: { bio, era[], keyAlbums[{title,releaseDate,context}], keyEvents[{date,fact}], djLines[] }
+// Built from Billboard year-end charts 1982-83 and Top 40 rotation data.
+const ARTIST_LIBRARY_1983 = {
+  "Michael Jackson": {
+    "artist": "Michael Jackson",
+    "era": [1970, 1980],
+    "bio": "Michael Jackson has been performing since he was a kid with his brothers in Gary, Indiana — and right now in 1983 he is simply the biggest artist on the planet. Thriller has been sitting at number one for months, and after that Motown 25 moonwalk performance, the whole country is still talking.",
+    "keyAlbums": [
+      { "title": "Off the Wall", "releaseDate": "1979-08-10", "context": "His first full adult solo record produced four top ten hits — a first for any solo artist, and it put him on a whole different level." },
+      { "title": "Thriller", "releaseDate": "1982-11-30", "context": "The biggest album in the world right now — produced by Quincy Jones, and every single they pull off it turns to gold." }
+    ],
+    "keyEvents": [
+      { "date": "1983-03-25", "fact": "His moonwalk performance of Billie Jean on the Motown 25 TV special last night has everyone talking — nobody's ever seen anything like it." },
+      { "date": "1983-05-16", "fact": "Beat It just topped the charts — that Eddie Van Halen guitar solo has rock fans and pop fans agreeing for once." }
+    ],
+    "djLines": [
+      "The man is untouchable right now — Michael Jackson on K-HIT!",
+      "You know, when Thriller came out last November I don't think any of us realized we were watching history get made — here he is.",
+      "Fresh off the Motown 25 moonwalk heard round the world — Michael Jackson!"
+    ]
+  },
+  "Lionel Richie": {
+    "artist": "Lionel Richie",
+    "era": [1970, 1980],
+    "bio": "Lionel Richie started out with the Commodores writing hits like Easy and Three Times a Lady, and since going solo he hasn't slowed down for a second. The man has a gift for a melody that just doesn't quit.",
+    "keyAlbums": [
+      { "title": "Lionel Richie", "releaseDate": "1982-10-21", "context": "His debut solo album — Truly went to number one and proved he didn't need the Commodores to dominate the charts." },
+      { "title": "Can't Slow Down", "releaseDate": "1983-10-01", "context": "Just out — All Night Long is already everywhere and it sounds like a certified smash." }
+    ],
+    "keyEvents": [
+      { "date": "1982-11-01", "fact": "Truly just hit number one — his first solo chart-topper, and it won't be his last." },
+      { "date": "1983-02-01", "fact": "He co-wrote Endless Love with Diana Ross last year and it spent nine weeks at number one — one of the biggest ballads in years." }
+    ],
+    "djLines": [
+      "Silk and soul — Lionel Richie on New York's number one!",
+      "The man wrote Endless Love, Easy, Three Times a Lady — and he's just getting warmed up. Lionel Richie!",
+      "If you're not smiling right now, check your pulse — that's Lionel Richie on K-HIT."
+    ]
+  },
+  "The Police": {
+    "artist": "The Police",
+    "era": [1970, 1980],
+    "bio": "Sting, Andy Summers, and Stewart Copeland — three guys from different worlds who came together in London and basically invented a new kind of rock. Their reggae-tinged sound and Sting's vocals make them unlike anything else on the dial.",
+    "keyAlbums": [
+      { "title": "Zenyatta Mondatta", "releaseDate": "1980-10-03", "context": "Don't Stand So Close to Me and De Do Do Do De Da Da Da made them massive on both sides of the Atlantic." },
+      { "title": "Ghost in the Machine", "releaseDate": "1981-10-02", "context": "Every Little Thing She Does Is Magic was everywhere in '81 — more polished, bigger sound." },
+      { "title": "Synchronicity", "releaseDate": "1983-06-17", "context": "Brand new and already enormous — Every Breath You Take is the song of the summer, number one with a bullet." }
+    ],
+    "keyEvents": [
+      { "date": "1983-06-17", "fact": "Synchronicity just dropped and Every Breath You Take is going to be the biggest song of the year — you can feel it." },
+      { "date": "1983-07-01", "fact": "Every Breath You Take hits number one — their biggest hit yet and it's not letting go." }
+    ],
+    "djLines": [
+      "The hottest band on the planet right now — The Police!",
+      "Every Breath You Take is number one with a bullet and it deserves every second of it — The Police on K-HIT!",
+      "Sting and the boys straight out of London — and right now they own New York. The Police!"
+    ]
+  },
+  "Duran Duran": {
+    "artist": "Duran Duran",
+    "era": [1980],
+    "bio": "Five young guys from Birmingham, England who look like they belong on a movie poster and sound like the future. MTV basically built their American career — their videos are works of art and the music backs it up.",
+    "keyAlbums": [
+      { "title": "Duran Duran", "releaseDate": "1981-06-15", "context": "Their debut — Girls on Film got them noticed and Planet Earth showed they were serious artists." },
+      { "title": "Rio", "releaseDate": "1982-05-10", "context": "Hungry Like the Wolf and the title track Rio are both in heavy rotation — this album made them superstars." }
+    ],
+    "keyEvents": [
+      { "date": "1982-08-01", "fact": "Hungry Like the Wolf is climbing fast — the video shot in Sri Lanka is all over MTV and it looks absolutely incredible." },
+      { "date": "1983-01-01", "fact": "Is There Something I Should Know just went to number one in the UK — their first chart-topper there." }
+    ],
+    "djLines": [
+      "The five best-looking guys in rock — Duran Duran on K-HIT!",
+      "MTV put these guys on the map and the music has kept them there — Duran Duran!",
+      "Straight out of Birmingham England, taking over the five boroughs — Duran Duran!"
+    ]
+  },
+  "Madonna": {
+    "artist": "Madonna",
+    "era": [1980],
+    "bio": "Madonna Ciccone out of Bay City, Michigan — came to New York to make it and she's doing exactly that. Holiday is getting heavy rotation right now and this girl has something nobody else has.",
+    "keyAlbums": [
+      { "title": "Madonna", "releaseDate": "1983-07-27", "context": "Her debut just dropped — Holiday is the track everyone's losing their minds over, pure dance floor energy." }
+    ],
+    "keyEvents": [
+      { "date": "1983-08-01", "fact": "Holiday is climbing the charts fast — this girl is going to be huge, remember where you heard it first." }
+    ],
+    "djLines": [
+      "A brand new voice out of New York City — Madonna on K-HIT!",
+      "Holiday is the song that's going to make this girl a star — Madonna!",
+      "She came to New York with nothing and now she's got a hit record — Madonna, and you heard her here first."
+    ]
+  },
+  "David Bowie": {
+    "artist": "David Bowie",
+    "era": [1970, 1980],
+    "bio": "David Bowie has been reinventing himself since the 60s — Ziggy Stardust, the Thin White Duke, and now with Let's Dance he's gone full mainstream pop and it's working better than anyone expected. The man is simply an artist.",
+    "keyAlbums": [
+      { "title": "The Rise and Fall of Ziggy Stardust", "releaseDate": "1972-06-16", "context": "The album that made him a rock god — Ziggy was one of the most theatrical characters in rock history." },
+      { "title": "Young Americans", "releaseDate": "1975-03-07", "context": "His plastic soul period — Fame with John Lennon was a massive number one hit." },
+      { "title": "Let's Dance", "releaseDate": "1983-04-14", "context": "Produced by Nile Rodgers — a completely new sound for Bowie, more danceable, and the biggest commercial success of his career." }
+    ],
+    "keyEvents": [
+      { "date": "1983-04-14", "fact": "Let's Dance just dropped and the title track is going straight up the charts — Nile Rodgers gave Bowie a completely new sound." },
+      { "date": "1983-05-01", "fact": "Let's Dance hits number one — his first chart-topper in years and it's his biggest hit ever." }
+    ],
+    "djLines": [
+      "A legend who keeps getting better — David Bowie on K-HIT!",
+      "He's been the most interesting man in rock for fifteen years running — David Bowie!",
+      "From Ziggy Stardust to Let's Dance — David Bowie reinvents himself again and New York loves him for it."
+    ]
+  },
+  "Culture Club": {
+    "artist": "Culture Club",
+    "era": [1980],
+    "bio": "Boy George and Culture Club out of London — the most visually striking act on MTV right now, and the music is just as good as the look. George O'Dowd has one of the most distinctive voices in pop, full stop.",
+    "keyAlbums": [
+      { "title": "Kissing to Be Clever", "releaseDate": "1982-10-01", "context": "Do You Really Want to Hurt Me was their first massive hit — that reggae-inflected sound was unlike anything else on radio." },
+      { "title": "Colour by Numbers", "releaseDate": "1983-10-10", "context": "Just out — Karma Chameleon is already a worldwide smash, their biggest record yet." }
+    ],
+    "keyEvents": [
+      { "date": "1982-11-01", "fact": "Do You Really Want to Hurt Me hits number one in the UK and starts climbing in the US — nobody expected this kind of crossover." },
+      { "date": "1983-10-01", "fact": "Karma Chameleon is going to be inescapable this fall — it's number one everywhere it's been released so far." }
+    ],
+    "djLines": [
+      "Boy George and the band — Culture Club on K-HIT!",
+      "The most colorful act on MTV right now sounds even better on the radio — Culture Club!",
+      "Do You Really Want to Hurt Me — they asked and New York answered with a definitive no. Culture Club!"
+    ]
+  },
+  "Cyndi Lauper": {
+    "artist": "Cyndi Lauper",
+    "era": [1980],
+    "bio": "Cyndi Lauper is from Queens — right here in New York City — and she's about as original as it gets. She's got a voice that can break your heart or make you dance, sometimes in the same song.",
+    "keyAlbums": [
+      { "title": "She's So Unusual", "releaseDate": "1983-10-14", "context": "Her debut just dropped and Girls Just Want to Have Fun is already everywhere — she's going to be a massive star." }
+    ],
+    "keyEvents": [
+      { "date": "1983-10-14", "fact": "She's So Unusual just dropped — Girls Just Want to Have Fun is pure pop perfection from a Queens girl made good." }
+    ],
+    "djLines": [
+      "A Queens girl making New York proud — Cyndi Lauper on K-HIT!",
+      "Girls Just Want to Have Fun — and right now everybody in New York wants to have fun with Cyndi Lauper!",
+      "She's brand new and she's already a star — remember this moment. Cyndi Lauper!"
+    ]
+  },
+  "Eurythmics": {
+    "artist": "Eurythmics",
+    "era": [1980],
+    "bio": "Annie Lennox and Dave Stewart out of London — she's got one of the most powerful voices in pop and he builds tracks that you can't get out of your head. Sweet Dreams took over the world this year.",
+    "keyAlbums": [
+      { "title": "Sweet Dreams (Are Made of This)", "releaseDate": "1983-01-04", "context": "The title track is one of the defining songs of 1983 — that synth line is immediately recognizable and Annie's voice is extraordinary." }
+    ],
+    "keyEvents": [
+      { "date": "1983-08-01", "fact": "Sweet Dreams hits number one in the US — that unforgettable synth riff is playing in every city in America right now." }
+    ],
+    "djLines": [
+      "Annie Lennox and Dave Stewart — the Eurythmics on K-HIT!",
+      "Sweet Dreams is one of the songs of the year — the Eurythmics!",
+      "Out of London by way of your subconscious — the Eurythmics on New York's number one!"
+    ]
+  },
+  "Men at Work": {
+    "artist": "Men at Work",
+    "era": [1980],
+    "bio": "Five guys from Melbourne, Australia who came out of nowhere and went to number one all over the world. Colin Hay writes songs with a wit and humanity that cuts right through, and that saxophone is unmistakable.",
+    "keyAlbums": [
+      { "title": "Business as Usual", "releaseDate": "1981-11-01", "context": "Who Can It Be Now and Down Under made them international stars overnight — this album sat at number one in the US for fifteen weeks." },
+      { "title": "Cargo", "releaseDate": "1983-03-19", "context": "Their follow-up is solid — Overkill and It's a Mistake are both getting strong airplay." }
+    ],
+    "keyEvents": [
+      { "date": "1983-01-01", "fact": "Business as Usual just finished its run at number one in the US — fifteen weeks at the top, an extraordinary debut." },
+      { "date": "1983-04-01", "fact": "Cargo is out and Overkill is climbing — it's a different, more personal sound from Down Under." }
+    ],
+    "djLines": [
+      "All the way from Melbourne Australia — Men at Work on K-HIT!",
+      "Down Under went to number one all over the world and now Overkill is making the same move — Men at Work!",
+      "They came from Australia with a saxophone and a sense of humor and conquered the whole planet. Men at Work!"
+    ]
+  },
+  "Hall and Oates": {
+    "artist": "Hall and Oates",
+    "era": [1970, 1980],
+    "bio": "Daryl Hall and John Oates from Philadelphia — the best-selling duo in music history and right now they're at the absolute peak of their powers. They can do soul, pop, rock, and make it all sound effortless.",
+    "keyAlbums": [
+      { "title": "Private Eyes", "releaseDate": "1981-09-28", "context": "I Can't Go for That and the title track Private Eyes — two number ones off one album, just dominant." },
+      { "title": "H2O", "releaseDate": "1982-11-05", "context": "Maneater sat at number one for four weeks — their most polished record yet and a massive commercial success." }
+    ],
+    "keyEvents": [
+      { "date": "1982-11-06", "fact": "Maneater is at number one and it's not going anywhere — Hall and Oates are the biggest duo in the country right now." },
+      { "date": "1983-01-01", "fact": "They've had six number one hits since 1980 — no duo in history has had a run like this." }
+    ],
+    "djLines": [
+      "The most unstoppable duo in the music business — Hall and Oates on K-HIT!",
+      "Six number ones and counting — Daryl Hall and John Oates!",
+      "Philadelphia soul brought uptown — Hall and Oates, New York's number one!"
+    ]
+  },
+  "Prince": {
+    "artist": "Prince",
+    "era": [1980],
+    "bio": "Prince Rogers Nelson from Minneapolis, Minnesota — writes everything, plays everything, produces everything. He's twenty-five years old and already operating at a level most artists never reach.",
+    "keyAlbums": [
+      { "title": "Dirty Mind", "releaseDate": "1980-10-08", "context": "The album that announced he was doing something completely his own — funk, rock, pop, R&B all at once." },
+      { "title": "Controversy", "releaseDate": "1981-10-14", "context": "He was pushing boundaries and the music press started paying serious attention." },
+      { "title": "1999", "releaseDate": "1982-10-27", "context": "A double album that crossed over to pop radio — Little Red Corvette is getting heavy play on both pop and R&B stations." }
+    ],
+    "keyEvents": [
+      { "date": "1983-02-01", "fact": "Little Red Corvette is climbing the pop charts — this is his biggest crossover moment yet and it won't be the last." },
+      { "date": "1983-03-01", "fact": "He's already recording his next project — the rumor is it might be a movie. Whatever he's doing, it'll be unlike anything else." }
+    ],
+    "djLines": [
+      "One man, every instrument, every idea — Prince on K-HIT!",
+      "Minneapolis gave us something the world wasn't ready for — Prince!",
+      "Little Red Corvette and he's just getting started — Prince on New York's number one!"
+    ]
+  },
+  "Bonnie Tyler": {
+    "artist": "Bonnie Tyler",
+    "era": [1970, 1980],
+    "bio": "Bonnie Tyler from Wales has a voice that sounds like it was dragged through gravel and comes out pure gold. Total Eclipse of the Heart is the kind of power ballad that makes the hair on the back of your neck stand up.",
+    "keyAlbums": [
+      { "title": "Faster Than the Speed of Night", "releaseDate": "1983-04-05", "context": "Total Eclipse of the Heart is the centerpiece — Jim Steinman produced it and it's an absolute epic." }
+    ],
+    "keyEvents": [
+      { "date": "1983-06-01", "fact": "Total Eclipse of the Heart just hit number one — it's four minutes and thirty seconds of pure emotional power." }
+    ],
+    "djLines": [
+      "That voice is one of a kind — Bonnie Tyler on K-HIT!",
+      "Jim Steinman wrote it, Bonnie Tyler owns it — Total Eclipse of the Heart!",
+      "Total Eclipse of the Heart — number one, and if you have a pulse you know exactly why. Bonnie Tyler!"
+    ]
+  },
+  "Billy Joel": {
+    "artist": "Billy Joel",
+    "era": [1970, 1980],
+    "bio": "Billy Joel from Hicksville, Long Island — as New York as it gets. The Piano Man has been writing the soundtrack to this city's life for over a decade and he just keeps getting better.",
+    "keyAlbums": [
+      { "title": "The Stranger", "releaseDate": "1977-09-29", "context": "Piano Man, Just the Way You Are, Movin' Out — this album put him in the conversation with the all-time greats." },
+      { "title": "Glass Houses", "releaseDate": "1980-03-12", "context": "It's Still Rock and Roll to Me went to number one — he proved he could rock as hard as anyone." },
+      { "title": "The Nylon Curtain", "releaseDate": "1982-09-23", "context": "Pressure and Allentown — darker, more serious, a genuine artistic statement about working class America." },
+      { "title": "An Innocent Man", "releaseDate": "1983-08-08", "context": "Just out — a love letter to the music of the 50s and 60s, and Tell Her About It is already a number one hit." }
+    ],
+    "keyEvents": [
+      { "date": "1983-08-29", "fact": "Tell Her About It just hit number one — his first chart-topper since It's Still Rock and Roll to Me and the new album is pure joy." }
+    ],
+    "djLines": [
+      "A Long Island kid who became the voice of New York — Billy Joel on K-HIT!",
+      "The Piano Man with a brand new number one — Billy Joel!",
+      "From Hicksville to the top of the charts — there's nobody more New York than Billy Joel."
+    ]
+  },
+  "Toto": {
+    "artist": "Toto",
+    "era": [1970, 1980],
+    "bio": "Toto is what happens when the best session musicians in Los Angeles decide to form their own band. These guys have played on more hit records than you can count, and when they make their own music it sounds like everything at once — and it works.",
+    "keyAlbums": [
+      { "title": "Toto IV", "releaseDate": "1982-04-08", "context": "Africa and Rosanna won six Grammys including Album of the Year — the most Grammy wins of any album in 1982." }
+    ],
+    "keyEvents": [
+      { "date": "1982-09-01", "fact": "Africa hits number one — one of the most meticulously crafted pop songs of the decade, and the Grammys agreed." },
+      { "date": "1983-02-23", "fact": "Toto IV just won Album of the Year at the Grammys — six awards total, the night belonged to them." }
+    ],
+    "djLines": [
+      "Grammy winners and then some — Toto on K-HIT!",
+      "Six Grammys including Album of the Year — Africa is one of the songs of our time. Toto!",
+      "The best musicians in LA making the best records in pop — Toto on New York's number one!"
+    ]
+  },
+  "Journey": {
+    "artist": "Journey",
+    "era": [1970, 1980],
+    "bio": "Journey from San Francisco with Steve Perry up front — they make rock anthems that feel personal, like every song is about something that happened to you specifically. Don't Stop Believin' is becoming one of the most played songs in rock history.",
+    "keyAlbums": [
+      { "title": "Escape", "releaseDate": "1981-07-31", "context": "Don't Stop Believin', Open Arms, Who's Crying Now — three massive hits off one album, their commercial peak." },
+      { "title": "Frontiers", "releaseDate": "1983-02-22", "context": "Separate Ways just came out — the video is gloriously cheesy but the song rocks hard." }
+    ],
+    "keyEvents": [
+      { "date": "1982-02-01", "fact": "Open Arms goes to number two — one of the biggest power ballads of the decade and Steve Perry's voice is extraordinary on it." },
+      { "date": "1983-03-01", "fact": "Separate Ways is climbing — Frontiers is their new album and it's already doing huge numbers." }
+    ],
+    "djLines": [
+      "San Francisco's finest — Journey on K-HIT!",
+      "Don't Stop Believin' is becoming the anthem of a generation and that's not an accident — Journey!",
+      "Steve Perry's got one of the great voices in rock — Journey on New York's number one!"
+    ]
+  },
+  "Olivia Newton-John": {
+    "artist": "Olivia Newton-John",
+    "era": [1970, 1980],
+    "bio": "Olivia Newton-John from Cambridge England by way of Australia — she reinvented herself with Grease in 1978 and Physical in '81 proved she could keep reinventing. One of the most adaptable and consistent pop artists of the era.",
+    "keyAlbums": [
+      { "title": "Totally Hot", "releaseDate": "1978-10-28", "context": "A Rock n Roll Hearts peaked and this was her bridging moment to the Grease era." },
+      { "title": "Physical", "releaseDate": "1981-11-02", "context": "The title track spent ten weeks at number one — the longest run at number one since 1956." }
+    ],
+    "keyEvents": [
+      { "date": "1981-11-07", "fact": "Physical hits number one and it's not letting go — ten weeks at the top, the longest since Debby Boone's You Light Up My Life." },
+      { "date": "1983-06-01", "fact": "She's working on new material after the massive success of Physical — one of the most bankable names in pop right now." }
+    ],
+    "djLines": [
+      "Pure pop perfection — Olivia Newton-John on K-HIT!",
+      "Physical spent ten weeks at number one — nobody in pop is more consistent than Olivia Newton-John!",
+      "From Grease to Physical and beyond — Olivia Newton-John on New York's number one!"
+    ]
+  },
+  "Kenny Rogers": {
+    "artist": "Kenny Rogers",
+    "era": [1970, 1980],
+    "bio": "Kenny Rogers from Houston Texas has been making music since the 60s but The Gambler in 1978 turned him into a genuine American icon. He can do country, pop, soul — and he makes it all feel like a late-night conversation with a friend.",
+    "keyAlbums": [
+      { "title": "The Gambler", "releaseDate": "1978-11-01", "context": "You've got to know when to hold em — one of the most quoted songs in American music history." },
+      { "title": "Kenny Rogers' Greatest Hits", "releaseDate": "1980-11-07", "context": "One of the best-selling albums of 1980 — he was everywhere that year." }
+    ],
+    "keyEvents": [
+      { "date": "1983-01-01", "fact": "Islands in the Stream with Dolly Parton is at the top of the country and pop charts — a genuine crossover smash." }
+    ],
+    "djLines": [
+      "The Gambler himself — Kenny Rogers on K-HIT!",
+      "Islands in the Stream with Dolly Parton is the duet of the year — Kenny Rogers!",
+      "Know when to hold em, know when to fold em — and know that Kenny Rogers is number one. K-HIT!"
+    ]
+  },
+  "Donna Summer": {
+    "artist": "Donna Summer",
+    "era": [1970, 1980],
+    "bio": "Donna Summer from Boston — the Queen of Disco turned pop star without missing a beat. She Could Have Danced All Night, she worked hard for the money, and she built a career that outlasted the genre that made her famous.",
+    "keyAlbums": [
+      { "title": "Bad Girls", "releaseDate": "1979-04-25", "context": "Hot Stuff and Bad Girls were both number one in the same year — an extraordinary achievement." },
+      { "title": "The Wanderer", "releaseDate": "1980-10-20", "context": "She moved to a harder rock sound — a brave pivot after disco's fall." },
+      { "title": "She Works Hard for the Money", "releaseDate": "1983-06-01", "context": "The title track is a massive comeback hit — one of the best things she's ever recorded." }
+    ],
+    "keyEvents": [
+      { "date": "1983-07-01", "fact": "She Works Hard for the Money is climbing fast — Donna Summer reminding everyone exactly why she's the queen." }
+    ],
+    "djLines": [
+      "The Queen of Disco working hard for the money — Donna Summer on K-HIT!",
+      "Hot Stuff, Bad Girls, and now She Works Hard for the Money — Donna Summer does not miss!",
+      "She built the disco era and she's outlasting all of it — Donna Summer on New York's number one!"
+    ]
+  },
+  "Dexys Midnight Runners": {
+    "artist": "Dexys Midnight Runners",
+    "era": [1980],
+    "bio": "Kevin Rowland and Dexys Midnight Runners out of Birmingham England — Come On Eileen is one of the most irresistible songs in years, and their Celtic soul sound is completely unlike anything else on American radio.",
+    "keyAlbums": [
+      { "title": "Too-Rye-Ay", "releaseDate": "1982-07-30", "context": "Come On Eileen off this album went to number one on both sides of the Atlantic — fiddles, harmonies, and pure joy." }
+    ],
+    "keyEvents": [
+      { "date": "1983-01-01", "fact": "Come On Eileen finished as the best-selling single of 1982 in the UK — and it was massive in the US too." }
+    ],
+    "djLines": [
+      "Come on Eileen — you know you love it. Dexys Midnight Runners on K-HIT!",
+      "The song you can't hear without smiling — Come On Eileen by Dexys Midnight Runners!",
+      "Celtic soul from Birmingham England taking over New York City — Dexys Midnight Runners!"
+    ]
+  },
+  "Irene Cara": {
+    "artist": "Irene Cara",
+    "era": [1980],
+    "bio": "Irene Cara from the Bronx — right here in New York City. She sang the title track to Fame and now Flashdance has made her a household name all over again. A New York success story if there ever was one.",
+    "keyAlbums": [
+      { "title": "Flashdance... What a Feeling", "releaseDate": "1983-04-14", "context": "The Flashdance soundtrack single is number one — her voice on that track is the sound of this whole moment." }
+    ],
+    "keyEvents": [
+      { "date": "1983-06-01", "fact": "What a Feeling from Flashdance is number one — and she's from the Bronx, so this is a New York story all the way." },
+      { "date": "1984-04-09", "fact": "She just won the Oscar for Best Original Song for What a Feeling — the first woman to win that award in years." }
+    ],
+    "djLines": [
+      "From the Bronx to number one — Irene Cara on K-HIT!",
+      "What a Feeling — and that's exactly what New York is having right now. Irene Cara!",
+      "She did Fame and now Flashdance — Irene Cara is on the greatest run in pop right now!"
+    ]
+  },
+  "Styx": {
+    "artist": "Styx",
+    "era": [1970, 1980],
+    "bio": "Styx from Chicago — one of the biggest arena rock bands of the past decade. Dennis DeYoung and Tommy Shaw together have written some of the most ambitious rock songs of the era, and they've been packing arenas coast to coast.",
+    "keyAlbums": [
+      { "title": "Paradise Theatre", "releaseDate": "1980-12-18", "context": "The Best of Times and Too Much Time on My Hands — a concept album that became their biggest commercial success." },
+      { "title": "Kilroy Was Here", "releaseDate": "1983-02-17", "context": "Mr. Roboto is a genuine statement — a rock opera about censorship. Love it or hate it, you can't ignore it." }
+    ],
+    "keyEvents": [
+      { "date": "1981-02-01", "fact": "The Best of Times hits number one — Paradise Theatre is their most complete album and the charts agree." },
+      { "date": "1983-02-17", "fact": "Kilroy Was Here just dropped — Mr. Roboto is already all over radio and it's unlike anything else in rock right now." }
+    ],
+    "djLines": [
+      "Chicago's arena rock giants — Styx on K-HIT!",
+      "Domo arigato, Mr. Roboto — Styx with one of the most unique songs in rock right now!",
+      "The Best of Times, Mr. Roboto — Styx have never done the same thing twice and that's exactly why we love them."
+    ]
+  },
+  "Rick Springfield": {
+    "artist": "Rick Springfield",
+    "era": [1980],
+    "bio": "Rick Springfield from Sydney Australia — actor, rock star, and the man who made Jessie's Girl the song of 1981. He plays Dr. Noah Drake on General Hospital and rocks arenas at night. Living the dream.",
+    "keyAlbums": [
+      { "title": "Working Class Dog", "releaseDate": "1981-04-01", "context": "Jessie's Girl went to number one — a perfect rock song and one of the most played tracks of 1981." },
+      { "title": "Success Hasn't Spoiled Me Yet", "releaseDate": "1982-03-09", "context": "Don't Talk to Strangers proved Jessie's Girl wasn't a fluke — another top five hit." }
+    ],
+    "keyEvents": [
+      { "date": "1981-08-01", "fact": "Jessie's Girl hits number one — Rick Springfield proving that soap opera heartthrobs can rock just as hard as anyone." },
+      { "date": "1982-06-01", "fact": "Don't Talk to Strangers is in the top five — he's got one of the most consistent hit rates in rock right now." }
+    ],
+    "djLines": [
+      "Dr. Noah Drake in the afternoon, rock star at night — Rick Springfield on K-HIT!",
+      "Jessie's Girl was number one and he hasn't slowed down since — Rick Springfield!",
+      "Australia's gift to American rock and roll — Rick Springfield on New York's number one!"
+    ]
+  },
+  "Eddy Grant": {
+    "artist": "Eddy Grant",
+    "era": [1980],
+    "bio": "Eddy Grant from Plaisance, British Guiana — Electric Avenue is one of those songs that tunnels into your brain and lives there. He built his own studio in Barbados and runs his own label. The man does everything himself.",
+    "keyAlbums": [
+      { "title": "Killer on the Rampage", "releaseDate": "1982-11-01", "context": "Electric Avenue off this album is one of the most distinctive sounds on radio right now — reggae-funk-pop and it's undeniable." }
+    ],
+    "keyEvents": [
+      { "date": "1983-03-01", "fact": "Electric Avenue hits the top five in the US — that bassline has been rattling windows from here to Los Angeles." }
+    ],
+    "djLines": [
+      "We gonna rock down to Electric Avenue — Eddy Grant on K-HIT!",
+      "Built his own studio, runs his own label, makes his own rules — Eddy Grant!",
+      "Electric Avenue is one of the most original sounds on radio right now — Eddy Grant on New York's number one!"
+    ]
+  },
+  "A Flock of Seagulls": {
+    "artist": "A Flock of Seagulls",
+    "era": [1980],
+    "bio": "A Flock of Seagulls from Liverpool England — the hair, the synths, and I Ran. MTV made them famous and the song itself is a genuine piece of work. Mike Score's haircut has its own fan club at this point.",
+    "keyAlbums": [
+      { "title": "A Flock of Seagulls", "releaseDate": "1982-04-02", "context": "I Ran is the track that made them MTV darlings — that synth sound and those guitars are completely of this moment." }
+    ],
+    "keyEvents": [
+      { "date": "1982-08-01", "fact": "I Ran is all over MTV and climbing the charts — and that hair is all over every magazine in America." },
+      { "date": "1983-01-01", "fact": "They won the Grammy for Best Rock Instrumental — Space Age Love Song is getting them taken seriously as musicians beyond the hair." }
+    ],
+    "djLines": [
+      "The hair, the synths, the song — A Flock of Seagulls on K-HIT!",
+      "I Ran — and so did we, straight to the radio. A Flock of Seagulls!",
+      "Liverpool England sending New York its most interesting haircut and best synth-pop right now — A Flock of Seagulls!"
+    ]
+  }
+};
 
-  { artist:'The Police', from:'1977-01-01', fact:`Formed in London in 1977. Members are Sting on bass and vocals, Andy Summers on guitar, and Stewart Copeland on drums.` },
-  { artist:'The Police', from:'1978-11-01', fact:`Their debut album Outlandos d'Amour established them as leaders of the new wave movement.` },
-  { artist:'The Police', from:'1983-06-17', fact:`Their new album Synchronicity just came out — Every Breath You Take is already a massive number one hit.` },
 
-  { artist:'Cyndi Lauper', from:'1953-06-22', fact:`Born June 22, 1953 in Queens, New York City.` },
-  { artist:'Cyndi Lauper', from:'1983-09-24', fact:`Her debut album She's So Unusual just came out — she writes her own songs and has a totally unique style.` },
+// ─── ARTIST LIBRARY — 90s HIP HOP (WBDX / DJ CIPHER) ────────────────────────
+// Top artists for KHIT hip hop format, dial years 1988–1999
+// Cipher's voice: authoritative, Brooklyn-grounded, culture-first
+const ARTIST_LIBRARY_HIPHOP = {
+  "The Notorious B.I.G.": {
+    "artist": "The Notorious B.I.G.",
+    "era": [1990],
+    "bio": "Christopher Wallace — Biggie Smalls — is from Bed-Stuy, Brooklyn, which makes him Cipher's own. The greatest rapper of his era by almost any measure: the storytelling, the flow, the voice that sounds like it was built in a basement and installed in a god. Ready to Die put him on the map. His second album is going to cement the legacy.",
+    "keyAlbums": [
+      {"title": "Ready to Die", "releaseDate": "1994-09-13", "context": "The debut that announced him as the realest voice in New York — Juicy, Big Poppa, the whole record is a masterpiece from a 22-year-old kid from Bed-Stuy."}
+    ],
+    "keyEvents": [
+      {"date": "1994-09-13", "fact": "Ready to Die just dropped and New York hasn't been the same since — Juicy is on every radio in the five boroughs."},
+      {"date": "1995-03-01", "fact": "One More Chance is everywhere — Biggie is the undisputed king of New York right now, no debate."},
+      {"date": "1996-03-01", "fact": "The tension with the West Coast has been building all year — Biggie stays focused on the music but the beef is real."}
+    ],
+    "djLines": [
+      "The king of New York, straight out of Bed-Stuy — the Notorious B.I.G.!",
+      "Christopher Wallace put Brooklyn on his back and carried it to the top of the world — Biggie Smalls.",
+      "Ready to Die came out two years ago and it still sounds like tomorrow — the Notorious B.I.G. on KHIT."
+    ]
+  },
+  "Nas": {
+    "artist": "Nas",
+    "era": [1990],
+    "bio": "Nasir Jones from Queensbridge Houses — one of the most gifted lyricists ever to pick up a microphone. Illmatic came out in '94 and it's already being called the greatest hip hop album of all time. He's 21 years old and he's already made his masterpiece. The question is what comes next.",
+    "keyAlbums": [
+      {"title": "Illmatic", "releaseDate": "1994-04-19", "context": "Ten tracks, forty minutes, no filler — Illmatic is what hip hop sounds like when everything goes exactly right. DJ Premier, Pete Rock, Large Professor all on production."},
+      {"title": "It Was Written", "releaseDate": "1996-07-02", "context": "His second album just dropped — more polished, more accessible, and street at the same time. Street Dreams is already in heavy rotation."}
+    ],
+    "keyEvents": [
+      {"date": "1994-04-19", "fact": "Illmatic is out and it's a revelation — NY State of Mind alone would make it a classic, and it has nine more records just like it."},
+      {"date": "1996-07-02", "fact": "It Was Written just dropped — Nas comes back with a bigger sound and Street Dreams is going to be huge."}
+    ],
+    "djLines": [
+      "Queensbridge's finest — Nas on KHIT, where the culture lives.",
+      "Illmatic came out two years ago and they're still debating whether any album has touched it — Nas.",
+      "The God's son, straight out of the bridge — Nas on KHIT!"
+    ]
+  },
+  "Jay-Z": {
+    "artist": "Jay-Z",
+    "era": [1990, 2000],
+    "bio": "Shawn Carter from the Marcy Houses in Bed-Stuy — started out hustling on the corners and now he's hustling records. Reasonable Doubt dropped this year and anybody paying attention knows they're watching the beginning of something historic. The flow is ice cold and the content is real.",
+    "keyAlbums": [
+      {"title": "Reasonable Doubt", "releaseDate": "1996-06-25", "context": "His debut just came out and it's the most assured debut since Illmatic — Can't Knock the Hustle, Dead Presidents, Brooklyn's Finest with Biggie. This is the real thing."}
+    ],
+    "keyEvents": [
+      {"date": "1996-06-25", "fact": "Reasonable Doubt just dropped — Jay-Z out of Bed-Stuy with the coldest debut of the year. Remember where you heard this name first."},
+      {"date": "1996-08-01", "fact": "Dead Presidents II is getting heavy play — Jay-Z is building a real buzz in the streets and on the radio."}
+    ],
+    "djLines": [
+      "Marcy Houses to the top — Jay-Z on KHIT!",
+      "Reasonable Doubt just came out and Cipher's been playing it every set — Jay-Z.",
+      "BK to the fullest — Jay-Z, fresh off his debut, on KHIT where the culture lives."
+    ]
+  },
+  "Wu-Tang Clan": {
+    "artist": "Wu-Tang Clan",
+    "era": [1990],
+    "bio": "Nine MCs from Shaolin — Staten Island — and they changed the whole architecture of hip hop. RZA built a sound that sounds like kung fu movies and broken radiators and New York in winter, and the MCs on top of it are some of the most original voices in the game. Enter the Wu-Tang is a landmark.",
+    "keyAlbums": [
+      {"title": "Enter the Wu-Tang (36 Chambers)", "releaseDate": "1993-11-09", "context": "CREAM, Method Man, Protect Ya Neck — this album sounded like nothing before it and nothing has sounded quite like it since. Nine MCs, one RZA, zero compromises."},
+      {"title": "Liquid Swords", "releaseDate": "1995-11-07", "context": "GZA's solo masterpiece — the most lyrical Wu release and one of the best hip hop albums ever made."}
+    ],
+    "keyEvents": [
+      {"date": "1993-11-09", "fact": "Enter the Wu-Tang just dropped — CREAM is everywhere and Shaolin is on the map permanently now."},
+      {"date": "1995-11-07", "fact": "Liquid Swords just came out — GZA goes bar for bar with himself for forty minutes and never loses. This is the Wu at peak."}
+    ],
+    "djLines": [
+      "Wu-Tang is for the children — and the adults, and everybody breathing. Wu-Tang Clan on KHIT!",
+      "Shaolin, Staten Island — nine MCs who changed the whole game. Wu-Tang Clan.",
+      "C.R.E.A.M. — cash rules everything around me. Wu-Tang Clan on KHIT where the culture lives."
+    ]
+  },
+  "A Tribe Called Quest": {
+    "artist": "A Tribe Called Quest",
+    "era": [1990],
+    "bio": "Q-Tip, Phife Dawg, Ali Shaheed Muhammad, and Jarobi from Queens — the most musical rap group that ever was. They took jazz samples and turned them into something warm and intelligent that opened hip hop up to people who didn't know they needed it. Low End Theory and Midnight Marauders are two of the greatest albums in any genre.",
+    "keyAlbums": [
+      {"title": "The Low End Theory", "releaseDate": "1991-09-24", "context": "Jazz bass, sharp rhymes, and a warmth that nobody else in rap had — this album expanded the whole idea of what hip hop could be."},
+      {"title": "Midnight Marauders", "releaseDate": "1993-11-09", "context": "Electric Relaxation, Award Tour, Steve Biko — their most consistent album and one of the cornerstones of the golden age."}
+    ],
+    "keyEvents": [
+      {"date": "1993-11-09", "fact": "Midnight Marauders drops the same day as Enter the Wu — two of the greatest hip hop albums of all time on the same Tuesday. New York is something else."},
+      {"date": "1996-01-01", "fact": "They're working on new material — Tribe has been quiet but when they come back it's going to matter."}
+    ],
+    "djLines": [
+      "The most musical rap group that ever breathed — A Tribe Called Quest on KHIT!",
+      "Electric Relaxation — that's exactly what this feels like. A Tribe Called Quest.",
+      "Q-Tip, Phife, Ali Shaheed — Queens in the house. A Tribe Called Quest on KHIT where the culture lives."
+    ]
+  },
+  "Mobb Deep": {
+    "artist": "Mobb Deep",
+    "era": [1990],
+    "bio": "Havoc and Prodigy from Queensbridge — the coldest, darkest sound in mid-90s New York rap. Shook Ones Part II is the most menacing rap record anyone has made and The Infamous is an album that sounds like the city at 3am when nothing good is happening.",
+    "keyAlbums": [
+      {"title": "The Infamous", "releaseDate": "1995-04-25", "context": "Shook Ones Part II alone would make this a classic — but every track on The Infamous sounds like Queensbridge winter. The grimiest and most honest rap album of 1995."}
+    ],
+    "keyEvents": [
+      {"date": "1995-04-25", "fact": "The Infamous just dropped and Shook Ones Part II is the hardest record on the street right now — period."},
+      {"date": "1996-01-01", "fact": "Mobb Deep is working on their follow-up — if it's half of what The Infamous was, New York is in trouble."}
+    ],
+    "djLines": [
+      "Queensbridge's grimiest — Mobb Deep on KHIT!",
+      "Shook Ones Part II — there is no harder record in New York right now. Mobb Deep.",
+      "Havoc and Prodigy, straight out of the Bridge — Mobb Deep on KHIT where the culture lives."
+    ]
+  },
+  "Gang Starr": {
+    "artist": "Gang Starr",
+    "era": [1990],
+    "bio": "DJ Premier from Houston and Guru from Boston — the least New York origin story for the most New York sound. Premo's beats are built from the DNA of the city and Guru's monotone delivery hits harder than anyone who's trying. They are the gold standard of what rap radio should sound like.",
+    "keyAlbums": [
+      {"title": "Hard to Earn", "releaseDate": "1994-03-08", "context": "Mass Appeal, DWYCK, Mostly tha Voice — Premier's production is at its peak and Guru is as precise as ever. The most complete Gang Starr album."}
+    ],
+    "keyEvents": [
+      {"date": "1994-03-08", "fact": "Hard to Earn just came out — Mass Appeal is on heavy rotation and DJ Premier is being called the best producer in New York, and the argument is hard to dispute."}
+    ],
+    "djLines": [
+      "The gold standard — Gang Starr on KHIT!",
+      "DJ Premier on the boards, Guru on the mic — there is no cleaner combination in hip hop. Gang Starr.",
+      "Mass Appeal — and that's exactly what they have. Gang Starr on KHIT where the culture lives."
+    ]
+  },
+  "Rakim": {
+    "artist": "Rakim",
+    "era": [1980, 1990],
+    "bio": "William Griffin Jr. from Wyandanch, Long Island — the God MC. Eric B. and Rakim fundamentally changed how people rapped. The internal rhyme schemes, the economy of language, the delivery that sounds like he never broke a sweat — every MC who came after him studied this man.",
+    "keyAlbums": [
+      {"title": "Paid in Full", "releaseDate": "1987-07-07", "context": "The album that made Rakim a legend before he was 20 — Eric B. Is President and I Know You Got Soul changed everything."},
+      {"title": "Follow the Leader", "releaseDate": "1988-07-25", "context": "Follow the Leader and Microphone Fiend — he kept raising his own standard and the rest of rap kept trying to catch up."},
+      {"title": "Let the Rhythm Hit 'Em", "releaseDate": "1990-05-21", "context": "His most mature work — the production and the lyrics in lockstep. The God MC at peak."}
+    ],
+    "keyEvents": [
+      {"date": "1987-07-07", "fact": "Paid in Full drops and hip hop has a new God MC — Rakim's flow is something that's never been heard before."},
+      {"date": "1992-01-01", "fact": "Eric B. and Rakim split up — the end of the greatest MC/DJ partnership in hip hop history. The solo era begins."}
+    ],
+    "djLines": [
+      "The God MC — Rakim on KHIT!",
+      "Every rapper you love studied this man. Rakim — the original architect.",
+      "Paid in Full, Follow the Leader — if hip hop has a Mount Rushmore, Rakim is on it. KHIT."
+    ]
+  },
+  "LL Cool J": {
+    "artist": "LL Cool J",
+    "era": [1980, 1990],
+    "bio": "James Todd Smith from St. Albans, Queens — LL Cool J was the first rapper to prove you could have a career that lasted more than an album. Radio in 1985 made him a star, Mama Said Knock You Out in 1990 made him a legend when people thought he was finished. He's been Def Jam since day one.",
+    "keyAlbums": [
+      {"title": "Radio", "releaseDate": "1985-11-18", "context": "The debut Def Jam album that launched LL's career — I Can't Live Without My Radio and Rock the Bells made a 17-year-old from Queens into a national star."},
+      {"title": "Mama Said Knock You Out", "releaseDate": "1990-08-27", "context": "The comeback album that silenced everyone who said he was done — the title track is one of the most ferocious records of 1990."}
+    ],
+    "keyEvents": [
+      {"date": "1990-08-27", "fact": "Mama Said Knock You Out just dropped — LL came back swinging and knocked everybody out who counted him out."},
+      {"date": "1996-01-01", "fact": "LL Cool J is still one of the most recognizable names in hip hop — eleven years in the game and still standing tall."}
+    ],
+    "djLines": [
+      "Queens stand up — LL Cool J on KHIT!",
+      "Eleven years in the game and LL Cool J is still the definition of longevity in hip hop.",
+      "From Radio to Mama Said Knock You Out — LL Cool J on KHIT where the culture lives."
+    ]
+  },
+  "2Pac": {
+    "artist": "2Pac",
+    "era": [1990],
+    "bio": "Tupac Amaru Shakur — born in New York, raised everywhere, claimed by the West Coast. All Eyez on Me is the biggest hip hop album of 1996 and California Love is on every radio in the country. His talent is undeniable even if Cipher's loyalties are New York. The East/West tension is real and it's heavy.",
+    "keyAlbums": [
+      {"title": "Me Against the World", "releaseDate": "1995-03-14", "context": "He recorded it while facing prison time and it became his most introspective and powerful record. Dear Mama is a generational song."},
+      {"title": "All Eyez on Me", "releaseDate": "1996-02-13", "context": "Four sides, twenty-seven tracks, California Love — the most ambitious hip hop project of 1996 and a commercial juggernaut."}
+    ],
+    "keyEvents": [
+      {"date": "1995-03-14", "fact": "Me Against the World drops while Pac is in prison — Dear Mama goes to number one and it deserves every moment of it."},
+      {"date": "1996-02-13", "fact": "All Eyez on Me just came out — a double album and California Love is everywhere. The biggest hip hop release of the year so far."},
+      {"date": "1996-09-13", "fact": "Tupac Shakur was shot in Las Vegas last night after the Tyson fight. He is in critical condition. The culture is holding its breath right now."},
+      {"date": "1996-09-14", "fact": "Tupac Shakur has passed away. He was 25 years old. Whatever you thought about the East/West situation — the loss of that talent is a blow to this entire culture."}
+    ],
+    "djLines": [
+      "All Eyez on Me — and they should be. 2Pac on KHIT.",
+      "Whatever side you're on, you can't deny the talent. 2Pac.",
+      "California Love is number one all over the country — 2Pac and Dr. Dre on KHIT where the culture lives."
+    ]
+  },
+  "Dr. Dre": {
+    "artist": "Dr. Dre",
+    "era": [1990],
+    "bio": "Andre Romelle Young from Compton — the architect of G-Funk. The Chronic in '92 invented a sound that the whole West Coast built on, and now with Death Row he's the most powerful producer in hip hop. Nuthin But a G Thang changed what rap radio sounded like.",
+    "keyAlbums": [
+      {"title": "The Chronic", "releaseDate": "1992-12-15", "context": "G-Funk was born here — Nuthin But a G Thang, Let Me Ride, Dre Day. Snoop Dogg's introduction to the world. The most influential rap album of the early 90s."}
+    ],
+    "keyEvents": [
+      {"date": "1992-12-15", "fact": "The Chronic just dropped and it sounds like nothing else on the radio — Dre just invented a whole new genre out of Compton."},
+      {"date": "1996-01-01", "fact": "Dre is the most powerful producer on the West Coast and one of the most influential in the game — everything coming out of Death Row has his fingerprints on it."}
+    ],
+    "djLines": [
+      "The architect of G-Funk — Dr. Dre on KHIT!",
+      "The Chronic came out and changed what rap radio sounded like everywhere — including New York. Dr. Dre.",
+      "Compton by way of your speakers — Dr. Dre on KHIT where the culture lives."
+    ]
+  },
+  "Snoop Doggy Dogg": {
+    "artist": "Snoop Doggy Dogg",
+    "era": [1990],
+    "bio": "Calvin Broadus from Long Beach California — introduced to the world on The Chronic and immediately one of the most distinctive voices in rap. Doggystyle went ten times platinum and the laid-back West Coast flow he perfected has influenced everything that came after.",
+    "keyAlbums": [
+      {"title": "Doggystyle", "releaseDate": "1993-11-23", "context": "Gin and Juice, What's My Name — sold almost a million copies in the first week and went on to be one of the best-selling rap albums ever."}
+    ],
+    "keyEvents": [
+      {"date": "1993-11-23", "fact": "Doggystyle just dropped — Snoop Dogg sells 800,000 copies in the first week. A new West Coast king is crowned."},
+      {"date": "1996-01-01", "fact": "Snoop is the face of Death Row alongside Tupac — the West Coast has never been more dominant in hip hop."}
+    ],
+    "djLines": [
+      "Long Beach in the house — Snoop Doggy Dogg on KHIT!",
+      "Gin and Juice, What's My Name — Snoop Dogg with that West Coast ice. KHIT.",
+      "Doggystyle sold a million copies in a week and Cipher still respects the craft. Snoop Doggy Dogg."
+    ]
+  },
+  "Busta Rhymes": {
+    "artist": "Busta Rhymes",
+    "era": [1990],
+    "bio": "Trevor Smith from East Flatbush, Brooklyn — started in Leaders of the New School and went solo to become the most energetic presence in hip hop. The flow is supernatural, the energy never drops, and nobody performs like Busta. He is Brooklyn doing what Brooklyn does.",
+    "keyAlbums": [
+      {"title": "The Coming", "releaseDate": "1996-03-26", "context": "His debut solo album — Woo-Hah!! Got You All in Check is the single of the spring and Busta is already being called one of the most exciting solo artists in rap."}
+    ],
+    "keyEvents": [
+      {"date": "1996-03-26", "fact": "Busta Rhymes drops The Coming — Woo-Hah!! is everywhere and Brooklyn has a new solo star to celebrate."}
+    ],
+    "djLines": [
+      "Brooklyn in the building — Busta Rhymes on KHIT!",
+      "Woo-Hah!! Got You All in Check — and he's got New York all in check too. Busta Rhymes.",
+      "The most electrifying man in hip hop right now — Busta Rhymes on KHIT where the culture lives."
+    ]
+  }
+};
 
-  { artist:'David Bowie', from:'1947-01-08', fact:`Born David Jones on January 8, 1947 in Brixton, London. Has been reinventing himself since the 1960s.` },
-  { artist:'David Bowie', from:'1983-04-14', fact:`His new album Let's Dance was produced by Nile Rodgers of Chic — a completely new sound for Bowie, much more mainstream.` },
 
-  { artist:'Eurythmics', from:'1980-01-01', fact:`Duo formed in London — Annie Lennox on vocals and Dave Stewart on instruments and production.` },
-  { artist:'Eurythmics', from:'1983-01-17', fact:`Their album Sweet Dreams Are Made of This just came out — the title track is getting massive airplay worldwide.` },
-
-  { artist:'Toto', from:'1977-01-01', fact:`Session musicians from Los Angeles who formed their own band. Africa and Rosanna from their Toto IV album were huge hits in 1982.` },
-  { artist:'Toto', from:'1982-02-01', fact:`Their album Toto IV just won six Grammy Awards including Album of the Year.` },
-
-  { artist:'Hall and Oates', from:'1970-01-01', fact:`Daryl Hall and John Oates met at Temple University in Philadelphia. The best-selling duo in music history.` },
-  { artist:'Hall and Oates', from:'1982-09-01', fact:`Their album H2O produced the massive hit Maneater which spent four weeks at number one.` },
-
-  { artist:'Lionel Richie', from:'1949-06-20', fact:`Born June 20, 1949 in Tuskegee, Alabama. Started his career with the Commodores.` },
-  { artist:'Lionel Richie', from:'1983-10-01', fact:`His new album Can't Slow Down just came out. All Night Long is already at number one.` },
-
-  { artist:'Prince', from:'1958-06-07', fact:`Born June 7, 1958 in Minneapolis, Minnesota. Writes, produces, and plays virtually every instrument himself.` },
-  { artist:'Prince', from:'1982-10-27', fact:`His album 1999 was just released — it's a double album getting heavy airplay on both pop and R&B stations.` },
-
-  { artist:'Duran Duran', from:'1978-01-01', fact:`Formed in Birmingham, England in 1978. One of the biggest acts on MTV right now.` },
-  { artist:'Duran Duran', from:'1982-05-21', fact:`Their album Rio is everywhere — Hungry Like the Wolf and Rio are both top ten hits.` },
-
-  { artist:'Culture Club', from:'1981-01-01', fact:`British new wave band fronted by Boy George. Known for their androgynous style and catchy pop songs.` },
-  { artist:'Culture Club', from:'1983-02-01', fact:`Karma Chameleon from their album Colour by Numbers is a massive worldwide hit.` },
-
-  { artist:'Bonnie Tyler', from:'1951-06-08', fact:`Born June 8, 1951 in Skewen, Wales. Known for her distinctive raspy voice.` },
-  { artist:'Bonnie Tyler', from:'1983-06-01', fact:`Total Eclipse of the Heart was produced by Jim Steinman — same guy who produced Meat Loaf's Bat Out of Hell. It's an epic power ballad.` },
-
-  { artist:'Journey', from:'1973-01-01', fact:`Rock band from San Francisco formed in 1973. Steve Perry has been lead vocalist since 1977.` },
-  { artist:'Journey', from:'1981-07-01', fact:`Their album Escape produced Don't Stop Believin' which is becoming one of the most played rock songs on radio.` },
-
-  { artist:'Men at Work', from:'1979-01-01', fact:`Australian rock band formed in Melbourne in 1979. Colin Hay writes most of their songs.` },
-  { artist:'Men at Work', from:'1981-11-01', fact:`Their debut album Business as Usual produced Who Can It Be Now and Down Under — both massive international hits.` },
-];
 
 function getDialDateFacts(dialDate){
   if(!dialDate) return [];
@@ -1821,14 +2608,38 @@ function getDialDateFacts(dialDate){
 }
 
 function getArtistFacts(artistName, dialDate){
-  if(!artistName || !dialDate) return [];
-  const iso = dialDate.iso;
-  // Match artist name (partial, case-insensitive)
-  const name = artistName.toLowerCase();
-  return ARTIST_KNOWLEDGE.filter(f => 
-    name.includes(f.artist.toLowerCase().split(' ')[0]) || 
-    f.artist.toLowerCase().includes(name.split(',')[0].trim()) 
-  ).filter(f => f.from <= iso);
+  if(!artistName || !dialDate) return null;
+  const iso = dialDate ? dialDate.iso : null;
+  const nameLower = artistName.toLowerCase().split(',')[0].trim();
+
+  // Check all available libraries
+  const allLibraries = [ARTIST_LIBRARY_1983, ARTIST_LIBRARY_HIPHOP];
+  let entry = null;
+
+  for(const lib of allLibraries){
+    const libKey = Object.keys(lib).find(k =>
+      k.toLowerCase().includes(nameLower) || nameLower.includes(k.toLowerCase().split(' ')[0])
+    );
+    if(libKey){ entry = lib[libKey]; break; }
+  }
+
+  if(entry){
+    const validEvents = iso ? entry.keyEvents.filter(e => e.date <= iso) : entry.keyEvents;
+    const validAlbums = iso ? entry.keyAlbums.filter(a => a.releaseDate <= iso) : entry.keyAlbums;
+    return {
+      source: 'library',
+      bio: entry.bio,
+      albums: validAlbums,
+      events: validEvents,
+      djLines: entry.djLines,
+      formatted: [
+        entry.bio,
+        validAlbums.length ? `Key records: ${validAlbums.map(a=>`"${a.title}" (${a.releaseDate.substring(0,4)}) — ${a.context}`).join('. ')}` : '',
+        validEvents.length ? `Recent moments: ${validEvents.map(e=>e.fact).join(' ')}` : '',
+      ].filter(Boolean).join('\n')
+    };
+  }
+  return null;
 }
 
 function getRecentFacts(dialDate, count=3){
@@ -1864,10 +2675,9 @@ async function getWikipediaArtistBio(artistName, dialDate){
 
   // Check pre-baked knowledge base first
   const prebaked = getArtistFacts(artistName, dialDate);
-  if(prebaked.length > 0){
-    const facts = prebaked.map(f=>f.fact).join(' ');
-    artistBioCache[cacheKey] = { facts, timestamp: Date.now() };
-    return facts;
+  if(prebaked && prebaked.formatted){
+    artistBioCache[cacheKey] = { facts: prebaked.formatted, timestamp: Date.now() };
+    return prebaked.formatted;
   }
 
   // Fetch from Wikipedia API
@@ -1925,8 +2735,10 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
   // Build context for the DJ
   // Use dial date if available, otherwise real day
   const _dialDate = dialDate || getDialDate(curYear);
+  const timeSlot = getTimeSlot();
+  const slotCtx = TIME_SLOT_CONTEXT[timeSlot] || TIME_SLOT_CONTEXT['midday'];
   const timeStr = (profile.time && DEV.timeofday) 
-    ? `The local time is ${getTimeOfDay()} on ${_dialDate.dayOfWeek}, ${_dialDate.short}, ${curYear}.`
+    ? `The local time is ${getTimeOfDay()} on ${_dialDate.dayOfWeek}, ${_dialDate.short}, ${curYear}. Daypart: ${slotCtx.label}. ${slotCtx.djNote}`
     : '';
   // Weather referenced based on dev setting and 30% chance
   const weatherStr = (profile.weather && weatherData && DEV.weather && (DJ_TEST_MODE || Math.random() < 0.30))
@@ -1937,14 +2749,16 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
   // Always include song context since we have it
   const hasSongContext = prevSong && nextSong;
 
-  // Detect if next song is "new" relative to dial year
-  const nextIsNew = nextSong && isSongNew(nextSong, curYear);
-  const prevIsNew = prevSong && isSongNew(prevSong, curYear);
-  const newSongStr = DEV.newsong && nextIsNew
-    ? `IMPORTANT: "${nextSong?.t}" by ${nextSong?.a} was JUST released — it is brand new right now in ${curYear}. Treat it as a hot new record, just out.`
-    : DEV.newsong && prevIsNew
-    ? `IMPORTANT: "${prevSong?.t}" by ${prevSong?.a} was just released recently — it is a new record. Mention that if natural.`
-    : '';
+  // Rich release context — tells Rick exactly how fresh each record is
+  const _dialDateForRelease = dialDate || getDialDate(curYear);
+  const nextCtx = nextSong ? getReleaseContext(nextSong, curYear, _dialDateForRelease) : null;
+  const prevCtx = prevSong ? getReleaseContext(prevSong, curYear, _dialDateForRelease) : null;
+
+  const nextCtxStr = DEV.newsong && nextCtx && RELEASE_CONTEXT_STRINGS[nextCtx]
+    ? RELEASE_CONTEXT_STRINGS[nextCtx](nextSong) : '';
+  const prevCtxStr = DEV.newsong && prevCtx && RELEASE_CONTEXT_STRINGS[prevCtx] && !nextCtxStr
+    ? RELEASE_CONTEXT_STRINGS[prevCtx](prevSong) : '';
+  const newSongStr = nextCtxStr || prevCtxStr;
 
   // Build era context with date-accurate knowledge
   const _dialDate2 = dialDate || getDialDate(curYear);
@@ -1953,7 +2767,10 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
     ? `Current events as of ${_dialDate2.short}, ${curYear}:
 ${recentFacts.map(f=>f.fact).join(' ')}`
     : '';
-  const artistFactStr = (artistFacts && DEV.songrefs) ? `Artist background (only use if natural): ${artistFacts}` : '';
+  // Artist facts — prefer rich library format, fall back to Wikipedia text
+  const artistFactStr = (artistFacts && DEV.songrefs)
+    ? `Artist background (use naturally, don't recite):\n${artistFacts}`
+    : '';
 
   const eraContext = DEV.eracontext && curStation === 'khit' && curYear >= 1980 && curYear <= 1989
     ? `You are broadcasting from New York City on ${_dialDate2.full}. Michael Jackson's Thriller is the biggest album in history. MTV launched in 1981 and is changing everything. The charts are dominated by pop, new wave, and early hip hop. Your listeners are young New Yorkers glued to their radios.`
@@ -2172,7 +2989,7 @@ const STATION_GENRES = {
   kpnk:  ['punk','new wave','punk rock'],
   kroq:  ['alternative rock','indie rock','alternative'],
   kdnc:  ['dance','electronic','house'],
-  khip:  ['hip-hop','rap'],
+  wbdx:  ['hip-hop','rap'],
   kwst:  ['hip-hop','rap','g-funk'],
   kbtm:  ['hip-hop','southern hip hop'],
   ksth:  ['hip-hop','southern hip hop','trap'],
@@ -2284,18 +3101,47 @@ async function fetchSpotifyCatalog(sid, y){
   return allTracks.filter(s => s.y <= y);
 }
 
-// Determines if a song is "new" relative to the dial year (within 60 days)
-function isSongNew(song, dialYear){
-  if(!song.release_date) return false;
+// Returns a natural-language release context string for a song relative to the dial date.
+// Used to tell the DJ exactly how fresh this record is — changes how Rick talks about it.
+function getReleaseContext(song, dialYear, dialDateObj){
+  if(!song || !song.release_date) return null;
+
   const parts = song.release_date.split('-');
   const releaseMs = new Date(
     parseInt(parts[0]),
     parts[1] ? parseInt(parts[1]) - 1 : 0,
     parts[2] ? parseInt(parts[2]) : 1
   ).getTime();
-  const dialMs = new Date(dialYear, 11, 31).getTime(); // end of dial year
-  const ageMs = dialMs - releaseMs;
-  return ageMs >= 0 && ageMs < 60 * 24 * 60 * 60 * 1000; // within 60 days
+
+  // Use exact dial date if available, otherwise end of dial year
+  const dialMs = dialDateObj
+    ? new Date(dialDateObj.year, dialDateObj.month - 1, dialDateObj.day).getTime()
+    : new Date(dialYear, 11, 31).getTime();
+
+  const deltaDays = Math.floor((dialMs - releaseMs) / (24 * 60 * 60 * 1000));
+
+  if(deltaDays < 0)   return null;                          // not released yet — don't mention
+  if(deltaDays <= 7)  return 'just_dropped';                // this week
+  if(deltaDays <= 21) return 'brand_new';                   // last few weeks
+  if(deltaDays <= 60) return 'fresh';                       // out a month or two
+  if(deltaDays <= 180) return 'recent';                     // out this year, still current
+  if(deltaDays <= 365) return 'this_year';                  // older but same year
+  return null;                                              // established — no special framing
+}
+
+// Human-readable framing strings injected into the DJ prompt
+const RELEASE_CONTEXT_STRINGS = {
+  just_dropped: (song) => `IMPORTANT: "${song.t}" by ${song.a} JUST came out this week — it is brand new, hot off the press. React to it like it just dropped.`,
+  brand_new:    (song) => `IMPORTANT: "${song.t}" by ${song.a} was released just a few weeks ago — it's a brand new record, still getting its first spins.`,
+  fresh:        (song) => `NOTE: "${song.t}" by ${song.a} came out a month or two ago — it's fresh, still new, mention it naturally if it fits.`,
+  recent:       (song) => `NOTE: "${song.t}" by ${song.a} came out earlier this year — it's a current record, well established now.`,
+  this_year:    (song) => null,  // subtle enough that we don't need to prompt it explicitly
+};
+
+// Backwards-compat shim — used in a couple of places
+function isSongNew(song, dialYear){
+  const ctx = getReleaseContext(song, dialYear, null);
+  return ctx === 'just_dropped' || ctx === 'brand_new';
 }
 
 // Enhanced getSongs — tries dynamic catalog first, falls back to hardcoded DB
@@ -2314,7 +3160,7 @@ const STATION_SEEDS = {
   weaf:3438160,wsng:268434,wcrn:3314836,wjaz:1232097,wjazb:3255408,
   wrnb:2023516,khit:1568189,krok:3564612,kmet:2014912,wsol:1824291,
   wflk:2872488,kpsy:237931,kdsc:1224101,kpnk:2494687,kroq:1951165,
-  kdnc:1584499,khip:1756714,kwst:262553,kbtm:266572,ksth:903531,
+  kdnc:1584499,wbdx:1756714,kwst:262553,kbtm:266572,ksth:903531,
   ktrap:1973585,kcons:556829,wltn:251527,kgro:3553971,wclx:983872
 };
 
@@ -2680,6 +3526,9 @@ function updateEraAudio(){
 
 document.getElementById('quality-toggle').addEventListener('click', function(){
   eraAudioOn = !eraAudioOn;
+  // Keep dev panel checkbox in sync
+  const devCb = document.getElementById('dev-era-audio');
+  if(devCb) devCb.checked = eraAudioOn;
   updateEraAudio();
 });
 
@@ -2732,7 +3581,7 @@ const BREAK_PROBABILITY = {
   weaf:0.70, wsng:0.70, wcrn:0.65, kdsc:0.65, khit:0.55,
   kgro:0.50, wrnb:0.45, wsol:0.45, krok:0.40, wflk:0.40,
   kroq:0.35, wjaz:0.35, wjazb:0.35, wltn:0.40,
-  kpnk:0.25, kmet:0.20, khip:0.35, kwst:0.30,
+  kpnk:0.25, kmet:0.20, wbdx:0.35, kwst:0.30,
   kbtm:0.25, ksth:0.28, kdnc:0.20, kpsy:0.25,
   ktrap:0.18, kcons:0.28, wclx:0.12
 };
@@ -2872,7 +3721,7 @@ const ENTRY_MODE_WEIGHTS = {
   kmet:  [0.30, 0.20, 0.40, 0.10],
   kdnc:  [0.25, 0.15, 0.20, 0.40],
   kpsy:  [0.25, 0.55, 0.15, 0.05],
-  khip:  [0.15, 0.15, 0.20, 0.50],  // heavy mid-song drops
+  wbdx:  [0.15, 0.15, 0.20, 0.50],  // heavy mid-song drops
   kwst:  [0.15, 0.15, 0.25, 0.45],
   kbtm:  [0.15, 0.20, 0.20, 0.45],
   ksth:  [0.20, 0.20, 0.20, 0.40],
@@ -3052,6 +3901,15 @@ function initDevPanel(){
     }
   });
 
+  // Era audio filter toggle (synced with user-facing button)
+  const devEraAudio = document.getElementById('dev-era-audio');
+  if(devEraAudio){
+    devEraAudio.addEventListener('change', function(){
+      eraAudioOn = this.checked;
+      updateEraAudio();
+    });
+  }
+
   // Wire up controls
   document.getElementById('dj-freq').addEventListener('input', function(){
     DEV.freq = parseInt(this.value);
@@ -3117,6 +3975,30 @@ function clearCatalogCache(){
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
+// Generate knurling on tuner knob
+(function(){
+  const g = document.getElementById('knurls');
+  if(!g) return;
+  const cx=40, cy=40, r=37, tickLen=4, n=60;
+  for(let i=0;i<n;i++){
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const x1 = cx + (r-tickLen)*Math.cos(angle);
+    const y1 = cy + (r-tickLen)*Math.sin(angle);
+    const x2 = cx + r*Math.cos(angle);
+    const y2 = cy + r*Math.sin(angle);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1.toFixed(2));
+    line.setAttribute('y1',y1.toFixed(2));
+    line.setAttribute('x2',x2.toFixed(2));
+    line.setAttribute('y2',y2.toFixed(2));
+    // Alternate light/dark for knurling effect
+    const bright = i%2===0;
+    line.setAttribute('stroke', bright ? 'rgba(200,190,170,0.6)' : 'rgba(30,20,10,0.5)');
+    line.setAttribute('stroke-width', bright ? '1.5' : '1');
+    g.appendChild(line);
+  }
+})();
+
 loadKeys();
 buildPlaylist();
 updateUI(false);
@@ -3144,9 +4026,10 @@ initDevPanel();
 
   function setKnobRotation(deg){
     currentRotation = deg;
-    knob.style.transform = `rotate(${deg}deg)`;
-    // Keep indicator pointing up visually (counter-rotate)
-    if(indicator) indicator.style.transform = `translateX(-50%) rotate(${-deg}deg)`;
+    const body = document.getElementById('knob-body');
+    if(body){
+      body.style.transform = `rotate(${deg}deg)`;
+    }
   }
 
   function yearToRotation(year){
