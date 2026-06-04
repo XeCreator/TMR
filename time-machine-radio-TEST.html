@@ -1959,6 +1959,10 @@ async function speakDJLine(text){
     }
 
     return new Promise((resolve) => {
+      // Resume AudioContext if suspended (iOS requirement)
+      if(djAudioContext && djAudioContext.state === 'suspended'){
+        djAudioContext.resume().catch(()=>{});
+      }
       audio.play().then(()=>{
         audio.onended = () => {
           currentDJAudio = null;
@@ -4631,6 +4635,26 @@ document.getElementById('freq-bar').addEventListener('click', function(e){
 });
 
 document.getElementById('btn-play').addEventListener('click', function(){
+  // ── iOS Audio Unlock ────────────────────────────────────────────────────
+  // iOS blocks programmatic audio unless triggered within a user gesture.
+  // Creating and resuming an AudioContext here unlocks audio for the session,
+  // so DJ voice (ElevenLabs) plays correctly even after API call latency.
+  if(!window._audioUnlocked){
+    try {
+      const unlockCtx = new (window.AudioContext || window.webkitAudioContext)();
+      unlockCtx.resume().then(() => {
+        window._audioUnlocked = true;
+        // Play and immediately stop a silent buffer to fully unlock
+        const buf = unlockCtx.createBuffer(1, 1, 22050);
+        const src = unlockCtx.createBufferSource();
+        src.buffer = buf;
+        src.connect(unlockCtx.destination);
+        src.start(0);
+        addDebugLog('[AUDIO] iOS audio context unlocked');
+      });
+    } catch(e){ /* non-fatal */ }
+  }
+
   if(!playing){
     // TUNE IN — sync to broadcast clock and start playing
     doPlay();
@@ -5023,56 +5047,51 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
     // Capture song refs at this moment
     const _prevSong = prevSong, _nextSong = nextSong;
     console.log(`DJ outro: duration=${(outroDurationMs/1000).toFixed(0)}s, entering in ${(outroEntryMs/1000).toFixed(1)}s, ${(msLeftAfterEntry/1000).toFixed(0)}s before end`);
+    // Snapshot song refs NOW at schedule time — not inside the timeout
+    // This prevents wrong-song references caused by curIdx advancing
+    // during the Claude + ElevenLabs API call latency
+    const _outro_prev = prevSong;
+    const _outro_next = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      const _cur = curPlaylist[curIdx];
-      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
-      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
-      await checkDJBreak(curIdx, _prev, _next, 'outro');
+      await checkDJBreak(curIdx, _outro_prev, _outro_next, 'outro');
       outroTimer = null;
     }, Math.max(0, outroEntryMs));
 
   } else if(mode === 'gap'){
-    const _prevSong = prevSong, _nextSong = nextSong;
+    const _gap_prev = prevSong;
+    const _gap_next = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      const _cur = curPlaylist[curIdx];
-      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
-      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
-      await checkDJBreak(curIdx, _prev, _next, 'gap');
+      await checkDJBreak(curIdx, _gap_prev, _gap_next, 'gap');
       outroTimer = null;
     }, Math.max(0, songRemaining - 300));
 
   } else if(mode === 'intro'){
-    const _prevSong = prevSong, _nextSong = nextSong;
+    const _intro_prev = prevSong;
+    const _intro_next = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      const _cur = curPlaylist[curIdx];
-      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
-      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
-      await checkDJBreak(curIdx, _prev, _next, 'intro');
+      await checkDJBreak(curIdx, _intro_prev, _intro_next, 'intro');
       outroTimer = null;
     }, Math.max(0, songRemaining + 100));
 
   } else if(mode === 'mid'){
-    const _prevSong = prevSong, _nextSong = nextSong;
+    const _mid_cur = prevSong; // in mid mode, prevSong IS the currently playing song
+    const _mid_next = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      const _cur = curPlaylist[curIdx];
-      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
-      await checkDJBreak(curIdx, _cur, _next, 'mid');
+      await checkDJBreak(curIdx, _mid_cur, _mid_next, 'mid');
       outroTimer = null;
     }, Math.max(0, msUntilMid));
 
   } else if(mode === 'bridge'){
     const bridgeEntryMs = Math.max(0, songRemaining - 20000);
-    const _prevSong = prevSong, _nextSong = nextSong;
+    const _bridge_prev = prevSong;
+    const _bridge_next = nextSong;
     outroTimer = setTimeout(async ()=>{
       if(!playing) return;
-      const _cur = curPlaylist[curIdx];
-      const _next = curPlaylist[(curIdx+1) % curPlaylist.length];
-      const _prev = curPlaylist[curIdx > 0 ? curIdx-1 : curPlaylist.length-1];
-      await checkDJBreak(curIdx, _prev, _next, 'bridge');
+      await checkDJBreak(curIdx, _bridge_prev, _bridge_next, 'bridge');
       outroTimer = null;
     }, bridgeEntryMs);
     console.log(`DJ bridge entry in ${(bridgeEntryMs/1000).toFixed(1)}s`);
@@ -5531,27 +5550,4 @@ const _tc = document.getElementById('total-count'); if(_tc) _tc.textContent = to
 const _st = document.getElementById('song-total'); if(_st) _st.textContent = total+' songs';
 </script>
 </body>
-</html>// DJ break trigger — called by scheduleDJBreak at the right musical moment
-async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
-  if(!anthropicKey || djGenPending) return;
-  devLog(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" playing="${curPlaylist[curIdx]?.t||'none'}"`);
-  console.log(`DJ CHECK: mode="${entryMode}" prev="${prevSong?.t||'none'}" next="${nextSong?.t||'none'}" playing="${curPlaylist[curIdx]?.t||'none'}"`);
-  
-  djGenPending = true;
-  try {
-    const profile = FORMAT_PROFILES[curStation];
-    const weather = (profile?.weather) ? await getWeather() : null;
-    const dialDate = getDialDate(curYear);
-    const artistToLookup = nextSong?.a || prevSong?.a || curPlaylist[curIdx]?.a;
-    const artistFacts = artistToLookup ? await getWikipediaArtistBio(artistToLookup, dialDate) : null;
-    const line = await generateDJLine(prevSong, nextSong, weather, entryMode||'gap', dialDate, artistFacts);
-    if(line){ showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']); }
-  } finally {
-    djGenPending = false;
-  }
-  } finally {
-    djGenPending = false;
-  }
-}
-
-
+</html>
