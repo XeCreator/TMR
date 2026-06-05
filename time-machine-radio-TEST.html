@@ -1095,6 +1095,18 @@
   <!-- Developer Panel -->
   <div id="dev-panel" style="display:none;position:fixed;bottom:0;right:0;width:320px;background:#0a0a0a;border:1px solid #2a1a08;border-radius:8px 0 0 0;padding:16px;z-index:9999;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a7a58;max-height:80vh;overflow-y:auto;">
     <div style="color:#c8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-size:12px;">⚙ Dev Panel <span style="float:right;cursor:pointer;color:#5a4a28;" onclick="document.getElementById('dev-panel').style.display='none'">✕</span></div>
+    <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">TRAVEL MODE</div>
+    <div style="font-size:9px;color:#888;margin-bottom:4px;" id="travel-mode-display">Mode: era_sync (default)</div>
+    <div style="display:flex;gap:4px;margin-bottom:4px;">
+      <button class="dev-btn" style="flex:1;font-size:8px;" onclick="resetTravelMode();updateTravelDisplay()">Era Sync</button>
+      <button class="dev-btn" style="flex:1;font-size:8px;" onclick="devPinDate()">Pin Date</button>
+      <button class="dev-btn" style="flex:1;font-size:8px;" onclick="devStartLiving()">Start Living</button>
+    </div>
+    <input type="text" id="dev-travel-date" placeholder="YYYY-MM-DD" style="width:100%;background:#111;color:#c8a84a;border:1px solid #2a1a08;padding:3px 6px;font-family:monospace;font-size:9px;margin-bottom:4px;">
+    <div style="display:flex;gap:4px;margin-bottom:10px;">
+      <button class="dev-btn" style="flex:1;font-size:8px;" onclick="pauseLivingTimeline();updateTravelDisplay()">Pause</button>
+      <button class="dev-btn" style="flex:1;font-size:8px;" onclick="resumeLivingTimeline();updateTravelDisplay()">Resume</button>
+    </div>
     <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">DIAGNOSTICS</div>
     <div style="font-size:9px;color:#888;margin-bottom:4px;" id="diag-anthropic">Anthropic: checking...</div>
     <div style="font-size:9px;color:#888;margin-bottom:4px;" id="diag-elevenlabs">ElevenLabs: checking...</div>
@@ -2267,31 +2279,46 @@ function getDayOfWeek(){
 // but doesn't change every minute
 
 function getDialDate(y){
-  const DIAL_DAY_MS = 60 * 60 * 1000; // 1 real hour = 1 dial day
+  // In pinned or living mode, use the broadcast clock's actual date
+  // rather than mapping real time into the dial year
+  if(travelMode === 'pinned' || travelMode === 'living'){
+    const broadcastMs = getBroadcastNow();
+    const d = new Date(broadcastMs);
+    const actualYear = d.getUTCFullYear();
+    return {
+      month:    d.toLocaleString('en-US', { month: 'long', timeZone:'UTC' }),
+      monthShort: d.toLocaleString('en-US', { month: 'short', timeZone:'UTC' }),
+      day:      d.getUTCDate(),
+      dayOfWeek: d.toLocaleString('en-US', { weekday: 'long', timeZone:'UTC' }),
+      year:     actualYear,
+      date:     d,
+      full:     `${d.toLocaleString('en-US',{weekday:'long',timeZone:'UTC'})}, ${d.toLocaleString('en-US',{month:'long',timeZone:'UTC'})} ${d.getUTCDate()}, ${actualYear}`,
+      short:    `${d.toLocaleString('en-US',{month:'long',timeZone:'UTC'})} ${d.getUTCDate()}`,
+      iso:      `${actualYear}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`,
+    };
+  }
+
+  // Era sync mode (default): map broadcast clock position into the dial year
   const startOfYear = new Date(y, 0, 1).getTime();
-  const endOfYear = new Date(y, 11, 31).getTime();
-  const yearMs = endOfYear - startOfYear;
-  
-  // Use broadcast clock position within the year
+  const endOfYear   = new Date(y, 11, 31).getTime();
+  const yearMs      = endOfYear - startOfYear;
+
   // Year-aware seed — different eras produce different calendar positions
-  const seed = 0x4a5b6c + (y * 999983);
-  const pos = (Date.now() + seed) % yearMs;
+  const seed   = 0x4a5b6c + (y * 999983);
+  const pos    = (getBroadcastNow() + seed) % yearMs;
   const dialMs = startOfYear + pos;
   const dialDate = new Date(dialMs);
-  
+
   return {
-    month: dialDate.toLocaleString('en-US', { month: 'long' }),
+    month:    dialDate.toLocaleString('en-US', { month: 'long' }),
     monthShort: dialDate.toLocaleString('en-US', { month: 'short' }),
-    day: dialDate.getDate(),
+    day:      dialDate.getDate(),
     dayOfWeek: dialDate.toLocaleString('en-US', { weekday: 'long' }),
-    year: y,
-    date: dialDate,
-    // Format: "Tuesday, March 15, 1983"
-    full: `${dialDate.toLocaleString('en-US', {weekday:'long'})}, ${dialDate.toLocaleString('en-US', {month:'long'})} ${dialDate.getDate()}, ${y}`,
-    // Format: "March 15"
-    short: `${dialDate.toLocaleString('en-US', {month:'long'})} ${dialDate.getDate()}`,
-    // ISO for knowledge base lookup
-    iso: `${y}-${String(dialDate.getMonth()+1).padStart(2,'0')}-${String(dialDate.getDate()).padStart(2,'0')}`
+    year:     y,
+    date:     dialDate,
+    full:     `${dialDate.toLocaleString('en-US',{weekday:'long'})}, ${dialDate.toLocaleString('en-US',{month:'long'})} ${dialDate.getDate()}, ${y}`,
+    short:    `${dialDate.toLocaleString('en-US',{month:'long'})} ${dialDate.getDate()}`,
+    iso:      `${y}-${String(dialDate.getMonth()+1).padStart(2,'0')}-${String(dialDate.getDate()).padStart(2,'0')}`
   };
 }
 
@@ -4638,6 +4665,169 @@ function getDialDateFacts(dialDate, stationId){
 
 // NYT API key — user provides via settings (same pattern as Anthropic/ElevenLabs keys)
 let nytApiKey = null;
+
+// ─── TRAVEL MODE INFRASTRUCTURE ───────────────────────────────────────────────
+// Three modes for how the broadcast "now" is determined:
+//
+//   'era_sync'  (default) — today's real date mapped into the dial year
+//                           June 5 2026 on dial 1983 = June 5 1983
+//
+//   'pinned'             — locked to a specific date/time the user chose
+//                           stays there until user changes it
+//
+//   'living'             — real clock runs forward from a chosen era start date
+//                           start April 3 1980, real time advances in that era
+//                           survives browser close via localStorage persistence
+//
+// Every downstream function reads from getBroadcastNow() — none of them
+// need to know which mode is active. Mode 3 is just a different time source.
+
+let travelMode = 'era_sync'; // 'era_sync' | 'pinned' | 'living'
+
+// Pinned mode state
+let pinnedDateMs = null;      // ms timestamp of the pinned moment
+
+// Living timeline state
+let livingEraStartMs  = null; // ms timestamp of the era start date (historical)
+let livingRealStartMs = null; // real Date.now() when the living timeline began
+let livingPausedMs    = null; // real ms when timeline was paused (null = running)
+let livingElapsedMs   = 0;    // accumulated elapsed ms before last pause
+
+const TRAVEL_MODE_STORAGE_KEY = 'tmr_travel_mode';
+
+// ── Core time source ─────────────────────────────────────────────────────────
+// Returns the millisecond timestamp representing "right now" in the broadcast.
+// This is the single source of truth for all time-dependent features.
+function getBroadcastNow(){
+  switch(travelMode){
+
+    case 'pinned':
+      return pinnedDateMs || Date.now();
+
+    case 'living': {
+      if(livingEraStartMs === null) return Date.now();
+      const elapsed = getLivingElapsed();
+      return livingEraStartMs + elapsed;
+    }
+
+    case 'era_sync':
+    default:
+      return Date.now();
+  }
+}
+
+// How much real time has elapsed in the living timeline
+function getLivingElapsed(){
+  if(livingPausedMs !== null){
+    // Paused — elapsed is frozen
+    return livingElapsedMs;
+  }
+  if(livingRealStartMs === null) return 0;
+  return livingElapsedMs + (Date.now() - livingRealStartMs);
+}
+
+// ── Pinned mode ──────────────────────────────────────────────────────────────
+function setPinnedDate(isoDate){
+  pinnedDateMs = new Date(isoDate + 'T12:00:00Z').getTime();
+  travelMode = 'pinned';
+  saveTravelState();
+  addDebugLog(`[TRAVEL] Pinned to: ${isoDate}`);
+}
+
+// ── Living timeline ──────────────────────────────────────────────────────────
+function startLivingTimeline(eraStartIso){
+  livingEraStartMs  = new Date(eraStartIso + 'T06:00:00Z').getTime();
+  livingRealStartMs = Date.now();
+  livingElapsedMs   = 0;
+  livingPausedMs    = null;
+  travelMode = 'living';
+  saveTravelState();
+  addDebugLog(`[TRAVEL] Living timeline started: ${eraStartIso}`);
+}
+
+function pauseLivingTimeline(){
+  if(travelMode !== 'living' || livingPausedMs !== null) return;
+  livingElapsedMs += Date.now() - (livingRealStartMs || Date.now());
+  livingPausedMs = Date.now();
+  saveTravelState();
+  addDebugLog('[TRAVEL] Living timeline paused');
+}
+
+function resumeLivingTimeline(){
+  if(travelMode !== 'living' || livingPausedMs === null) return;
+  livingRealStartMs = Date.now();
+  livingPausedMs = null;
+  saveTravelState();
+  addDebugLog('[TRAVEL] Living timeline resumed');
+}
+
+function resetTravelMode(){
+  travelMode = 'era_sync';
+  pinnedDateMs = null;
+  livingEraStartMs = null;
+  livingRealStartMs = null;
+  livingElapsedMs = 0;
+  livingPausedMs = null;
+  saveTravelState();
+  addDebugLog('[TRAVEL] Reset to era sync mode');
+}
+
+// ── Persistence ──────────────────────────────────────────────────────────────
+function saveTravelState(){
+  try {
+    localStorage.setItem(TRAVEL_MODE_STORAGE_KEY, JSON.stringify({
+      travelMode,
+      pinnedDateMs,
+      livingEraStartMs,
+      // Save total elapsed so timeline resumes correctly after browser close
+      livingElapsedMs: getLivingElapsed(),
+      livingPausedMs: livingPausedMs ? 1 : null, // 1 = was paused, null = was running
+    }));
+  } catch(e){}
+}
+
+function loadTravelState(){
+  try {
+    const raw = localStorage.getItem(TRAVEL_MODE_STORAGE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    travelMode        = s.travelMode || 'era_sync';
+    pinnedDateMs      = s.pinnedDateMs || null;
+    livingEraStartMs  = s.livingEraStartMs || null;
+    livingElapsedMs   = s.livingElapsedMs || 0;
+
+    if(travelMode === 'living'){
+      if(s.livingPausedMs){
+        // Was paused when browser closed — stay paused
+        livingPausedMs    = Date.now();
+        livingRealStartMs = null;
+      } else {
+        // Was running when browser closed — resume from where we left off
+        livingRealStartMs = Date.now();
+        livingPausedMs    = null;
+      }
+      const resumeDate = new Date(getBroadcastNow()).toISOString().substring(0,10);
+      addDebugLog(`[TRAVEL] Living timeline restored — resuming at ${resumeDate}`);
+    }
+  } catch(e){}
+}
+
+// ── Living timeline current era date for UI display ──────────────────────────
+function getLivingTimelineDisplay(){
+  if(travelMode !== 'living' || livingEraStartMs === null) return null;
+  const now = getBroadcastNow();
+  const d = new Date(now);
+  return {
+    iso:   d.toISOString().substring(0, 10),
+    year:  d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day:   d.getUTCDate(),
+    full:  d.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric', timeZone:'UTC'}),
+    paused: livingPausedMs !== null,
+  };
+}
+
+
 try { nytApiKey = localStorage.getItem('tmr_nyt_key') || null; } catch(e){}
 
 const weeklyContextCache = {}; // { 'YYYY-MM-W': [{fact, source, date, relevance}] }
@@ -6318,7 +6508,7 @@ function getBroadcastPosition(sid, y){
   // Year is incorporated with a large prime multiplier so that small year
   // changes produce large clock position jumps — each era feels distinct
   const yearOffset = y * 999983;
-  const now = Date.now() + seed + yearOffset;
+  const now = getBroadcastNow() + seed + yearOffset;
 
   // Total playlist duration (using default since we don't have real durations yet)
   const totalMs = playlist.length * DEFAULT_DURATION_MS;
@@ -6494,7 +6684,7 @@ async function doPlay(overridePositionMs){
   // Compute broadcast clock position using loaded playlist with real durations
   const seed = STATION_SEEDS[curStation] || 0;
   const yearOffset = curYear * 999983;
-  const now = Date.now() + seed + yearOffset;
+  const now = getBroadcastNow() + seed + yearOffset;
   const totalMs = playlist.reduce((sum, s) => sum + (s.duration_ms || DEFAULT_DURATION_MS), 0);
   const posInLoop = now % totalMs;
 
@@ -7120,6 +7310,52 @@ const DEV = {
 let devModeIdx = 0;
 const DEV_MODE_CYCLE = ['outro','gap','intro','mid','bridge','auto'];
 
+function updateTravelDisplay(){
+  const el = document.getElementById('travel-mode-display');
+  if(!el) return;
+  if(travelMode === 'era_sync'){
+    el.textContent = 'Mode: era_sync (default)';
+    el.style.color = '#4caf50';
+  } else if(travelMode === 'pinned'){
+    const d = new Date(pinnedDateMs).toISOString().substring(0,10);
+    el.textContent = `Mode: pinned → ${d}`;
+    el.style.color = '#F5C842';
+  } else if(travelMode === 'living'){
+    const disp = getLivingTimelineDisplay();
+    el.textContent = `Mode: living → ${disp?.iso || '?'}${disp?.paused ? ' (PAUSED)' : ' (running)'}`;
+    el.style.color = disp?.paused ? '#e53935' : '#4caf50';
+  }
+}
+
+function devPinDate(){
+  const val = document.getElementById('dev-travel-date')?.value.trim();
+  if(!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)){
+    devLog('Enter a date in YYYY-MM-DD format first');
+    return;
+  }
+  setPinnedDate(val);
+  // Update curYear to match pinned year
+  curYear = parseInt(val.substring(0,4));
+  updateUI(false);
+  if(playing) doPlay();
+  updateTravelDisplay();
+  devLog(`[TRAVEL] Pinned to ${val}`);
+}
+
+function devStartLiving(){
+  const val = document.getElementById('dev-travel-date')?.value.trim();
+  if(!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)){
+    devLog('Enter a start date in YYYY-MM-DD format first');
+    return;
+  }
+  startLivingTimeline(val);
+  curYear = parseInt(val.substring(0,4));
+  updateUI(false);
+  if(playing) doPlay();
+  updateTravelDisplay();
+  devLog(`[TRAVEL] Living timeline started from ${val}`);
+}
+
 function updateDevDiagnostics(){
   const set = (id, text, ok) => {
     const el = document.getElementById(id);
@@ -7145,7 +7381,10 @@ function initDevPanel(){
     if(e.ctrlKey && e.shiftKey && e.key === 'D'){
       const panel = document.getElementById('dev-panel');
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      if(panel.style.display === 'block') updateDevDiagnostics();
+      if(panel.style.display === 'block'){
+        updateDevDiagnostics();
+        updateTravelDisplay();
+      }
     }
   });
 
@@ -7493,6 +7732,20 @@ buildPlaylist();
 updateUI(false);
 buildStationBar();
 initStationBar();
+// Load travel mode state — must happen before first play
+loadTravelState();
+// Living timeline ticker — keeps curYear in sync as era date advances
+setInterval(() => {
+  if(travelMode === 'living' && !livingPausedMs){
+    const disp = getLivingTimelineDisplay();
+    if(disp && disp.year !== curYear){
+      curYear = disp.year;
+      updateUI(false);
+      addDebugLog(`[TRAVEL] Living timeline crossed year boundary → ${curYear}`);
+    }
+    updateTravelDisplay();
+  }
+}, 5000); // check every 5 seconds
 // Preload Billboard valid dates in background — ready before first play
 loadValidDates();
 updateEraAudio();
