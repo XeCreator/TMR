@@ -870,6 +870,11 @@
     <div class="api-status" id="elevenlabs-status">not set</div>
   </div>
   <div class="api-row">
+    <div class="api-label">Proxy URL</div>
+    <input class="api-input" type="text" id="proxy-url" placeholder="https://tmr-proxy.*.workers.dev (optional)">
+    <div class="api-status" id="proxy-status">not set</div>
+  </div>
+  <div class="api-row">
     <div class="api-label">NYT Archive</div>
     <input class="api-input" type="password" id="nyt-key" placeholder="optional — enables real weekly news">
     <div class="api-status" id="nyt-status">not set</div>
@@ -1457,7 +1462,7 @@ function getYTId(song){
 // ─── APP STATE ────────────────────────────────────────────────────────────────
 let curYear=1983, curStation='khit', prevYear=1983;
 let curPlaylist=[], curIdx=0, playing=false, shuffleOn=true;
-let anthropicKey='', spotifyClientId='', elevenlabsKey='', userLocation='';
+let anthropicKey='', spotifyClientId='', elevenlabsKey='', userLocation='', proxyUrl='';
 let djAudio=null, djGenPending=false;
 
 // ─── DJ BREAK MEMORY ──────────────────────────────────────────────────────────
@@ -1553,7 +1558,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         setTimeout(() => {
           sdkTrackEnded = false;
           if(playing){
-            curIdx = (curIdx + 1) % curPlaylist.length;
+            advanceToNextUniqueTrack();
             updateQueue();
             doPlay(0);
           }
@@ -1610,12 +1615,14 @@ function loadKeys(){
   spotifyClientId = localStorage.getItem('tmr_spotify_id')||'';
   anthropicKey = localStorage.getItem('tmr_anthropic')||'';
   elevenlabsKey = localStorage.getItem('tmr_elevenlabs')||'';
+  proxyUrl = localStorage.getItem('tmr_proxy_url')||'';
   nytApiKey = localStorage.getItem('tmr_nyt_key')||null;
   spotifyToken = localStorage.getItem('tmr_spotify_token')||null;
   userLocation = localStorage.getItem('tmr_location')||'';
   if(spotifyClientId) document.getElementById('spotify-client-id').value = spotifyClientId;
   if(anthropicKey) document.getElementById('anthropic-key').value = anthropicKey;
   if(elevenlabsKey) document.getElementById('elevenlabs-key').value = elevenlabsKey;
+  if(proxyUrl){ const el = document.getElementById('proxy-url'); if(el) el.value = proxyUrl; }
   if(nytApiKey){ const el = document.getElementById('nyt-key'); if(el) el.value = nytApiKey; }
   if(userLocation){
     document.getElementById('location-input').value = userLocation;
@@ -1631,7 +1638,10 @@ function saveKeys(){
   spotifyClientId = document.getElementById('spotify-client-id').value.trim();
   anthropicKey = document.getElementById('anthropic-key').value.trim();
   elevenlabsKey = document.getElementById('elevenlabs-key').value.trim();
+  proxyUrl = document.getElementById('proxy-url')?.value.trim() || '';
   nytApiKey = document.getElementById('nyt-key')?.value.trim() || null;
+  if(proxyUrl) localStorage.setItem('tmr_proxy_url', proxyUrl);
+  else localStorage.removeItem('tmr_proxy_url');
   if(spotifyClientId) localStorage.setItem('tmr_spotify_id', spotifyClientId);
   else localStorage.removeItem('tmr_spotify_id');
   if(anthropicKey) localStorage.setItem('tmr_anthropic', anthropicKey);
@@ -1656,11 +1666,12 @@ function updateKeyStatus(){
   else { ss.textContent='not set'; ss.className='api-status'; authBtn.style.display='none'; }
 
   if(anthropicKey){ as.textContent='✓ set'; as.className='api-status ok'; }
+  else if(proxyUrl){ as.textContent='✓ via proxy'; as.className='api-status ok'; }
   else { as.textContent='⚠ not set — DJ breaks disabled'; as.className='api-status'; }
 
   const es = document.getElementById('elevenlabs-status');
   if(es){
-    if(elevenlabsKey){ es.textContent='✓ set'; es.className='api-status ok'; }
+    if(isVoiceEnabled()){ es.textContent='✓ set'; es.className='api-status ok'; }
     else { es.textContent='not set — text only (no voice)'; es.className='api-status'; }
   }
   const ns = document.getElementById('nyt-status');
@@ -2000,7 +2011,7 @@ function monitorPlayback(remainingMs){
   playbackTimer = setTimeout(()=>{
     if(playing && !sdkTrackEnded){
       addDebugLog('[TIMER] Fallback transition fired');
-      curIdx = (curIdx + 1) % curPlaylist.length;
+      advanceToNextUniqueTrack();
       updateQueue();
       doPlay(sdkReady ? 0 : 1500);
     }
@@ -2010,7 +2021,7 @@ function monitorPlayback(remainingMs){
 
 function skipToNext(){
   const prevSong = curPlaylist[curIdx];
-  curIdx = (curIdx + 1) % curPlaylist.length;
+  advanceToNextUniqueTrack();
   updateQueue();
   if(playing){
     checkDJBreak(prevSong, curPlaylist[curIdx], null, DEFAULT_DURATION_MS);
@@ -2312,16 +2323,12 @@ let djAudioContext = null;
 let currentDJAudio = null;
 
 async function speakDJLine(text){
-  if(!elevenlabsKey || !text) return;
+  if(!isVoiceEnabled() || !text) return;
   const voice = getEraVoice(curYear);
   try {
-    const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`, {
+    const resp = await fetch(getElevenLabsUrl(`/v1/text-to-speech/${voice.id}`), {
       method: 'POST',
-      headers: { 
-        'xi-api-key': elevenlabsKey, 
-        'Content-Type': 'application/json',
-        'Accept': 'audio/mpeg'
-      },
+      headers: getElevenLabsHeaders(),
       body: JSON.stringify({
         text: text,
         model_id: 'eleven_turbo_v2_5',
@@ -5023,6 +5030,40 @@ function getArtistFacts(artistName, dialDate){
 // Wikipedia fetch + Claude filter for artist bios
 const artistBioCache = {}; // { artistName: { facts, timestamp } }
 
+
+// ─── PROXY-AWARE API HELPERS ─────────────────────────────────────────────────
+// When a proxyUrl is set, all Anthropic and ElevenLabs calls route through it.
+// This keeps API keys server-side so testers don't need to enter them.
+
+function getAnthropicUrl(path='/v1/messages'){
+  if(proxyUrl) return `${proxyUrl.replace(/\/$/, '')}/anthropic${path}`;
+  return `https://api.anthropic.com${path}`;
+}
+
+function getElevenLabsUrl(path){
+  if(proxyUrl) return `${proxyUrl.replace(/\/$/, '')}/elevenlabs${path}`;
+  return `https://api.elevenlabs.io${path}`;
+}
+
+function getAnthropicHeaders(){
+  if(proxyUrl) return {'Content-Type':'application/json'};
+  return {'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+}
+
+function getElevenLabsHeaders(contentType='application/json'){
+  if(proxyUrl) return {'Content-Type':contentType,'Accept':'audio/mpeg'};
+  return {'Content-Type':contentType,'xi-api-key':elevenlabsKey,'Accept':'audio/mpeg'};
+}
+
+// Check if DJ is enabled (either direct key or proxy)
+function isDJEnabled(){
+  return !!(anthropicKey || proxyUrl);
+}
+
+function isVoiceEnabled(){
+  return !!(elevenlabsKey || proxyUrl);
+}
+
 // ─── MUSICBRAINZ INTEGRATION ─────────────────────────────────────────────────
 // Free, no API key needed. Provides deep recording metadata:
 // studio, producer, recording date, personnel, label, chart history.
@@ -5153,15 +5194,15 @@ async function getWikipediaArtistBio(artistName, dialDate){
     if(!extract || extract.length < 50) return null;
 
     // Use Claude to extract date-bounded facts
-    if(!anthropicKey) return null;
+    if(!isDJEnabled()) return null;
     const filterPrompt = `You are a historical fact filter. Given this Wikipedia excerpt about "${artistName}", extract ONLY facts that would have been publicly known before ${dialDate.full}. Return 2-3 sentences maximum. Do NOT include: death dates, posthumous releases, events after ${dialDate.year}, future awards, or anything not yet known. Return only the filtered facts as plain text, nothing else.
 
 Wikipedia excerpt:
 ${extract.substring(0, 1500)}`;
     
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(getAnthropicUrl(), {
       method: 'POST',
-      headers: {'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers: getAnthropicHeaders(),
       body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:150, messages:[{role:'user',content:filterPrompt}] })
     });
     if(!resp.ok) return null;
@@ -5436,7 +5477,7 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
 }
 
 async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', dialDate=null, artistFacts=null){
-  if(!anthropicKey) return null;
+  if(!isDJEnabled()) return null;
   const dj = DJ_PERSONALITIES[curStation] || DJ_PERSONALITIES['khit'];
   const stationDef = SDEFS[curStation] || {name:curStation, call:curStation};
   const profile = FORMAT_PROFILES[curStation] || {every:4, lengths:["short"], weather:false, time:false};
@@ -5531,9 +5572,9 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
     : `Talk break on ${stationDef?.call || sid.toUpperCase()}. Natural station patter. Output ONLY the DJ spoken words.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(getAnthropicUrl(), {
       method: 'POST',
-      headers: {'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers: getAnthropicHeaders(),
       body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
     });
     if(!resp.ok){
@@ -5570,7 +5611,7 @@ function showDJBubble(text, djDef){
   setTimeout(()=>{ if(bubble.classList.contains('show')) bubble.className='dj-bubble'; }, displayMs);
 
   // Speak the line if ElevenLabs is configured
-  if(elevenlabsKey){
+  if(isVoiceEnabled()){
     duckVolume();
     speakDJLine(text).then(()=>{
       // Restore immediately when audio finishes — no delay
@@ -5608,9 +5649,9 @@ async function fetchTrackAnalysis(trackId){
 // ─── INTELLIGENT DJ BREAK TRIGGER ────────────────────────────────────────────
 // Fires at the song's natural fade-out point, not at a fixed interval
 async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
-  if(!anthropicKey){
+  if(!isDJEnabled()){
     // Show a clear indicator in the bubble so you know why DJ is silent
-    addDebugLog('[DJ] No Anthropic key — DJ breaks disabled. Add key in settings.');
+    addDebugLog('[DJ] No Anthropic key or proxy — DJ breaks disabled. Add key or proxy URL in settings.');
     if(DJ_TEST_MODE){
       showDJBubble('[ No Anthropic key set — add it in settings to enable DJ ]',
         DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']);
@@ -6187,6 +6228,24 @@ async function getSongsDynamic(sid, y){
 
   // ── 3. Final fallback: hardcoded DB ─────────────────────────────────────
   return getSongs(sid, y);
+}
+
+// ─── PLAYLIST DEDUP ──────────────────────────────────────────────────────────
+// Advances curIdx past any consecutive duplicate URIs so the same track
+// never plays twice in a row, even in a weighted playlist
+function advanceToNextUniqueTrack(){
+  if(!curPlaylist.length) return;
+  const currentUri = curPlaylist[curIdx]?.uri;
+  if(!currentUri) return;
+  let attempts = 0;
+  while(
+    curPlaylist[(curIdx + 1) % curPlaylist.length]?.uri === currentUri &&
+    attempts < curPlaylist.length
+  ){
+    curIdx = (curIdx + 1) % curPlaylist.length;
+    attempts++;
+  }
+  curIdx = (curIdx + 1) % curPlaylist.length;
 }
 
 // ─── BROADCAST CLOCK ────────────────────────────────────────────────────────
