@@ -1522,15 +1522,11 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     spotifyPlayer.addListener('ready', ({ device_id }) => {
       spotifyDeviceId = device_id;
       sdkReady = true;
-      addDebugLog(`[SDK] Player ready — device_id: ${device_id}`);
-      // Transfer playback to our SDK device if currently playing
-      if(spotifyToken && playing){
-        fetch('https://api.spotify.com/v1/me/player', {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer '+spotifyToken, 'Content-Type':'application/json' },
-          body: JSON.stringify({ device_ids: [device_id], play: true })
-        }).catch(()=>{});
-      }
+      addDebugLog(`[SDK] Player ready — device_id: ${device_id} (event detection only — audio stays on Spotify app)`);
+      // NOTE: We do NOT transfer playback to the SDK device.
+      // The SDK is used purely for player_state_changed events (song end detection).
+      // Audio continues playing through whatever Spotify device the user already has active.
+      // Transferring to the browser SDK device silences audio on mobile.
     });
 
     spotifyPlayer.addListener('not_ready', ({ device_id }) => {
@@ -1603,14 +1599,10 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
 // Transfer playback to SDK device when it becomes ready
 function transferToSDK(){
-  if(!sdkReady || !spotifyToken || !spotifyDeviceId) return;
-  fetch('https://api.spotify.com/v1/me/player', {
-    method: 'PUT',
-    headers: { 'Authorization': 'Bearer '+spotifyToken, 'Content-Type':'application/json' },
-    body: JSON.stringify({ device_ids: [spotifyDeviceId], play: false })
-  }).then(r => {
-    if(r.ok) addDebugLog('[SDK] Playback transferred to TMR browser device');
-  }).catch(()=>{});
+  // Intentionally disabled — transferring to the browser SDK device silences
+  // audio on mobile (iOS). SDK is used for event detection only.
+  // Audio stays on whatever Spotify device the user has active.
+  addDebugLog('[SDK] transferToSDK disabled — audio stays on Spotify app device');
 }
 
 // ─── KEY MANAGEMENT ──────────────────────────────────────────────────────────
@@ -1929,9 +1921,8 @@ async function searchAndPlay(song, positionMs){
   // Play the track with position_ms for broadcast clock sync
   const seekMs = (positionMs !== undefined) ? positionMs : 0;
   const playBody = { uris: [track.uri], position_ms: seekMs };
-  const playUrl = spotifyDeviceId
-    ? `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`
-    : 'https://api.spotify.com/v1/me/player/play';
+  // Use active Spotify device — don't force SDK device (breaks mobile audio)
+  const playUrl = 'https://api.spotify.com/v1/me/player/play';
 
   try {
     const playRes = await fetch(playUrl, {
@@ -3321,9 +3312,8 @@ async function playClip(clip){
   await setSpotifyVolume(Math.round(prevVol * 30)); // duck to 30% of current
 
   // Play the clip from startMs
-  const playUrl = spotifyDeviceId
-    ? `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`
-    : 'https://api.spotify.com/v1/me/player/play';
+  // Use active Spotify device — don't force SDK device (breaks mobile audio)
+  const playUrl = 'https://api.spotify.com/v1/me/player/play';
 
   try {
     await fetch(playUrl, {
@@ -6582,8 +6572,6 @@ document.getElementById('btn-play').addEventListener('click', function(){
   }
 
   if(!playing){
-    // Transfer to SDK device first if available
-    if(sdkReady) transferToSDK();
     // TUNE IN — sync to broadcast clock and start playing
     doPlay();
   } else {
@@ -7330,9 +7318,7 @@ async function doIntroRewind(track, songIdx, count){
   if(!playing || curIdx !== songIdx) return;
 
   // Seek back to 0
-  const seekUrl = spotifyDeviceId
-    ? `https://api.spotify.com/v1/me/player/seek?position_ms=0&device_id=${spotifyDeviceId}`
-    : 'https://api.spotify.com/v1/me/player/seek?position_ms=0';
+  const seekUrl = 'https://api.spotify.com/v1/me/player/seek?position_ms=0';
   try {
     await fetch(seekUrl, {
       method: 'PUT',
