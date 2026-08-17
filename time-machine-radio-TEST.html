@@ -6179,7 +6179,6 @@ async function getBillboardPlaylist(sid, dialDateIso){
   const maxPos = filter ? filter.maxPos : 100;
   const pool = [];
   const seen = new Set();
-  let anchorChartDate = null;
   // Party nights (Fri/Sat evening–early morning, party-eligible formats only)
   // reach back further for recurrent/throwback material — real mix shows lean
   // on familiar crowd-pleasers alongside the current chart, not just this
@@ -6188,13 +6187,26 @@ async function getBillboardPlaylist(sid, dialDateIso){
   const isPartyEligible = format && PARTY_NIGHT_FORMATS.includes(format);
   const WINDOW_WEEKS = (isPartyEligible && isPartyNight()) ? 10 : 4;
 
+  // Compute all target chart dates FIRST, synchronously — nearestChartDate()
+  // has no await in it, so this whole walk-backward pass costs nothing.
+  // Only THEN do we touch the network, and we do it in parallel (Promise.all)
+  // rather than one sequential await per week. On party nights specifically,
+  // 10 sequential round-trips could take long enough that the play button
+  // looked unresponsive even though it was still working — this fixes that.
+  const targetDates = [];
   let cursorIso = dialDateIso;
   for(let week = 0; week < WINDOW_WEEKS; week++){
     const chartDate = nearestChartDate(cursorIso);
     if(!chartDate) break;
-    if(week === 0) anchorChartDate = chartDate;
+    targetDates.push(chartDate);
+    cursorIso = new Date(new Date(chartDate + 'T12:00:00Z').getTime() - 7*86400000)
+      .toISOString().substring(0, 10);
+  }
+  if(!targetDates.length) return null;
+  const anchorChartDate = targetDates[0];
 
-    const chart = await fetchBillboardChart(chartDate);
+  const charts = await Promise.all(targetDates.map(d => fetchBillboardChart(d)));
+  for(const chart of charts){
     if(chart && chart.data){
       for(const entry of chart.data){
         if(entry.this_week > maxPos) continue;
@@ -6213,9 +6225,6 @@ async function getBillboardPlaylist(sid, dialDateIso){
         });
       }
     }
-    // Step back 7 days for the next iteration
-    cursorIso = new Date(new Date(chartDate + 'T12:00:00Z').getTime() - 7*86400000)
-      .toISOString().substring(0, 10);
   }
 
   if(!anchorChartDate){
@@ -6731,11 +6740,22 @@ async function getBroadcastPlaylistAsync(sid, y){
   const cacheKey = `${sid}_${y}`;
   if(broadcastPlaylistCache[cacheKey]) return broadcastPlaylistCache[cacheKey];
 
-  // Try dynamic catalog first
-  let songs = await getSongsDynamic(sid, y);
-
-  // Filter to songs that existed at dial year
-  songs = songs.filter(s => s.y <= y);
+  let songs = [];
+  try {
+    // Try dynamic catalog first
+    songs = await getSongsDynamic(sid, y);
+    // Filter to songs that existed at dial year
+    songs = songs.filter(s => s.y <= y);
+  } catch(e){
+    // Anything in the async chain (Billboard fetch, Spotify search, genre
+    // lookup, party-night boost) can fail — a network blip, a rate limit,
+    // a bad response. Without this catch, the exception propagates all the
+    // way to doPlay() and silently kills it before searchAndPlay() ever
+    // runs — Spotify just keeps playing whatever it already had cued, with
+    // no visible error. Fall through to the hardcoded DB instead.
+    addDebugLog(`[CATALOG] Dynamic pipeline threw for ${sid}/${y}: ${e.message || e} — falling back to DB`);
+    songs = [];
+  }
 
   if(songs.length < 3){
     // Fallback to hardcoded DB with relaxed year filter
@@ -6931,8 +6951,17 @@ async function doPlay(overridePositionMs){
   }
 
   // TUNE IN — load dynamic catalog first, then sync to broadcast clock
-  // Try dynamic catalog (may be cached already)
-  let playlist = await getBroadcastPlaylistAsync(curStation, curYear);
+  let playlist;
+  try {
+    playlist = await getBroadcastPlaylistAsync(curStation, curYear);
+  } catch(e){
+    // getBroadcastPlaylistAsync already catches internally, but this is a
+    // last-resort net so a retune NEVER silently dies — better a slightly
+    // stale hardcoded playlist than the old song just playing forever with
+    // no indication anything went wrong.
+    addDebugLog(`[DOPLAY] Unexpected error building playlist: ${e.message || e}`);
+    playlist = null;
+  }
   if(!playlist || playlist.length === 0){
     // Fall back to hardcoded DB
     playlist = getBroadcastPlaylist(curStation, curYear);
@@ -6965,7 +6994,12 @@ async function doPlay(overridePositionMs){
   curPlaylist = playlist;
   curIdx = idx;
   updateQueue();
-  searchAndPlay(curPlaylist[curIdx], positionMs);
+  try {
+    await searchAndPlay(curPlaylist[curIdx], positionMs);
+  } catch(e){
+    addDebugLog(`[DOPLAY] searchAndPlay threw: ${e.message || e}`);
+    showMessage('Retune failed — try pressing play again.');
+  }
 }
 
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
@@ -7083,6 +7117,10 @@ document.getElementById('btn-play').addEventListener('click', function(){
 
   if(!playing){
     // TUNE IN — sync to broadcast clock and start playing
+    // Immediate, synchronous feedback the instant the tap registers — this
+    // runs before any async work starts, so even normal network latency
+    // (Spotify search, genre lookups) never looks like the tap did nothing.
+    document.getElementById('now-playing').textContent = '…  Tuning in...';
     doPlay();
   } else {
     // TUNE OUT — stop listening, but broadcast continues without us
