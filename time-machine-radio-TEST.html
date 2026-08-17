@@ -1132,6 +1132,8 @@
       <label class="dev-toggle"><input type="checkbox" id="dj-newsong" checked> New song alerts</label>
       <label class="dev-toggle"><input type="checkbox" id="dj-eracontext" checked> Era context</label>
       <label class="dev-toggle"><input type="checkbox" id="dj-stationid" checked> Station IDs</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-knowledge" checked> Events/news</label>
+      <label class="dev-toggle"><input type="checkbox" id="dj-sweepers" checked> Sweepers</label>
     </div>
     <div style="color:#c8a84a;margin-bottom:6px;letter-spacing:1px;">DJ FREQUENCY</div>
     <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px;">
@@ -1158,7 +1160,7 @@
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
       <button class="dev-btn" onclick="forceDJBreak()">▶ Force DJ Break Now</button>
       <button class="dev-btn" onclick="forceClipPlay()">▶ Force Clip Play</button>
-      <button class="dev-btn" onclick="forceHypeDrop()">▶ Force Hype Drop</button>
+      <button class="dev-btn" onclick="forceSweeper()">▶ Force Sweeper</button>
       <button class="dev-btn" onclick="forceIntroRewind()">▶ Force Intro Rewind</button>
       <button class="dev-btn" onclick="forceNextMode()">⟳ Cycle Entry Mode (<span id="cur-mode-display">auto</span>)</button>
       <button class="dev-btn" onclick="clearCatalogCache()">⌫ Clear Catalog Cache</button>
@@ -1304,7 +1306,20 @@ const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blu
 
 const CLASSICAL=[{t:"Symphony No 5",a:"Beethoven",y:1808,st:["wclx"],p:99,q:"Beethoven Symphony No 5 Karajan"},{t:"Ode to Joy",a:"Beethoven",y:1824,st:["wclx"],p:99,q:"Beethoven Ode to Joy Symphony 9"},{t:"The Four Seasons Spring",a:"Vivaldi",y:1725,st:["wclx"],p:97,q:"Vivaldi Four Seasons Spring"},{t:"Clair de lune",a:"Debussy",y:1905,st:["wclx"],p:97,q:"Debussy Clair de lune"},{t:"Moonlight Sonata",a:"Beethoven",y:1801,st:["wclx"],p:97,q:"Beethoven Moonlight Sonata"},{t:"Rhapsody in Blue",a:"Gershwin",y:1924,st:["wclx"],p:96,q:"Gershwin Rhapsody in Blue Bernstein"},{t:"Swan Lake Suite",a:"Tchaikovsky",y:1877,st:["wclx"],p:96,q:"Tchaikovsky Swan Lake Suite"},{t:"Canon in D",a:"Pachelbel",y:1694,st:["wclx"],p:96,q:"Pachelbel Canon in D"},{t:"Bolero",a:"Ravel",y:1928,st:["wclx"],p:95,q:"Ravel Bolero"},{t:"Symphony No 40",a:"Mozart",y:1788,st:["wclx"],p:95,q:"Mozart Symphony No 40"},{t:"Gymnopedie No 1",a:"Satie",y:1888,st:["wclx"],p:94,q:"Satie Gymnopedie No 1"},{t:"Air on the G String",a:"Bach",y:1731,st:["wclx"],p:94,q:"Bach Air on G String"},{t:"New World Symphony",a:"Dvorak",y:1893,st:["wclx"],p:95,q:"Dvorak New World Symphony"},{t:"Adagio for Strings",a:"Barber",y:1936,st:["wclx"],p:95,q:"Barber Adagio for Strings"},{t:"Schindlers List Theme",a:"John Williams",y:1993,st:["wclx"],p:96,q:"Schindlers List Theme John Williams"},{t:"Interstellar Main Theme",a:"Hans Zimmer",y:2014,st:["wclx"],p:94,q:"Interstellar Main Theme Hans Zimmer"},{t:"On the Nature of Daylight",a:"Max Richter",y:2004,st:["wclx"],p:93,q:"Max Richter On the Nature of Daylight"}];
 
-const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng","weaf"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng","weaf","wcrn"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng","weaf"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["kgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["kgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet","kpsy"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,uri:"spotify:track:6e1cB2E4G8ZVFcBHps0zG5",st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet","krok"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit","wrnb"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol","wrnb"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc","wbdx"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol","wrnb"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb","wsol"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok","kroq"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:96,q:"Juicy Notorious BIG 1994"},{t:"Big Poppa",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:95,q:"Big Poppa Notorious BIG 1994"},{t:"One More Chance",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:94,q:"One More Chance Notorious BIG 1995"},{t:"C.R.E.A.M.",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:95,q:"CREAM Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["wbdx"],p:95,q:"NY State of Mind Nas 1994"},{t:"The World Is Yours",a:"Nas",y:1994,st:["wbdx"],p:94,q:"The World Is Yours Nas 1994"},{t:"Illmatic",a:"Nas",y:1994,st:["wbdx"],p:93,q:"Illmatic Nas 1994"},{t:"Dead Presidents II",a:"Jay-Z",y:1996,st:["wbdx"],p:93,q:"Dead Presidents II Jay-Z 1996"},{t:"Ain't No Nigga",a:"Jay-Z ft Foxy Brown",y:1996,st:["wbdx"],p:92,q:"Ain't No Nigga Jay-Z Foxy Brown 1996"},{t:"Mass Appeal",a:"Gang Starr",y:1994,st:["wbdx"],p:91,q:"Mass Appeal Gang Starr 1994"},{t:"I Got a Man",a:"Positive K",y:1992,st:["wbdx"],p:88,q:"I Got a Man Positive K 1992"},{t:"Scenario",a:"A Tribe Called Quest",y:1991,st:["wbdx"],p:93,q:"Scenario A Tribe Called Quest 1991"},{t:"Electric Relaxation",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:94,q:"Electric Relaxation A Tribe Called Quest 1993"},{t:"Award Tour",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:93,q:"Award Tour A Tribe Called Quest 1993"},{t:"I Used to Love H.E.R.",a:"Common",y:1994,st:["wbdx"],p:91,q:"I Used to Love HER Common 1994"},{t:"Deja Vu (Uptown Baby)",a:"Lord Tariq and Peter Gunz",y:1996,st:["wbdx"],p:89,q:"Deja Vu Uptown Baby Lord Tariq Peter Gunz"},{t:"Shook Ones Pt II",a:"Mobb Deep",y:1995,st:["wbdx"],p:94,q:"Shook Ones Part II Mobb Deep 1995"},{t:"Survival of the Fittest",a:"Mobb Deep",y:1995,st:["wbdx"],p:92,q:"Survival of the Fittest Mobb Deep 1995"},{t:"Method Man",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:93,q:"Method Man Wu-Tang Clan 1993"},{t:"Protect Ya Neck",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:92,q:"Protect Ya Neck Wu-Tang Clan 1993"},{t:"Passin Me By",a:"The Pharcyde",y:1992,st:["wbdx"],p:91,q:"Passin Me By The Pharcyde 1992"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst","wbdx"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"One More Chance (Remix)",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:95,q:"One More Chance Remix Notorious BIG 1995"},{t:"Scenario (Remix)",a:"A Tribe Called Quest",y:1992,st:["wbdx"],p:90,q:"Scenario Remix A Tribe Called Quest 1992"},{t:"Flava in Ya Ear (Remix)",a:"Craig Mack ft Biggie",y:1994,st:["wbdx"],p:91,q:"Flava in Ya Ear Remix Craig Mack Biggie 1994"},{t:"Toss It Up",a:"2Pac ft K-Ci",y:1996,st:["kwst","wbdx"],p:89,q:"Toss It Up 2Pac K-Ci 1996"},{t:"Versace (Remix)",a:"Migos ft Drake",y:2013,st:["wbdx","ktrap"],p:93,q:"Versace Remix Migos Drake 2013"},
+const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng","weaf"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng","weaf","wcrn"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng","weaf"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["kgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},
+{t:"Ko-Ko",a:"Charlie Parker",y:1945,st:["wjazb"],p:89,q:"Ko-Ko Charlie Parker 1945"},
+{t:"Now's the Time",a:"Charlie Parker",y:1945,st:["wjazb"],p:88,q:"Nows the Time Charlie Parker 1945"},
+{t:"Salt Peanuts",a:"Dizzy Gillespie",y:1945,st:["wjazb"],p:86,q:"Salt Peanuts Dizzy Gillespie 1945"},
+{t:"Groovin High",a:"Dizzy Gillespie",y:1945,st:["wjazb"],p:85,q:"Groovin High Dizzy Gillespie 1945"},
+{t:"Anthropology",a:"Charlie Parker",y:1946,st:["wjazb"],p:84,q:"Anthropology Charlie Parker 1946"},
+{t:"Un Poco Loco",a:"Bud Powell",y:1951,st:["wjazb"],p:83,q:"Un Poco Loco Bud Powell 1951"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["kgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet","kpsy"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,uri:"spotify:track:6e1cB2E4G8ZVFcBHps0zG5",st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet","krok"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit","wrnb"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol","wrnb"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc","wbdx"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,party:true,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,party:true,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol","wrnb"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb","wsol"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok","kroq"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:96,party:true,q:"Juicy Notorious BIG 1994"},{t:"Big Poppa",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:95,q:"Big Poppa Notorious BIG 1994"},{t:"One More Chance",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:94,q:"One More Chance Notorious BIG 1995"},{t:"C.R.E.A.M.",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:95,q:"CREAM Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["wbdx"],p:95,q:"NY State of Mind Nas 1994"},{t:"The World Is Yours",a:"Nas",y:1994,st:["wbdx"],p:94,q:"The World Is Yours Nas 1994"},{t:"Illmatic",a:"Nas",y:1994,st:["wbdx"],p:93,q:"Illmatic Nas 1994"},{t:"Dead Presidents II",a:"Jay-Z",y:1996,st:["wbdx"],p:93,q:"Dead Presidents II Jay-Z 1996"},{t:"Ain't No Nigga",a:"Jay-Z ft Foxy Brown",y:1996,st:["wbdx"],p:92,q:"Ain't No Nigga Jay-Z Foxy Brown 1996"},{t:"Mass Appeal",a:"Gang Starr",y:1994,st:["wbdx"],p:91,q:"Mass Appeal Gang Starr 1994"},{t:"I Got a Man",a:"Positive K",y:1992,st:["wbdx"],p:88,q:"I Got a Man Positive K 1992"},{t:"Scenario",a:"A Tribe Called Quest",y:1991,st:["wbdx"],p:93,q:"Scenario A Tribe Called Quest 1991"},{t:"Electric Relaxation",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:94,q:"Electric Relaxation A Tribe Called Quest 1993"},{t:"Award Tour",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:93,q:"Award Tour A Tribe Called Quest 1993"},{t:"I Used to Love H.E.R.",a:"Common",y:1994,st:["wbdx"],p:91,q:"I Used to Love HER Common 1994"},{t:"Deja Vu (Uptown Baby)",a:"Lord Tariq and Peter Gunz",y:1996,st:["wbdx"],p:89,q:"Deja Vu Uptown Baby Lord Tariq Peter Gunz"},{t:"Shook Ones Pt II",a:"Mobb Deep",y:1995,st:["wbdx"],p:94,q:"Shook Ones Part II Mobb Deep 1995"},{t:"Survival of the Fittest",a:"Mobb Deep",y:1995,st:["wbdx"],p:92,q:"Survival of the Fittest Mobb Deep 1995"},{t:"Method Man",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:93,q:"Method Man Wu-Tang Clan 1993"},{t:"Protect Ya Neck",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:92,q:"Protect Ya Neck Wu-Tang Clan 1993"},{t:"Passin Me By",a:"The Pharcyde",y:1992,st:["wbdx"],p:91,q:"Passin Me By The Pharcyde 1992"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst","wbdx"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,party:true,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},
+{t:"International Players Anthem",a:"UGK ft OutKast",y:2007,st:["kbtm"],p:94,party:true,q:"International Players Anthem UGK OutKast 2007"},
+{t:"Sippin On Some Syrup",a:"Three 6 Mafia ft UGK",y:2000,st:["kbtm"],p:88,q:"Sippin On Some Syrup Three 6 Mafia UGK 2000"},
+{t:"Mind Playing Tricks on Me",a:"Geto Boys",y:1991,st:["kbtm"],p:92,q:"Mind Playing Tricks on Me Geto Boys 1991"},
+{t:"Still Tippin",a:"Mike Jones ft Slim Thug Paul Wall",y:2004,st:["kbtm"],p:91,q:"Still Tippin Mike Jones Slim Thug Paul Wall 2004"},
+{t:"Grillz",a:"Nelly ft Paul Wall",y:2005,st:["kbtm"],p:87,q:"Grillz Nelly Paul Wall 2005"},
+{t:"Wanna Be a Baller",a:"Lil Troy",y:1998,st:["kbtm"],p:83,q:"Wanna Be a Baller Lil Troy 1998"},
+{t:"Diamonds and Wood",a:"Slim Thug",y:2005,st:["kbtm"],p:81,q:"Diamonds and Wood Slim Thug 2005"},{t:"End of the Road",a:"Boyz II Men",y:1992,st:["wrnb","wsol"],p:97,q:"End of the Road Boyz II Men 1992"},{t:"Friends in Low Places",a:"Garth Brooks",y:1990,st:["kgro"],p:96,q:"Friends in Low Places Garth Brooks 1990"},{t:"Livin la Vida Loca",a:"Ricky Martin",y:1999,st:["wltn","khit"],p:97,q:"Livin la Vida Loca Ricky Martin 1999"},{t:"One More Chance (Remix)",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:95,q:"One More Chance Remix Notorious BIG 1995"},{t:"Scenario (Remix)",a:"A Tribe Called Quest",y:1992,st:["wbdx"],p:90,q:"Scenario Remix A Tribe Called Quest 1992"},{t:"Flava in Ya Ear (Remix)",a:"Craig Mack ft Biggie",y:1994,st:["wbdx"],p:91,q:"Flava in Ya Ear Remix Craig Mack Biggie 1994"},{t:"Toss It Up",a:"2Pac ft K-Ci",y:1996,st:["kwst","wbdx"],p:89,q:"Toss It Up 2Pac K-Ci 1996"},{t:"Versace (Remix)",a:"Migos ft Drake",y:2013,st:["wbdx","ktrap"],p:93,q:"Versace Remix Migos Drake 2013"},
 // ── KROQ — Alternative/New Wave ──────────────────────────────────────────────
 
 {t:"Losing My Religion",a:"R.E.M.",y:1991,st:["kroq"],p:95,q:"Losing My Religion REM 1991"},
@@ -1337,7 +1352,7 @@ const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:9
 
 // ── KWST — West Coast Rap ────────────────────────────────────────────────────
 
-{t:"Gin and Juice",a:"Snoop Dogg",y:1993,st:["kwst","wbdx"],p:95,q:"Gin and Juice Snoop Dogg 1993"},
+{t:"Gin and Juice",a:"Snoop Dogg",y:1993,st:["kwst","wbdx"],p:95,party:true,q:"Gin and Juice Snoop Dogg 1993"},
 {t:"Regulate",a:"Warren G ft Nate Dogg",y:1994,st:["kwst","wbdx"],p:95,q:"Regulate Warren G Nate Dogg 1994"},
 {t:"It Was a Good Day",a:"Ice Cube",y:1992,st:["kwst","wbdx"],p:96,q:"It Was a Good Day Ice Cube 1992"},
 {t:"Dear Mama",a:"2Pac",y:1995,st:["kwst","wbdx"],p:95,q:"Dear Mama 2Pac 1995"},
@@ -1345,8 +1360,8 @@ const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:9
 {t:"Ambitionz Az a Ridah",a:"2Pac",y:1996,st:["kwst"],p:93,q:"Ambitionz Az a Ridah 2Pac 1996"},
 {t:"How Do U Want It",a:"2Pac",y:1996,st:["kwst","wbdx"],p:93,q:"How Do U Want It 2Pac 1996"},
 // ── KDNC — Dance/House ───────────────────────────────────────────────────────
-{t:"Around the World",a:"Daft Punk",y:1997,st:["kdnc"],p:94,q:"Around the World Daft Punk 1997"},
-{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,q:"One More Time Daft Punk 2000"},
+{t:"Around the World",a:"Daft Punk",y:1997,st:["kdnc"],p:94,party:true,q:"Around the World Daft Punk 1997"},
+{t:"One More Time",a:"Daft Punk",y:2000,st:["kdnc","khit"],p:96,party:true,q:"One More Time Daft Punk 2000"},
 {t:"Harder Better Faster Stronger",a:"Daft Punk",y:2001,st:["kdnc"],p:93,q:"Harder Better Faster Stronger Daft Punk 2001"},
 {t:"Holiday",a:"Madonna",y:1983,st:["kdnc","khit"],p:93,q:"Holiday Madonna 1983"},
 {t:"Vogue",a:"Madonna",y:1990,st:["kdnc","khit"],p:96,q:"Vogue Madonna 1990"},
@@ -1380,8 +1395,8 @@ const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:9
 // ── KROK — Classic Rock ──────────────────────────────────────────────────────
 
 {t:"Go Your Own Way",a:"Fleetwood Mac",y:1977,st:["krok"],p:95,q:"Go Your Own Way Fleetwood Mac 1977"},
-{t:"Don't Stop Believin",a:"Journey",y:1981,st:["krok","khit"],p:97,q:"Dont Stop Believin Journey 1981"},
-{t:"Back in Black",a:"AC/DC",y:1980,st:["krok"],p:97,q:"Back in Black ACDC 1980"},
+{t:"Don't Stop Believin",a:"Journey",y:1981,st:["krok","khit"],p:97,party:true,q:"Dont Stop Believin Journey 1981"},
+{t:"Back in Black",a:"AC/DC",y:1980,st:["krok"],p:97,party:true,q:"Back in Black ACDC 1980"},
 {t:"Sweet Home Alabama",a:"Lynyrd Skynyrd",y:1974,st:["krok"],p:96,q:"Sweet Home Alabama Lynyrd Skynyrd 1974"},
 {t:"More Than a Feeling",a:"Boston",y:1976,st:["krok"],p:95,q:"More Than a Feeling Boston 1976"},
 
@@ -1402,7 +1417,7 @@ const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:9
 
 {t:"Crazy Train",a:"Ozzy Osbourne",y:1980,st:["kmet"],p:95,q:"Crazy Train Ozzy Osbourne 1980"},
 
-{t:"Welcome to the Jungle",a:"Guns N Roses",y:1987,st:["kmet","kroq"],p:96,q:"Welcome to the Jungle Guns N Roses 1987"},
+{t:"Welcome to the Jungle",a:"Guns N Roses",y:1987,st:["kmet","kroq"],p:96,party:true,q:"Welcome to the Jungle Guns N Roses 1987"},
 {t:"Paradise City",a:"Guns N Roses",y:1987,st:["kmet","kroq"],p:95,q:"Paradise City Guns N Roses 1987"},
 // ── WEAF — Big Band ──────────────────────────────────────────────────────────
 {t:"Take the A Train",a:"Duke Ellington",y:1941,st:["weaf","wjaz"],p:94,q:"Take the A Train Duke Ellington 1941"},
@@ -1444,7 +1459,20 @@ const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:9
 {t:"Bad Girls",a:"Donna Summer",y:1979,st:["kdsc"],p:95,q:"Bad Girls Donna Summer 1979"},
 {t:"Love to Love You Baby",a:"Donna Summer",y:1975,st:["kdsc"],p:93,q:"Love to Love You Baby Donna Summer 1975"},
 {t:"YMCA",a:"Village People",y:1978,st:["kdsc","khit"],p:95,q:"YMCA Village People 1978"},
-{t:"Don't Stop 'Til You Get Enough",a:"Michael Jackson",y:1979,st:["kdsc","khit"],p:96,q:"Dont Stop Till You Get Enough Michael Jackson 1979"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,uri:"spotify:track:2L4IuPHiOaHjYa1ULwBsgG",st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["wbdx"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["wbdx"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["wbdx"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,q:"Get Low Lil Jon Ying Yang Twins 2003"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["wbdx","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"0 to 100 (The Catch Up)",a:"Drake",y:2014,uri:"spotify:track:3FvGCjMvfaslJIRaX4HDLN",explicit:true,st:["wbdx","ktrap"],p:94,q:"0 to 100 Drake 2014"},{t:"Back to Back",a:"Drake",y:2015,uri:"spotify:track:2kfsDpTPqPSMnNhBfJb6uT",explicit:true,st:["wbdx","ktrap"],p:94,q:"Back to Back Drake Meek Mill 2015"},{t:"Control",a:"Big Sean ft Kendrick Lamar",y:2013,st:["wbdx","kcons"],p:93,q:"Control Big Sean Kendrick Lamar Jay Electronica 2013",uri:"spotify:track:2YpeDb67231RjR0MgVLzsG",explicit:true},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["wbdx","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
+{t:"Don't Stop 'Til You Get Enough",a:"Michael Jackson",y:1979,st:["kdsc","khit"],p:96,q:"Dont Stop Till You Get Enough Michael Jackson 1979"},{t:"Autumn Leaves",a:"Miles Davis",y:1958,st:["wjaz"],p:88,q:"Autumn Leaves Miles Davis"},{t:"My Favorite Things",a:"John Coltrane",y:1961,st:["wjaz"],p:92,q:"My Favorite Things John Coltrane"},{t:"Cantaloupe Island",a:"Herbie Hancock",y:1964,st:["wjaz"],p:89,q:"Cantaloupe Island Herbie Hancock"},{t:"Birdland",a:"Weather Report",y:1977,st:["wjaz"],p:90,q:"Birdland Weather Report"},{t:"Don't Know Why",a:"Norah Jones",y:2002,st:["wjaz"],p:90,q:"Don't Know Why Norah Jones"},{t:"Spain",a:"Chick Corea",y:1972,st:["wjaz"],p:89,q:"Spain Chick Corea Return to Forever"}],"2000":[{t:"Crazy in Love",a:"Beyonce ft Jay-Z",y:2003,st:["khit","wrnb"],p:98,q:"Crazy in Love Beyonce Jay-Z 2003"},{t:"Umbrella",a:"Rihanna",y:2007,st:["khit","wrnb"],p:97,q:"Umbrella Rihanna 2007"},{t:"Poker Face",a:"Lady Gaga",y:2008,st:["khit","kdnc"],p:98,q:"Poker Face Lady Gaga 2008"},{t:"Crazy",a:"Gnarls Barkley",y:2006,uri:"spotify:track:2L4IuPHiOaHjYa1ULwBsgG",st:["khit","wsol"],p:97,q:"Crazy Gnarls Barkley 2006"},{t:"Hey Ya",a:"OutKast",y:2003,st:["khit","ksth"],p:98,q:"Hey Ya OutKast 2003"},{t:"Mr Brightside",a:"The Killers",y:2003,st:["kroq"],p:96,q:"Mr Brightside The Killers 2003"},{t:"Seven Nation Army",a:"The White Stripes",y:2003,st:["kroq"],p:95,q:"Seven Nation Army White Stripes 2003"},{t:"Numb",a:"Linkin Park",y:2003,st:["kmet","kroq"],p:96,q:"Numb Linkin Park 2003"},{t:"Lose Yourself",a:"Eminem",y:2002,st:["wbdx"],p:98,q:"Lose Yourself Eminem 2002"},{t:"In Da Club",a:"50 Cent",y:2003,st:["wbdx"],p:97,q:"In Da Club 50 Cent 2003"},{t:"Gold Digger",a:"Kanye West",y:2005,st:["wbdx"],p:97,q:"Gold Digger Kanye West 2005"},{t:"Lollipop",a:"Lil Wayne",y:2008,st:["ksth"],p:96,q:"Lollipop Lil Wayne 2008"},{t:"Get Low",a:"Lil Jon",y:2003,st:["ksth"],p:91,party:true,q:"Get Low Lil Jon Ying Yang Twins 2003"},
+{t:"Turn Down for What",a:"DJ Snake ft Lil Jon",y:2013,st:["ksth"],p:90,q:"Turn Down for What DJ Snake Lil Jon 2013"},
+{t:"Yeah!",a:"Usher ft Lil Jon Ludacris",y:2004,st:["ksth"],p:95,q:"Yeah Usher Lil Jon Ludacris 2004"},
+{t:"Salt Shaker",a:"Ying Yang Twins ft Lil Jon",y:2003,st:["ksth"],p:86,q:"Salt Shaker Ying Yang Twins Lil Jon 2003"},
+{t:"What You Know",a:"T.I.",y:2006,st:["ksth"],p:88,q:"What You Know T.I. 2006"},
+{t:"Snap Yo Fingers",a:"Lil Jon ft E-40",y:2006,st:["ksth"],p:85,q:"Snap Yo Fingers Lil Jon E-40 2006"},
+{t:"Lollipop (Remix)",a:"Lil Wayne ft Static Major",y:2008,st:["ksth"],p:89,q:"Lollipop Remix Lil Wayne 2008"},{t:"Rehab",a:"Amy Winehouse",y:2006,st:["wsol","kroq"],p:94,q:"Rehab Amy Winehouse 2006"},{t:"Hips Dont Lie",a:"Shakira",y:2006,st:["wltn","khit"],p:96,q:"Hips Don't Lie Shakira 2006"},{t:"Before He Cheats",a:"Carrie Underwood",y:2005,st:["kgro","khit"],p:96,q:"Before He Cheats Carrie Underwood 2005"}],"2010":[{t:"Uptown Funk",a:"Mark Ronson ft Bruno Mars",y:2014,st:["khit","wsol"],p:99,party:true,q:"Uptown Funk Mark Ronson Bruno Mars 2014"},{t:"Blinding Lights",a:"The Weeknd",y:2019,st:["khit","wrnb"],p:99,q:"Blinding Lights The Weeknd 2019"},{t:"Rolling in the Deep",a:"Adele",y:2010,st:["khit","wsol"],p:99,q:"Rolling in the Deep Adele 2010"},{t:"Shape of You",a:"Ed Sheeran",y:2017,st:["khit"],p:98,q:"Shape of You Ed Sheeran 2017"},{t:"Do I Wanna Know",a:"Arctic Monkeys",y:2013,st:["kroq"],p:94,q:"Do I Wanna Know Arctic Monkeys 2013"},{t:"Take Me to Church",a:"Hozier",y:2013,st:["kroq","khit"],p:95,q:"Take Me to Church Hozier 2013"},{t:"Gods Plan",a:"Drake",y:2018,st:["wbdx","khit"],p:99,q:"God's Plan Drake 2018"},{t:"Mask Off",a:"Future",y:2017,st:["ktrap"],p:96,party:true,q:"Mask Off Future 2017"},{t:"Bad and Boujee",a:"Migos",y:2016,st:["ktrap"],p:96,party:true,q:"Bad and Boujee Migos 2016"},{t:"HUMBLE",a:"Kendrick Lamar",y:2017,st:["kcons"],p:97,party:true,q:"HUMBLE Kendrick Lamar 2017"},{t:"Redbone",a:"Childish Gambino",y:2016,st:["kcons","wsol"],p:95,q:"Redbone Childish Gambino 2016"},{t:"All of Me",a:"John Legend",y:2013,st:["wsol","khit"],p:97,q:"All of Me John Legend 2013"},{t:"Wake Me Up",a:"Avicii",y:2013,st:["kdnc","khit"],p:95,q:"Wake Me Up Avicii 2013"},{t:"Tennessee Whiskey",a:"Chris Stapleton",y:2015,st:["kgro"],p:95,q:"Tennessee Whiskey Chris Stapleton 2015"},{t:"0 to 100 (The Catch Up)",a:"Drake",y:2014,uri:"spotify:track:3FvGCjMvfaslJIRaX4HDLN",explicit:true,st:["wbdx","ktrap"],p:94,q:"0 to 100 Drake 2014"},{t:"Back to Back",a:"Drake",y:2015,uri:"spotify:track:2kfsDpTPqPSMnNhBfJb6uT",explicit:true,st:["wbdx","ktrap"],p:94,q:"Back to Back Drake Meek Mill 2015"},{t:"Control",a:"Big Sean ft Kendrick Lamar",y:2013,st:["wbdx","kcons"],p:93,q:"Control Big Sean Kendrick Lamar Jay Electronica 2013",uri:"spotify:track:2YpeDb67231RjR0MgVLzsG",explicit:true},{t:"Old Town Road",a:"Lil Nas X",y:2019,st:["kgro","khit","ktrap"],p:99,q:"Old Town Road Lil Nas X Billy Ray Cyrus 2019"}],"2020":[{t:"As It Was",a:"Harry Styles",y:2022,st:["khit"],p:99,q:"As It Was Harry Styles 2022"},{t:"Anti-Hero",a:"Taylor Swift",y:2022,st:["khit"],p:99,q:"Anti-Hero Taylor Swift 2022"},{t:"Levitating",a:"Dua Lipa",y:2020,st:["khit","kdnc"],p:97,q:"Levitating Dua Lipa 2020"},{t:"Heat Waves",a:"Glass Animals",y:2020,st:["kroq","khit"],p:95,q:"Heat Waves Glass Animals 2020"},{t:"Rich Flex",a:"Drake and 21 Savage",y:2022,st:["wbdx","ktrap"],p:97,q:"Rich Flex Drake 21 Savage 2022"},{t:"Fukumean",a:"Gunna",y:2023,st:["ktrap"],p:93,q:"Fukumean Gunna 2023"},{t:"Count Me Out",a:"Kendrick Lamar",y:2022,st:["kcons"],p:94,q:"Count Me Out Kendrick Lamar 2022"},
+{t:"Alright",a:"Kendrick Lamar",y:2015,st:["kcons"],p:96,q:"Alright Kendrick Lamar 2015"},
+{t:"The Blacker the Berry",a:"Kendrick Lamar",y:2015,st:["kcons"],p:92,q:"The Blacker the Berry Kendrick Lamar 2015"},
+{t:"No Role Modelz",a:"J. Cole",y:2014,st:["kcons"],p:93,q:"No Role Modelz J Cole 2014"},
+{t:"Middle Child",a:"J. Cole",y:2019,st:["kcons"],p:91,q:"Middle Child J Cole 2019"},
+{t:"Same Drugs",a:"Chance the Rapper",y:2016,st:["kcons"],p:87,q:"Same Drugs Chance the Rapper 2016"},
+{t:"No Problem",a:"Chance the Rapper ft Lil Wayne 2 Chainz",y:2016,st:["kcons"],p:88,q:"No Problem Chance the Rapper 2016"},
+{t:"i",a:"Kendrick Lamar",y:2014,st:["kcons"],p:89,q:"i Kendrick Lamar 2014"},{t:"Kill Bill",a:"SZA",y:2022,st:["wrnb","wsol"],p:96,q:"Kill Bill SZA 2022"},{t:"Bad Habit",a:"Steve Lacy",y:2022,st:["wsol","khit"],p:96,q:"Bad Habit Steve Lacy 2022"},{t:"I Remember Everything",a:"Zach Bryan",y:2023,st:["kgro"],p:94,q:"I Remember Everything Zach Bryan 2023"},{t:"Ella Baila Sola",a:"Eslabon Armado and Peso Pluma",y:2023,st:["wltn"],p:95,q:"Ella Baila Sola Eslabon Armado Peso Pluma 2023"}]};
 
 // ─── YOUTUBE ID MAP ───────────────────────────────────────────────────────────
 // NOTE: Currently UNUSED — playback runs entirely through Spotify. getYTId() below
@@ -2038,7 +2066,7 @@ async function searchAndPlay(song, positionMs){
 
     // ── HYPE DROP + INTRO REWIND ─────────────────────────────────────────────
     // Only on hype-eligible stations during hype hours
-    scheduleHypeDrop(track, seekMs, scheduledIdx);
+    scheduleSweeper(track, seekMs, scheduledIdx);
 
     // Immediate schedule using fallback timing
     scheduleDJBreak(track, null, seekMs, scheduledPrev, scheduledNext, scheduledIdx);
@@ -6135,50 +6163,68 @@ async function fetchBillboardChart(chartDate){
   }
 }
 
-// Build a weighted playlist from Billboard chart data for a station
+// Build a weighted playlist from Billboard chart data for a station.
+// Pulls a multi-week window (current + 3 prior weeks) instead of a single
+// week — mirrors how real stations actually program: a rolling library of
+// recent hits, not a hard reset to exactly one week's chart. Songs seen in
+// an earlier (more recent) week keep that week's chart position for weighting;
+// later weeks only contribute songs not already in the pool, so the pool
+// grows with recurrent-but-still-current tracks instead of duplicating.
 // Returns array of {t, a, y, weight, chartPos, weeksOnChart, peakPos}
 async function getBillboardPlaylist(sid, dialDateIso){
   // Load valid dates first if needed
   if(!validDatesLoaded) await loadValidDates();
 
-  const chartDate = nearestChartDate(dialDateIso);
-  if(!chartDate){
+  const filter = STATION_CHART_FILTERS[sid];
+  const maxPos = filter ? filter.maxPos : 100;
+  const pool = [];
+  const seen = new Set();
+  let anchorChartDate = null;
+  // Party nights (Fri/Sat evening–early morning, party-eligible formats only)
+  // reach back further for recurrent/throwback material — real mix shows lean
+  // on familiar crowd-pleasers alongside the current chart, not just this
+  // month's exact rotation.
+  const format = SWEEPER_STATION_FORMAT[sid];
+  const isPartyEligible = format && PARTY_NIGHT_FORMATS.includes(format);
+  const WINDOW_WEEKS = (isPartyEligible && isPartyNight()) ? 10 : 4;
+
+  let cursorIso = dialDateIso;
+  for(let week = 0; week < WINDOW_WEEKS; week++){
+    const chartDate = nearestChartDate(cursorIso);
+    if(!chartDate) break;
+    if(week === 0) anchorChartDate = chartDate;
+
+    const chart = await fetchBillboardChart(chartDate);
+    if(chart && chart.data){
+      for(const entry of chart.data){
+        if(entry.this_week > maxPos) continue;
+        const key = `${entry.song}|||${entry.artist}`.toLowerCase();
+        if(seen.has(key)) continue; // keep the most recent week's position/weight
+        seen.add(key);
+        pool.push({
+          t: entry.song,
+          a: entry.artist,
+          y: parseInt(dialDateIso.substring(0, 4)),
+          weight: chartPositionWeight(entry.this_week),
+          chartPos: entry.this_week,
+          peakPos: entry.peak_position,
+          weeksOnChart: entry.weeks_on_chart,
+          source: 'billboard',
+        });
+      }
+    }
+    // Step back 7 days for the next iteration
+    cursorIso = new Date(new Date(chartDate + 'T12:00:00Z').getTime() - 7*86400000)
+      .toISOString().substring(0, 10);
+  }
+
+  if(!anchorChartDate){
     addDebugLog(`[BILLBOARD] No chart date found near ${dialDateIso}`);
     return null;
   }
 
-  const chart = await fetchBillboardChart(chartDate);
-  if(!chart || !chart.data) return null;
-
-  const filter = STATION_CHART_FILTERS[sid];
-  const maxPos = filter ? filter.maxPos : 100;
-
-  // Build weighted pool — each entry appears N times based on chart weight
-  // Stations without a specific filter get the full Hot 100
-  const pool = [];
-  const seen = new Set();
-
-  for(const entry of chart.data){
-    if(entry.this_week > maxPos) continue;
-    const key = `${entry.song}|||${entry.artist}`.toLowerCase();
-    if(seen.has(key)) continue;
-    seen.add(key);
-
-    const weight = chartPositionWeight(entry.this_week);
-    pool.push({
-      t: entry.song,
-      a: entry.artist,
-      y: parseInt(dialDateIso.substring(0, 4)),
-      weight,
-      chartPos: entry.this_week,
-      peakPos: entry.peak_position,
-      weeksOnChart: entry.weeks_on_chart,
-      source: 'billboard',
-    });
-  }
-
-  addDebugLog(`[BILLBOARD] Built pool: ${pool.length} tracks for ${sid} on ${chartDate}`);
-  return { pool, chartDate };
+  addDebugLog(`[BILLBOARD] Built pool: ${pool.length} tracks for ${sid} across ${WINDOW_WEEKS}wk window (anchor ${anchorChartDate})`);
+  return { pool, chartDate: anchorChartDate };
 }
 
 // Search Spotify for a Billboard chart entry and return the track URI
@@ -6239,6 +6285,7 @@ async function searchBillboardTrack(song, artist, year){
       uri: track.uri,
       t: track.name,
       a: track.artists.map(a=>a.name).join(', '),
+      artistId: track.artists?.[0]?.id || null,
       y: parseInt((track.album?.release_date||'0').substring(0,4)),
       duration_ms: track.duration_ms,
       p: track.popularity,
@@ -6254,49 +6301,54 @@ async function searchBillboardTrack(song, artist, year){
   }
 }
 
+// ── ARTIST GENRE LOOKUP ───────────────────────────────────────────────────────
+// Fixes a real gap: STATION_CHART_FILTERS defines a `genres` list per station,
+// but until now nothing ever read it — every Billboard-driven station pulled
+// from the identical Hot 100, differentiated only by chart-position cutoff.
+// This batches artist genre lookups (Spotify allows up to 50 IDs per call)
+// and caches results, so a hip-hop station and a country station actually end
+// up with different songs, not just a different-depth slice of the same chart.
+const artistGenreCache = {}; // { artistId: string[] }
+
+async function fetchArtistGenres(artistIds){
+  const uncached = [...new Set(artistIds.filter(id => id && !artistGenreCache[id]))];
+  if(!uncached.length || !spotifyToken) return;
+  try {
+    for(let i = 0; i < uncached.length; i += 50){
+      const batch = uncached.slice(i, i + 50);
+      const r = await fetch(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`, {
+        headers: { 'Authorization': 'Bearer ' + spotifyToken }
+      });
+      if(!r.ok) continue;
+      const d = await r.json();
+      for(const artist of (d.artists || [])){
+        if(artist) artistGenreCache[artist.id] = artist.genres || [];
+      }
+    }
+  } catch(e){ addDebugLog(`[GENRE] Lookup failed: ${e.message}`); }
+}
+
+// Fuzzy match: Spotify's granular genres ("conscious hip hop", "west coast rap")
+// often contain a station's configured keyword as a substring, or vice versa.
+function artistMatchesStationGenre(artistId, stationGenres){
+  if(!stationGenres || !stationGenres.length) return true; // no filter configured — allow
+  const genres = artistGenreCache[artistId];
+  if(!genres || !genres.length) return true; // unknown artist genres — don't punish, allow through
+  return genres.some(g => stationGenres.some(sg => g.includes(sg) || sg.includes(g)));
+}
+
 // Build the final playable playlist from a Billboard pool
 // Searches Spotify for top N entries, returns weighted array
-async function buildBillboardSpotifyPlaylist(sid, dialDateIso){
-  const result = await getBillboardPlaylist(sid, dialDateIso);
-  if(!result) return null;
-
-  const { pool, chartDate } = result;
-  let playable = [];
-  const maxSearch = 40; // search top 40 chart entries — good balance of speed vs variety
-  const searchBatch = pool.slice(0, maxSearch);
-
-  // Search Spotify for each entry (in parallel batches of 5)
-  const BATCH = 5;
-  for(let i = 0; i < searchBatch.length; i += BATCH){
-    const batch = searchBatch.slice(i, i + BATCH);
-    const results = await Promise.all(
-      batch.map(entry => searchBillboardTrack(entry.t, entry.a, entry.y))
-    );
-    results.forEach((track, j) => {
-      if(!track) return;
-      const entry = batch[j];
-      // Add track multiple times based on weight for rotation frequency.
-      // NOTE: these land consecutively here — they get interleaved below so a
-      // heavy-rotation song never plays (or appears in Up Next) back-to-back.
-      for(let w = 0; w < entry.weight; w++){
-        playable.push({
-          ...track,
-          chartPos: entry.chartPos,
-          peakPos: entry.peakPos,
-          weeksOnChart: entry.weeksOnChart,
-          source: 'billboard',
-          chartDate,
-        });
-      }
-    });
-  }
-
-  // ── Interleave by rotation "pass" ──────────────────────────────────────────
-  // Group copies by track, then deal them out round-robin: one copy of every
-  // track per pass. A weight-8 song appears in all 8 passes (still heavy
-  // rotation) but is separated by other songs, instead of 8 times in a row.
+// ── SHARED INTERLEAVE UTILITY ─────────────────────────────────────────────────
+// Takes an array that may contain duplicate entries (weighted rotation — the
+// same song pushed in multiple times) and deals them out round-robin so a
+// heavy-rotation track is spread across the playlist instead of stacking
+// consecutively. Used by the Billboard weighting above AND by the party-night
+// boost below, so both share one tested anti-clustering behavior rather than
+// two separately-maintained near-duplicates of the same logic.
+function interleaveWeightedSongs(songs){
   const byTrack = new Map();
-  for(const t of playable){
+  for(const t of songs){
     const k = t.id || (t.t + '|' + t.a);
     if(!byTrack.has(k)) byTrack.set(k, []);
     byTrack.get(k).push(t);
@@ -6305,15 +6357,11 @@ async function buildBillboardSpotifyPlaylist(sid, dialDateIso){
   const maxWeight = Math.max(0, ...buckets.map(b => b.length));
   const interleaved = [];
   for(let pass = 0; pass < maxWeight; pass++){
-    // Rotate the starting offset each pass so the same track isn't always first
     const order = buckets.filter(b => b.length > pass);
     for(let n = 0; n < order.length; n++){
       interleaved.push(order[(n + pass) % order.length][pass]);
     }
   }
-
-  // Repair pass: heavy-rotation tracks can still cluster near the tail once the
-  // lighter ones run out. Swap any adjacent duplicate forward to a safe slot.
   const keyOf = t => t.id || (t.t + '|' + t.a);
   for(let i = 1; i < interleaved.length; i++){
     if(keyOf(interleaved[i]) !== keyOf(interleaved[i-1])) continue;
@@ -6329,7 +6377,111 @@ async function buildBillboardSpotifyPlaylist(sid, dialDateIso){
       }
     }
   }
-  playable = interleaved;
+  return interleaved;
+}
+
+// ── PARTY NIGHT SONG SELECTION ────────────────────────────────────────────────
+// Friday/Saturday evening through the early morning hours — real stations lean
+// into more uptempo, more familiar, more crowd-pleasing programming on these
+// nights specifically. This combines three mechanisms into one post-process,
+// applied uniformly regardless of which pipeline (Billboard, Spotify genre
+// search, or hardcoded DB) resolved the song pool:
+//
+//   1. STEEPER CHART-POSITION WEIGHTING — top-10 songs get boosted further
+//      beyond their normal weight; the rotation leans harder toward big hits.
+//   2. CURATED "PARTY" TRACKS — hand-tagged high-energy songs (party:true in
+//      the DB) get an extra boost, independent of chart data.
+//   3. DEEPER RECURRENT WINDOW — handled in getBillboardPlaylist via
+//      WINDOW_WEEKS reacting to isPartyNight(); reaches further back for
+//      familiar throwback-adjacent material, same as real mix shows do.
+//
+// Only applies to formats where "party programming" makes sense — same
+// station scope as the sweeper layer, since a jazz or classical station
+// wouldn't shift its selection for Friday night the way a hip-hop or dance
+// station would.
+const PARTY_NIGHT_FORMATS = ['hiphop', 'popRock', 'dance'];
+
+function isPartyNight(){
+  const now = new Date();
+  const day = now.getDay();          // 0=Sun ... 5=Fri, 6=Sat
+  const hour = now.getHours();
+  const isFriOrSat = (day === 5 || day === 6);
+  if(!isFriOrSat) return false;
+  return hour >= 18 || hour < 3;     // ~6pm through ~3am
+}
+
+function applyPartyNightBoost(songs, sid){
+  if(!songs || !songs.length) return songs;
+  const format = SWEEPER_STATION_FORMAT[sid];
+  if(!format || !PARTY_NIGHT_FORMATS.includes(format)) return songs;
+  if(!isPartyNight()) return songs;
+
+  const boosted = [];
+  for(const song of songs){
+    boosted.push(song);
+    // Mechanism 1: steeper top-10 weighting — Billboard-sourced tracks carry
+    // chartPos; give #1-10 an extra couple of spins beyond their base weight.
+    if(song.chartPos && song.chartPos <= 10) boosted.push(song, song);
+    else if(song.chartPos && song.chartPos <= 20) boosted.push(song);
+    // Mechanism 2: hand-curated party tracks (DB fallback layer) get a boost
+    // independent of chart data, since they won't have a chartPos at all.
+    if(song.party === true) boosted.push(song, song);
+  }
+  const before = songs.length, after = boosted.length;
+  if(after > before) addDebugLog(`[PARTY] ${sid}: boosted pool ${before} -> ${after} entries for Fri/Sat night`);
+  return interleaveWeightedSongs(boosted);
+}
+
+async function buildBillboardSpotifyPlaylist(sid, dialDateIso){
+  const result = await getBillboardPlaylist(sid, dialDateIso);
+  if(!result) return null;
+
+  const { pool, chartDate } = result;
+  let playable = [];
+  const maxSearch = 60; // was 40 — widened for more variety (Fix 4)
+  const searchBatch = pool.slice(0, maxSearch);
+  const stationGenres = STATION_CHART_FILTERS[sid]?.genres || null;
+
+  // Search Spotify for each entry (in parallel batches of 5)
+  const BATCH = 5;
+  const resolved = [];
+  for(let i = 0; i < searchBatch.length; i += BATCH){
+    const batch = searchBatch.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(entry => searchBillboardTrack(entry.t, entry.a, entry.y))
+    );
+    results.forEach((track, j) => {
+      if(!track) return;
+      resolved.push({ track, entry: batch[j] });
+    });
+  }
+
+  // Genre check: batch-fetch genres for every resolved artist, then filter.
+  // Only applies when the station has a genre list configured — stations not
+  // in STATION_CHART_FILTERS (or with an empty list) are unaffected.
+  if(stationGenres){
+    await fetchArtistGenres(resolved.map(r => r.track.artistId));
+  }
+
+  let genreRejected = 0;
+  for(const { track, entry } of resolved){
+    if(stationGenres && !artistMatchesStationGenre(track.artistId, stationGenres)){
+      genreRejected++;
+      continue;
+    }
+    for(let w = 0; w < entry.weight; w++){
+      playable.push({
+        ...track,
+        chartPos: entry.chartPos,
+        peakPos: entry.peakPos,
+        weeksOnChart: entry.weeksOnChart,
+        source: 'billboard',
+        chartDate,
+      });
+    }
+  }
+  if(genreRejected) addDebugLog(`[GENRE] ${sid}: rejected ${genreRejected} off-format tracks`);
+  playable = interleaveWeightedSongs(playable);
 
   addDebugLog(`[BILLBOARD] Playlist built: ${playable.length} weighted entries (${byTrack.size} unique tracks, interleaved)`);
   return playable.length >= 5 ? playable : null;
@@ -6517,16 +6669,16 @@ async function getSongsDynamic(sid, y){
   const billboardPlaylist = await buildBillboardSpotifyPlaylist(sid, dialDate.iso);
   if(billboardPlaylist && billboardPlaylist.length >= 5){
     addDebugLog(`[CATALOG] Using Billboard chart for ${sid} @ ${dialDate.iso}`);
-    return billboardPlaylist;
+    return applyPartyNightBoost(billboardPlaylist, sid);
   }
 
   // ── 2. Fallback: Spotify genre search ───────────────────────────────────
   addDebugLog(`[CATALOG] Billboard unavailable — falling back to Spotify genre search`);
   const dynamic = await fetchSpotifyCatalog(sid, y);
-  if(dynamic && dynamic.length >= 5) return dynamic;
+  if(dynamic && dynamic.length >= 5) return applyPartyNightBoost(dynamic, sid);
 
   // ── 3. Final fallback: hardcoded DB ─────────────────────────────────────
-  return getSongs(sid, y);
+  return applyPartyNightBoost(getSongs(sid, y), sid);
 }
 
 // ─── PLAYLIST DEDUP ──────────────────────────────────────────────────────────
@@ -7397,7 +7549,7 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
 // ─── DEVELOPER PANEL ─────────────────────────────────────────────────────────
 const DEV = {
   weather: true, timeofday: true, songrefs: true, newsong: true,
-  eracontext: true, stationid: true,
+  eracontext: true, stationid: true, knowledge: true, sweepers: true,
   freq: 50,       // 0-100 probability multiplier
   modes: { outro:true, gap:true, intro:true, mid:true, bridge:true },
   breakLen: 'mixed',
@@ -7517,7 +7669,7 @@ function initDevPanel(){
     document.getElementById('dj-freq-val').textContent = DEV.freq + '%';
   });
 
-  ['weather','timeofday','songrefs','newsong','eracontext','stationid'].forEach(key => {
+  ['weather','timeofday','songrefs','newsong','eracontext','stationid','knowledge','sweepers'].forEach(key => {
     document.getElementById('dj-'+key).addEventListener('change', function(){
       DEV[key] = this.checked;
     });
@@ -7571,58 +7723,201 @@ function addDebugLog(msg){
   }
 }
 
-// ─── HYPE DROP + INTRO REWIND ENGINE ─────────────────────────────────────────
-// Inspired by Funkmaster Flex / DJ Cipher hype behavior.
-// Two modes:
-//   1. HYPE DROP — short interjection over song intro (station ID, cocky line,
-//      artist co-sign). No Claude call needed — drawn from pre-baked lines.
-//   2. INTRO REWIND — for brand new drops on hype nights, rewind intro 2-3x
-//      before letting it ride. Cipher drops a one-liner between rewinds.
+// ─── SWEEPER LAYER + INTRO REWIND ENGINE ─────────────────────────────────────
+// "Sweeper" is the real radio-industry term for these — short, pre-baked
+// station-imaging interjections (liners/sweepers), distinct from the full
+// Claude-generated DJ breaks. No API call, no latency — just a quick drop.
+// Three modes:
+//   1. STATION ID SWEEP — brief interjection over song intro (station ID,
+//      DJ tag, energy stamp). Format-appropriate per station's persona.
+//   2. CLASSIC CALLBACK — a beloved-hit acknowledgment ("I know we all love
+//      this one") — only for genuinely high-popularity tracks, replaces the
+//      station-ID sweep for that moment rather than stacking both.
+//   3. INTRO REWIND — for brand new drops on hype nights, rewind intro 2-3x
+//      before letting it ride. Unchanged, still hip-hop/dance-cluster only.
+//
+// DEV.sweepers is the master on/off toggle (see DEV object + dev panel).
 
-// Stations eligible for hype drops
-const HYPE_STATIONS = ['wbdx', 'kdnc', 'ktrap', 'ksth', 'kbtm'];
+// Stations eligible for sweepers, grouped by format — this drives both which
+// time slots are open and how often they fire. Pop/rock/dance keep the
+// original narrower evening-into-late-night window. Hip-hop runs wider and
+// hotter, consistent with real urban-format daypart practice.
+const SWEEPER_STATION_FORMAT = {
+  wbdx:'hiphop', kwst:'hiphop', kbtm:'hiphop', ktrap:'hiphop', ksth:'hiphop', kcons:'hiphop',
+  khit:'popRock', krok:'popRock', kmet:'popRock',
+  kdnc:'dance',
+};
+const SWEEPER_STATIONS = Object.keys(SWEEPER_STATION_FORMAT);
 
-// Time slots eligible for hype drops
-const HYPE_SLOTS = ['night', 'late_night', 'evening', 'weekend_afternoon'];
+const SWEEPER_SLOTS_BY_FORMAT = {
+  hiphop:  ['morning_drive','afternoon_drive','midday','evening','night','late_night','weekend_morning','weekend_afternoon'],
+  popRock: ['night','late_night','evening','weekend_afternoon'],
+  dance:   ['night','late_night','evening','weekend_afternoon'],
+};
 
-// Pre-baked hype lines — drawn randomly, no Claude call needed
-// Keyed by station for authenticity
-const HYPE_LINES = {
+// Base chance, and the Friday/Saturday-night bump. Hip-hop runs hotter on
+// both counts and stays elevated even outside weekend nights, matching how
+// urban-format DJs actually work — this isn't purely a Fri/Sat-only thing,
+// it's always-on with weekend nights turned up further.
+const SWEEPER_PROB_BY_FORMAT = {
+  hiphop:  { base: 0.18, weekendNight: 0.35 },
+  popRock: { base: 0.10, weekendNight: 0.22 },
+  dance:   { base: 0.12, weekendNight: 0.25 },
+};
+
+function getSweeperFormat(sid){ return SWEEPER_STATION_FORMAT[sid] || 'popRock'; }
+
+// Rewind stays scoped to its ORIGINAL roster — broadening sweeper eligibility
+// above should not also broaden which stations do live intro-rewinds, since
+// that's a much more specific hip-hop/mix-show practice, not something a
+// Top 40 or rock jock would typically do on air.
+const REWIND_ELIGIBLE_STATIONS = ['wbdx', 'kdnc', 'ktrap', 'ksth', 'kbtm'];
+
+// A song this popular gets a classic-callback line instead of a plain
+// station-ID sweep — "I know we all love this one" only fires for genuine
+// hits, not just anything above the general sweeper-eligibility bar.
+const CLASSIC_CALLBACK_THRESHOLD = 95;
+
+// Station-ID sweeps — short, format-appropriate, matching each DJ's own
+// established vocab/catchphrase. `default` covers any station not yet given
+// its own set.
+const SWEEPER_LINES = {
   wbdx: [
-    "WBDX!",
-    "Where the culture lives!",
-    "Brooklyn in the building!",
-    "DJ Cipher — I been knowing about this record.",
-    "WBDX, WBDX, WBDX!",
-    "That's that fire right there.",
-    "Follow DJ Cipher — at DJ Cipher on Instagram.",
-    "I told y'all. I told y'all.",
-    "New York stand up!",
-    "The culture lives right here!",
-    "DJ Cipher in the building — don't touch that dial.",
-    "That's my record right there!",
-    "Nobody plays it like WBDX.",
-    "Real hip hop. All day.",
+    "WBDX!", "Where the culture lives!", "Brooklyn in the building!",
+    "DJ Cipher — I been knowing about this record.", "WBDX, WBDX, WBDX!",
+    "That's that fire right there.", "Follow DJ Cipher — at DJ Cipher on Instagram.",
+    "I told y'all. I told y'all.", "New York stand up!", "The culture lives right here!",
+    "DJ Cipher in the building — don't touch that dial.", "That's my record right there!",
+    "Nobody plays it like WBDX.", "Real hip hop. All day.",
   ],
   kdnc: [
-    "Dance FM!",
-    "KDNC — the floor never stops!",
-    "That's that heat right there!",
-    "DJ Axis in the building!",
-    "Keep it moving!",
+    "Dance FM!", "KDNC — the floor never stops!", "That's that heat right there!",
+    "DJ Axis in the building!", "Keep it moving!",
   ],
   ktrap: [
-    "KTRAP!",
-    "Trap music all night!",
-    "That's the wave right there!",
-    "Streets is watching!",
+    "KTRAP!", "Trap music all night!", "That's the wave right there!", "Streets is watching!",
+  ],
+  ksth: [
+    "KSTH!", "ATL all day!", "On God, that's the one.", "Lil Buck in the building.",
+    "That's the city right there.",
+  ],
+  kbtm: [
+    "KBTM.", "The South runs this.", "Slow it down. Feel that.",
+    "Dirty Slab. Third Ward.", "That's Houston right there.",
+  ],
+  kwst: [
+    "KWST.", "West side. All day.", "That's the coast right there.",
+    "Legit. Straight up.", "Westside Loc. No doubt.",
+  ],
+  kcons: [
+    "KCONS.", "This matters.", "The culture, right here.",
+    "Hip hop has always been journalism.", "This is the real thing.",
+  ],
+  khit: [
+    "K-HIT!", "New York's number one for hits!", "103 point 7, K-HIT!",
+    "Rockin' the five boroughs!", "That's a smash, cats and kittens.",
+    "Rick Wilde — stay tuned.", "Chart-buster right there.",
+  ],
+  krok: [
+    "KROK!", "Turn it up!", "Rocktop, baby!", "That's a killer riff right there.",
+    "Solid gold, every time.", "Daddy Thunders — cranked to eleven.",
+  ],
+  kmet: [
+    "KMET.", "This riff will haunt you.", "Heavy. Always heavy.",
+    "That's the weight of it.", "Iron Rex. Don't turn it down.",
   ],
   default: [
-    "That's that fire!",
-    "Don't touch that dial!",
-    "Stay locked in!",
+    "That's that fire!", "Don't touch that dial!", "Stay locked in!",
   ]
 };
+
+// Classic-callback lines — fires INSTEAD OF a station-ID sweep when the
+// track clears CLASSIC_CALLBACK_THRESHOLD. Written from each DJ's own
+// established persona/vocab (see DJ_PERSONALITIES) rather than interchangeable
+// hype phrases — Cipher references "the science," Thought treats it as
+// documentation, Iron Rex talks about weight and distortion, etc. A couple
+// per station use {artist} — filled in from the actual track, no API call
+// needed since it's simple string interpolation, not a generated line.
+const CLASSIC_LINES = {
+  khit: [ // Rick Wilde — insider industry memory, warm authority, dry wit
+    "I remember exactly where I was the first time I played this.",
+    "Chart-buster then. Chart-buster now.",
+    "Still gets requests every single week. Every week.",
+    "{artist} doesn't miss. Never has.",
+    "This one's been number one in my book since day one.",
+  ],
+  krok: [ // Daddy Thunders — guitar worship, was there for the arenas
+    "That solo right there? That's why God invented the guitar.",
+    "I was there the first time I heard this one live. Never forgot it.",
+    "Some riffs get better with age. This is one of 'em.",
+    "{artist}. Turn it up for this one.",
+    "Cranked it the first time I heard it. Still crank it now.",
+  ],
+  kmet: [ // Iron Rex — measured, reverential, talks in weight not volume
+    "This one's been haunting radios for years. Still does the job.",
+    "Heavy then. Heavier now.",
+    "Some riffs never lose their weight.",
+    "This is the one that started it, for a lot of us.",
+    "{artist} understood distortion before most people had the word for it.",
+  ],
+  wbdx: [ // DJ Cipher — calm authority, treats hip hop as history and craft
+    "Word is bond, this one's untouchable.",
+    "This is the science. Every bar of it.",
+    "Real ones already know what this is.",
+    "{artist} wrote a page of the blueprint right here.",
+    "This right here is the culture. No debate.",
+  ],
+  kwst: [ // Westside Loc — laid back, unhurried confidence
+    "Real ones know. No doubt.",
+    "This one's been solid since day one.",
+    "Legit then. Legit now.",
+    "{artist}. The west never forgets a record like this.",
+  ],
+  kcons: [ // Thought — literary, treats hip hop as documentation
+    "This is the record that proves the point.",
+    "Some verses age like the best literature does.",
+    "This is documentation. This is why it matters.",
+    "History remembers records like this one.",
+    "{artist} was writing something that was going to last. You can hear it.",
+  ],
+  ksth: [ // Lil Buck — young, hungry, ATL pride
+    "ATL's been calling this a classic since it dropped, on God.",
+    "This one put the city on the map. Straight up.",
+    "No lie, this record still goes.",
+    "{artist} — the city never stopped playing this one.",
+  ],
+  kbtm: [ // Dirty Slab — slow, deliberate, Third Ward philosophy
+    "Slow it down for this one. It earned it.",
+    "Third Ward's been calling this a classic for years.",
+    "Some records you gotta let ride slow. This is one.",
+    "{artist}. Chopped, screwed, and still perfect either way.",
+  ],
+  ktrap: [ // Savage K — minimal, cold, occasional real warmth
+    "No cap, this one's timeless.",
+    "Real ones already know this is the one.",
+    "This wave never left. Real talk.",
+  ],
+  kdnc: [ // DJ Axis — economical, club-professional, floor-focused
+    "This one never left the floor. Not once.",
+    "The floor still remembers this record.",
+    "Some records just don't leave rotation. This is one.",
+  ],
+  default: [
+    "This one's earned its place.",
+    "Some records just don't fade.",
+    "Still holds up. Every time.",
+  ],
+};
+
+// Fills {artist} in a sweeper/classic line from the actual track, using just
+// the primary credited artist so it reads clean when spoken ("Migos ft Drake"
+// becomes "Migos"). No API call — this is template interpolation on a
+// pre-written line, keeping the sweeper layer's zero-latency design intact.
+function fillSweeperTemplate(line, track){
+  if(!line.includes('{artist}')) return line;
+  const primary = (track?.a || '').split(/,| ft\.?| [Ff]eaturing /)[0].trim();
+  return line.replace('{artist}', primary || 'This artist');
+}
 
 // Rewind lines — said between intro rewinds
 const REWIND_LINES = [
@@ -7639,24 +7934,26 @@ let hypeDropTimer = null;
 let rewindCount = 0;
 let rewindTimer = null;
 
-function isHypeEligible(track){
-  // Check station, time slot, and song energy
-  if(!HYPE_STATIONS.includes(curStation)) return false;
+function isSweeperEligible(track){
+  if(!DEV.sweepers) return false;
+  if(!SWEEPER_STATIONS.includes(curStation)) return false;
+  const format = getSweeperFormat(curStation);
+  const slots = SWEEPER_SLOTS_BY_FORMAT[format];
   const slot = getTimeSlot();
-  if(!HYPE_SLOTS.includes(slot)) return false;
+  if(!slots.includes(slot)) return false;
   // Only high-energy tracks (popularity threshold)
   if(track && track.p < 85) return false;
   // Day check — Friday (5) or Saturday (6) bump probability
   const day = new Date().getDay();
   const isWeekendNight = (day === 5 || day === 6);
-  // Base 12% chance, 25% on weekend nights
-  return Math.random() < (isWeekendNight ? 0.25 : 0.12);
+  const prob = SWEEPER_PROB_BY_FORMAT[format];
+  return Math.random() < (isWeekendNight ? prob.weekendNight : prob.base);
 }
 
 function isRewindEligible(track, seekMs){
-  if(!HYPE_STATIONS.includes(curStation)) return false;
+  if(!REWIND_ELIGIBLE_STATIONS.includes(curStation)) return false;
   const slot = getTimeSlot();
-  if(!HYPE_SLOTS.includes(slot)) return false;
+  if(!SWEEPER_SLOTS_BY_FORMAT.hiphop.includes(slot)) return false;
   // Only if tuning in from start (not mid-broadcast)
   if(seekMs > 8000) return false;
   // Only brand new drops
@@ -7671,8 +7968,15 @@ function isRewindEligible(track, seekMs){
   return isWeekendNight && Math.random() < 0.35;
 }
 
-function getHypeLine(stationId){
-  const lines = HYPE_LINES[stationId] || HYPE_LINES.default;
+// Picks the right line pool for this moment: classic-callback if the track
+// clears the threshold, otherwise the station's own ID/hype lines.
+function getSweeperLine(stationId, track){
+  if(track && track.p >= CLASSIC_CALLBACK_THRESHOLD){
+    const cls = CLASSIC_LINES[stationId] || CLASSIC_LINES.default;
+    const line = cls[Math.floor(Math.random() * cls.length)];
+    return fillSweeperTemplate(line, track);
+  }
+  const lines = SWEEPER_LINES[stationId] || SWEEPER_LINES.default;
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
@@ -7680,7 +7984,7 @@ function getRewindLine(){
   return REWIND_LINES[Math.floor(Math.random() * REWIND_LINES.length)];
 }
 
-async function scheduleHypeDrop(track, seekMs, songIdx){
+async function scheduleSweeper(track, seekMs, songIdx){
   if(!track) return;
   if(hypeDropTimer) clearTimeout(hypeDropTimer);
   if(rewindTimer) clearTimeout(rewindTimer);
@@ -7691,19 +7995,19 @@ async function scheduleHypeDrop(track, seekMs, songIdx){
     // Fire first rewind after intro plays (6-10 seconds in)
     const firstRewindMs = 6000 + Math.random() * 4000;
     rewindTimer = setTimeout(() => doIntroRewind(track, songIdx, 0), firstRewindMs);
-    addDebugLog(`[HYPE] Intro rewind scheduled for ${Math.round(firstRewindMs/1000)}s`);
+    addDebugLog(`[SWEEPER] Intro rewind scheduled for ${Math.round(firstRewindMs/1000)}s`);
     return;
   }
 
-  // Otherwise try a hype drop
-  if(!isHypeEligible(track)) return;
+  // Otherwise try a sweeper
+  if(!isSweeperEligible(track)) return;
 
   // Fire 2-8 seconds into the song — over the intro
   const dropMs = 2000 + Math.random() * 6000;
   hypeDropTimer = setTimeout(async () => {
     if(!playing || curIdx !== songIdx) return; // Song changed
-    const line = getHypeLine(curStation);
-    addDebugLog(`[HYPE] Drop: "${line}"`);
+    const line = getSweeperLine(curStation, track);
+    addDebugLog(`[SWEEPER] Drop: "${line}"`);
     await speakDJLine(line);
   }, dropMs);
 }
@@ -7753,12 +8057,15 @@ async function doIntroRewind(track, songIdx, count){
   }
 }
 
-async function forceHypeDrop(){
+async function forceSweeper(){
   if(!playing){ devLog('Not playing'); return; }
-  const line = getHypeLine(curStation);
-  devLog(`[HYPE] Forcing drop: "${line}"`);
+  const track = curPlaylist[curIdx];
+  const line = getSweeperLine(curStation, track);
+  devLog(`[SWEEPER] Forcing drop: "${line}"`);
   await speakDJLine(line);
 }
+// Kept as an alias in case anything external still calls the old name
+const forceHypeDrop = forceSweeper;
 
 async function forceIntroRewind(){
   if(!playing){ devLog('Not playing'); return; }
