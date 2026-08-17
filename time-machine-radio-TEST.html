@@ -853,36 +853,41 @@
 
 <!-- Setup Panel -->
 <div class="api-setup">
-  <div class="api-setup-title">Setup</div>
+  <div class="api-setup-title">Setup
+    <span id="advanced-setup-toggle" style="float:right;cursor:pointer;font-size:14px;letter-spacing:0;" title="Advanced setup (API keys) — or press Ctrl+Shift+D">⚙</span>
+  </div>
   <div class="api-row">
     <div class="api-label">Spotify ID</div>
     <input class="api-input" type="text" id="spotify-client-id" placeholder="Your Spotify Client ID">
     <div class="api-status" id="spotify-status">not set</div>
   </div>
   <div class="api-row">
-    <div class="api-label">Anthropic</div>
-    <input class="api-input" type="password" id="anthropic-key" placeholder="sk-ant-... (optional — for DJ lines)">
-    <div class="api-status" id="anthropic-status">not set</div>
-  </div>
-  <div class="api-row">
-    <div class="api-label">ElevenLabs</div>
-    <input class="api-input" type="password" id="elevenlabs-key" placeholder="optional — enables DJ voice">
-    <div class="api-status" id="elevenlabs-status">not set</div>
-  </div>
-  <div class="api-row">
-    <div class="api-label">Proxy URL</div>
-    <input class="api-input" type="text" id="proxy-url" placeholder="https://tmr-proxy.*.workers.dev (optional)">
-    <div class="api-status" id="proxy-status">not set</div>
-  </div>
-  <div class="api-row">
-    <div class="api-label">NYT Archive</div>
-    <input class="api-input" type="password" id="nyt-key" placeholder="optional — enables real weekly news">
-    <div class="api-status" id="nyt-status">not set</div>
-  </div>
-  <div class="api-row">
     <div class="api-label">Location</div>
     <input class="api-input" type="text" id="location-input" placeholder="City or ZIP (optional — for weather)">
+    <button class="api-save" id="detect-location-btn" title="Use my current location" style="flex-shrink:0;">📍 Detect</button>
     <div class="api-status" id="location-status">not set</div>
+  </div>
+  <div id="advanced-setup-fields" style="display:none;">
+    <div class="api-row">
+      <div class="api-label">Anthropic</div>
+      <input class="api-input" type="password" id="anthropic-key" placeholder="sk-ant-... (optional — for DJ lines)">
+      <div class="api-status" id="anthropic-status">not set</div>
+    </div>
+    <div class="api-row">
+      <div class="api-label">ElevenLabs</div>
+      <input class="api-input" type="password" id="elevenlabs-key" placeholder="optional — enables DJ voice">
+      <div class="api-status" id="elevenlabs-status">not set</div>
+    </div>
+    <div class="api-row">
+      <div class="api-label">Proxy URL</div>
+      <input class="api-input" type="text" id="proxy-url" placeholder="https://tmr-proxy.*.workers.dev (optional)">
+      <div class="api-status" id="proxy-status">not set</div>
+    </div>
+    <div class="api-row">
+      <div class="api-label">NYT Archive</div>
+      <input class="api-input" type="password" id="nyt-key" placeholder="optional — enables real weekly news">
+      <div class="api-status" id="nyt-status">not set</div>
+    </div>
   </div>
   <div class="api-row">
     <button class="api-save" id="save-keys">Save</button>
@@ -1644,7 +1649,60 @@ function loadKeys(){
   updateKeyStatus();
   // Check if we just returned from Spotify OAuth
   handleSpotifyCallback();  // async, runs in background
+
+  // If no location has been manually entered yet, try a silent one-time
+  // auto-detect via GPS so weather/DJ context works without the person
+  // having to find and use the Detect button themselves. Manual entry
+  // (typed now or later) always takes priority and is never overwritten.
+  if(!userLocation && navigator.geolocation){
+    detectLocation({ silent: true });
+  }
 }
+
+// Resolves the browser's current GPS position to a city name via reverse
+// geocoding, then fills and saves the Location field. Shared by the
+// "📍 Detect" button and the silent first-load auto-attempt.
+async function detectLocation(opts = {}){
+  const { silent = false } = opts;
+  const statusEl = document.getElementById('location-status');
+  const inputEl = document.getElementById('location-input');
+  const btnEl = document.getElementById('detect-location-btn');
+
+  if(!navigator.geolocation){
+    if(!silent && statusEl){ statusEl.textContent = 'geolocation not supported'; statusEl.className = 'api-status'; }
+    return;
+  }
+
+  if(!silent && btnEl){ btnEl.textContent = 'Locating…'; btnEl.disabled = true; }
+  if(!silent && statusEl){ statusEl.textContent = 'detecting…'; statusEl.className = 'api-status'; }
+
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
+    );
+    const { latitude, longitude } = pos.coords;
+    const geoR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, { headers: { 'Accept-Language': 'en' } });
+    const geoD = await geoR.json();
+    const city = geoD.address?.city || geoD.address?.town || geoD.address?.county || geoD.address?.state || null;
+    if(!city) throw new Error('Could not resolve a city name');
+
+    userLocation = city;
+    localStorage.setItem('tmr_location', city);
+    cachedWeather = null; // force a fresh weather pull for the new location
+    if(inputEl) inputEl.value = city;
+    if(statusEl){ statusEl.textContent = '✓ detected'; statusEl.className = 'api-status ok'; }
+    addDebugLog(`[LOCATION] Auto-detected: ${city}`);
+  } catch(e){
+    // Silent failures (permission denied, timeout, offline) are expected and
+    // fine — the app just falls back to no-weather DJ context, same as today.
+    if(!silent && statusEl){ statusEl.textContent = 'could not detect — enter manually'; statusEl.className = 'api-status'; }
+    addDebugLog(`[LOCATION] Detect failed: ${e.message || e}`);
+  } finally {
+    if(!silent && btnEl){ btnEl.textContent = '📍 Detect'; btnEl.disabled = false; }
+  }
+}
+
+document.getElementById('detect-location-btn')?.addEventListener('click', () => detectLocation({ silent: false }));
 
 function saveKeys(){
   spotifyClientId = document.getElementById('spotify-client-id').value.trim();
@@ -1689,7 +1747,13 @@ function updateKeyStatus(){
   const ns = document.getElementById('nyt-status');
   if(ns){
     if(nytApiKey){ ns.textContent='✓ set'; ns.className='api-status ok'; }
+    else if(proxyUrl){ ns.textContent='✓ via proxy'; ns.className='api-status ok'; }
     else { ns.textContent='not set — using local knowledge only'; ns.className='api-status'; }
+  }
+  const ps = document.getElementById('proxy-status');
+  if(ps){
+    if(proxyUrl){ ps.textContent='✓ set'; ps.className='api-status ok'; }
+    else { ps.textContent='not set'; ps.className='api-status'; }
   }
 
   // Update SDK status
@@ -2079,7 +2143,7 @@ const FORMAT_PROFILES = {
 const LENGTH_TOKENS = {short:65, medium:110, long:160};
 
 // ─── DJ BREAK PROBABILITY ENGINE ─────────────────────────────────────────────
-const DJ_TEST_MODE = true; // Set to true to fire DJ every song for testing
+const DJ_TEST_MODE = false; // Set to true to fire DJ every song for testing
 
 function shouldTalkNow(sid, songDurationMs){
   if(DJ_TEST_MODE) return true;
@@ -2298,16 +2362,17 @@ function getDialDate(y){
     };
   }
 
-  // Era sync mode (default): map broadcast clock position into the dial year
-  const startOfYear = new Date(y, 0, 1).getTime();
-  const endOfYear   = new Date(y, 11, 31).getTime();
-  const yearMs      = endOfYear - startOfYear;
-
-  // Year-aware seed — different eras produce different calendar positions
-  const seed   = 0x4a5b6c + (y * 999983);
-  const pos    = (getBroadcastNow() + seed) % yearMs;
-  const dialMs = startOfYear + pos;
-  const dialDate = new Date(dialMs);
+  // Era sync mode (default): map TODAY'S REAL CALENDAR DATE into the dial year.
+  // (June 5 2026 on dial 1983 = June 5 1983.) Previously this used a seeded
+  // modulo that scattered the date to a random point in the year — that's why
+  // Rick could reference the wrong month (e.g. "December" in the middle of
+  // August). Fixed to a direct month/day mapping.
+  const now = new Date(getBroadcastNow());
+  let mappedMonth = now.getMonth();
+  let mappedDay = now.getDate();
+  const isLeap = (yy) => (yy % 4 === 0 && yy % 100 !== 0) || yy % 400 === 0;
+  if(mappedMonth === 1 && mappedDay === 29 && !isLeap(y)) mappedDay = 28; // Feb 29 guard
+  const dialDate = new Date(y, mappedMonth, mappedDay);
 
   return {
     month:    dialDate.toLocaleString('en-US', { month: 'long' }),
@@ -4869,7 +4934,8 @@ function getWeekKey(dialDateIso){
 
 // ── NYT ARCHIVE ───────────────────────────────────────────────────────────────
 async function fetchNYTWeeklyNews(dialDate, stationId){
-  if(!nytApiKey) return [];
+  // Need either a direct key or a working proxy (which holds its own NYT key server-side)
+  if(!nytApiKey && !proxyUrl) return [];
 
   const year = dialDate.year;
   const month = parseInt(dialDate.iso.substring(5,7));
@@ -4892,7 +4958,12 @@ async function fetchNYTWeeklyNews(dialDate, stationId){
   } catch(e){}
 
   try {
-    const url = `https://api.nytimes.com/svc/archive/v1/${year}/${month}.json?api-key=${nytApiKey}`;
+    // Route through the Cloudflare proxy when configured — NYT blocks direct
+    // browser requests via CORS, so this both fixes that and keeps the key
+    // server-side. Falls back to a direct call if no proxy is set.
+    const url = proxyUrl
+      ? `${proxyUrl.replace(/\/$/, '')}/nyt/svc/archive/v1/${year}/${month}.json`
+      : `https://api.nytimes.com/svc/archive/v1/${year}/${month}.json?api-key=${nytApiKey}`;
     const r = await fetch(url);
     if(!r.ok){
       addDebugLog(`[NYT] ${r.status} for ${year}/${month}`);
@@ -7384,8 +7455,16 @@ function initDevPanel(){
       if(panel.style.display === 'block'){
         updateDevDiagnostics();
         updateTravelDisplay();
+        const fields = document.getElementById('advanced-setup-fields');
+        if(fields) fields.style.display = 'block';
       }
     }
+  });
+
+  // Advanced setup toggle — gear icon reveals Anthropic/ElevenLabs/Proxy/NYT fields
+  document.getElementById('advanced-setup-toggle')?.addEventListener('click', () => {
+    const fields = document.getElementById('advanced-setup-fields');
+    if(fields) fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
   });
 
   // Explicit/clean toggle
