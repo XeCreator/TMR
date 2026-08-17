@@ -905,7 +905,10 @@
       Time Machine Radio
       <span>Tune Through History</span>
     </div>
-    <div class="tuned-badge" id="status-badge">TUNED · 1983</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="mobile-dev-toggle" style="cursor:pointer;font-size:15px;opacity:0.5;" title="Diagnostics (or press Ctrl+Shift+D)">🛠</span>
+      <div class="tuned-badge" id="status-badge">TUNED · 1983</div>
+    </div>
   </div>
 
   <!-- Frequency Dial -->
@@ -1098,7 +1101,7 @@
   </div>
 
   <!-- Developer Panel -->
-  <div id="dev-panel" style="display:none;position:fixed;bottom:0;right:0;width:320px;background:#0a0a0a;border:1px solid #2a1a08;border-radius:8px 0 0 0;padding:16px;z-index:9999;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a7a58;max-height:80vh;overflow-y:auto;">
+  <div id="dev-panel" style="display:none;position:fixed;bottom:0;right:0;width:320px;max-width:100vw;background:#0a0a0a;border:1px solid #2a1a08;border-radius:8px 0 0 0;padding:16px;z-index:9999;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a7a58;max-height:80vh;overflow-y:auto;box-sizing:border-box;">
     <div style="color:#c8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-size:12px;">⚙ Dev Panel <span style="float:right;cursor:pointer;color:#5a4a28;" onclick="document.getElementById('dev-panel').style.display='none'">✕</span></div>
     <div style="color:#c8a84a;margin-bottom:8px;letter-spacing:1px;">TRAVEL MODE</div>
     <div style="font-size:9px;color:#888;margin-bottom:4px;" id="travel-mode-display">Mode: era_sync (default)</div>
@@ -7682,6 +7685,28 @@ function initDevPanel(){
   document.getElementById('advanced-setup-toggle')?.addEventListener('click', () => {
     const fields = document.getElementById('advanced-setup-fields');
     if(fields) fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Mobile dev panel toggle — tap-accessible equivalent of Ctrl+Shift+D.
+  // The keyboard shortcut has no touch equivalent, which made mobile-only
+  // bugs undiagnosable — this opens the exact same panel with the exact
+  // same debug log, diagnostics, and force-test buttons.
+  document.getElementById('mobile-dev-toggle')?.addEventListener('click', () => {
+    const panel = document.getElementById('dev-panel');
+    if(!panel) return;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if(panel.style.display === 'block'){
+      updateDevDiagnostics();
+      updateTravelDisplay();
+      const fields = document.getElementById('advanced-setup-fields');
+      if(fields) fields.style.display = 'block';
+      // Auto-enable the debug log so it's immediately useful on first tap —
+      // on mobile there's no keyboard shortcut fallback, so don't make the
+      // person hunt for the "show" checkbox before they can see anything.
+      const logCb = document.getElementById('dj-debuglog');
+      const logDiv = document.getElementById('dj-debug');
+      if(logCb && !logCb.checked){ logCb.checked = true; DEV.debugLog = true; if(logDiv) logDiv.style.display = 'block'; }
+    }
   });
 
   // Explicit/clean toggle
