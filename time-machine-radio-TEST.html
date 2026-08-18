@@ -1721,10 +1721,18 @@ async function detectLocation(opts = {}){
     if(statusEl){ statusEl.textContent = '✓ detected'; statusEl.className = 'api-status ok'; }
     addDebugLog(`[LOCATION] Auto-detected: ${city}`);
   } catch(e){
-    // Silent failures (permission denied, timeout, offline) are expected and
-    // fine — the app just falls back to no-weather DJ context, same as today.
-    if(!silent && statusEl){ statusEl.textContent = 'could not detect — enter manually'; statusEl.className = 'api-status'; }
-    addDebugLog(`[LOCATION] Detect failed: ${e.message || e}`);
+    // Distinguish WHY it failed rather than one generic message for
+    // everything — permission denial is by far the most common real cause
+    // on a repeat visit, and browsers won't re-prompt automatically once
+    // denied, so a generic "try again" message leaves no actual path forward.
+    let msg = 'could not detect — enter manually';
+    if(e && e.code === 1){ // GeolocationPositionError.PERMISSION_DENIED
+      msg = 'location blocked — enable it in browser site settings, or type city/ZIP';
+    } else if(e && e.code === 3){ // TIMEOUT
+      msg = 'location timed out — try again, or type city/ZIP';
+    }
+    if(!silent && statusEl){ statusEl.textContent = msg; statusEl.className = 'api-status'; }
+    addDebugLog(`[LOCATION] Detect failed: code=${e?.code ?? 'n/a'} ${e.message || e}`);
   } finally {
     if(!silent && btnEl){ btnEl.textContent = '📍 Detect'; btnEl.disabled = false; }
   }
