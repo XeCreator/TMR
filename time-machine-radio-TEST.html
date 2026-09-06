@@ -7660,12 +7660,20 @@ function updateDevDiagnostics(){
     const el = document.getElementById(id);
     if(el){ el.textContent = text; el.style.color = ok ? '#4caf50' : '#e53935'; }
   };
+  // Matches isDJEnabled()/isVoiceEnabled() exactly — a working proxy is a
+  // real substitute for a direct key, not a lesser state. This used to only
+  // check the direct key and show a false "NOT SET" alarm even when a
+  // correctly-configured Cloudflare proxy made DJ breaks work perfectly fine.
   set('diag-anthropic',
-    anthropicKey ? `Anthropic: ✓ key set (${anthropicKey.substring(0,12)}...)` : 'Anthropic: ✗ NOT SET — DJ breaks will not fire',
-    !!anthropicKey);
+    anthropicKey ? `Anthropic: ✓ key set (${anthropicKey.substring(0,12)}...)`
+    : proxyUrl ? `Anthropic: ✓ via proxy (${proxyUrl.substring(0,30)}...)`
+    : 'Anthropic: ✗ NOT SET — DJ breaks will not fire',
+    !!(anthropicKey || proxyUrl));
   set('diag-elevenlabs',
-    elevenlabsKey ? `ElevenLabs: ✓ key set — voice enabled` : 'ElevenLabs: not set — text only (no voice)',
-    !!elevenlabsKey);
+    elevenlabsKey ? `ElevenLabs: ✓ key set — voice enabled`
+    : proxyUrl ? `ElevenLabs: ✓ via proxy — voice enabled`
+    : 'ElevenLabs: not set — text only (no voice)',
+    !!(elevenlabsKey || proxyUrl));
   set('diag-spotify',
     spotifyToken ? `Spotify: ✓ connected (token: ${spotifyToken.substring(0,8)}...)` : 'Spotify: ✗ not connected',
     !!spotifyToken);
