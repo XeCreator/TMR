@@ -1066,9 +1066,6 @@
   <!-- Transport Controls -->
   <div class="transport">
     <div class="transport-btns">
-      <div class="t-btn" id="btn-prev" title="Back">
-        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </div>
       <div class="t-btn play-btn" id="btn-play" title="Tune in">
         <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
       </div>
@@ -1717,6 +1714,7 @@ async function detectLocation(opts = {}){
     userLocation = city;
     localStorage.setItem('tmr_location', city);
     cachedWeather = null; // force a fresh weather pull for the new location
+    userTimezone = null; // the old timezone belonged to the old location
     if(inputEl) inputEl.value = city;
     if(statusEl){ statusEl.textContent = '✓ detected'; statusEl.className = 'api-status ok'; }
     addDebugLog(`[LOCATION] Auto-detected: ${city}`);
@@ -1757,7 +1755,7 @@ function saveKeys(){
   if(nytApiKey) localStorage.setItem('tmr_nyt_key', nytApiKey);
   else localStorage.removeItem('tmr_nyt_key');
   userLocation = document.getElementById('location-input').value.trim();
-  if(userLocation){ localStorage.setItem('tmr_location', userLocation); cachedWeather=null; }
+  if(userLocation){ localStorage.setItem('tmr_location', userLocation); cachedWeather=null; userTimezone=null; }
   else localStorage.removeItem('tmr_location');
   updateKeyStatus();
 }
@@ -2217,6 +2215,43 @@ function shouldTalkNow(sid, songDurationMs){
 // ─── WEATHER FETCH ────────────────────────────────────────────────────────────
 let cachedWeather = null;
 let weatherFetchTime = 0;
+// Resolved IANA timezone (e.g. "America/Chicago") for wherever userLocation
+// points, captured from Open-Meteo's response the first time weather is
+// fetched each session. null until then, or if weather has never succeeded —
+// in which case every consumer below falls back to plain device-local time,
+// exactly as before. This is what lets date, time-of-day, and weather all
+// agree on ONE place instead of weather using the typed location while
+// everything else silently used the device's own timezone.
+let userTimezone = null;
+
+// Returns {hour, day, minute, month, date} for "now" — in userTimezone when
+// resolved, otherwise plain device-local time (unchanged from prior behavior).
+// `day` is 0=Sunday..6=Saturday, matching Date.getDay(). `month` is 0-indexed,
+// matching Date.getMonth(). `date` is day-of-month, matching Date.getDate().
+function getLocalTimeParts(tz){
+  const now = new Date();
+  if(!tz){
+    return { hour: now.getHours(), day: now.getDay(), minute: now.getMinutes(), month: now.getMonth(), date: now.getDate() };
+  }
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hour: 'numeric', hour12: false, minute: 'numeric', weekday: 'short', month: 'numeric', day: 'numeric',
+    });
+    const parts = fmt.formatToParts(now);
+    const get = (type) => parts.find(p => p.type === type)?.value;
+    const weekdayMap = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
+    let hour = parseInt(get('hour'));
+    if(hour === 24) hour = 0; // Intl can render midnight as "24" in hour12:false
+    return {
+      hour, day: weekdayMap[get('weekday')], minute: parseInt(get('minute')),
+      month: parseInt(get('month')) - 1, // Intl month is 1-indexed; match Date.getMonth()
+      date: parseInt(get('day')),
+    };
+  } catch(e){
+    // Invalid/unsupported timezone string — fail safe to device-local
+    return { hour: now.getHours(), day: now.getDay(), minute: now.getMinutes(), month: now.getMonth(), date: now.getDate() };
+  }
+}
 
 async function getWeather(){
   // Cache for 30 minutes
@@ -2252,6 +2287,10 @@ async function getWeather(){
     const d = await r.json();
     const temp = Math.round(d.current.temperature_2m);
     const conditions = weatherCodeToDesc(d.current.weathercode);
+    // Open-Meteo resolves the actual IANA timezone for these coordinates when
+    // timezone=auto is set — capture it so date/time-of-day logic can use the
+    // same place weather does, instead of silently defaulting to the device.
+    if(d.timezone) userTimezone = d.timezone;
     cachedWeather = { temp, conditions, city };
     weatherFetchTime = Date.now();
     return cachedWeather;
@@ -2278,7 +2317,7 @@ function weatherCodeToDesc(code){
 }
 
 function getTimeOfDay(){
-  const h = new Date().getHours();
+  const { hour: h } = getLocalTimeParts(userTimezone);
   if(h < 6) return 'late night';
   if(h < 12) return 'morning';
   if(h < 17) return 'afternoon';
@@ -2289,8 +2328,8 @@ function getTimeOfDay(){
 // ─── TIME SLOT SYSTEM ────────────────────────────────────────────────────────
 // 6 broadcast dayparts — each shapes DJ behavior meaningfully
 function getTimeSlot(){
-  const h = new Date().getHours();
-  const isWeekend = [0,6].includes(new Date().getDay());
+  const { hour: h, day } = getLocalTimeParts(userTimezone);
+  const isWeekend = [0,6].includes(day);
   if(h >= 6 && h < 10 && !isWeekend)  return 'morning_drive';
   if(h >= 6 && h < 10 && isWeekend)   return 'weekend_morning';
   if(h >= 10 && h < 15)               return 'midday';
@@ -2369,7 +2408,7 @@ const TIME_SLOT_CONTEXT = {
 };
 
 function getDayOfWeek(){
-  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][getLocalTimeParts(userTimezone).day];
 }
 
 // ─── DIAL DATE ────────────────────────────────────────────────────────────────
@@ -2403,9 +2442,15 @@ function getDialDate(y){
   // modulo that scattered the date to a random point in the year — that's why
   // Rick could reference the wrong month (e.g. "December" in the middle of
   // August). Fixed to a direct month/day mapping.
-  const now = new Date(getBroadcastNow());
-  let mappedMonth = now.getMonth();
-  let mappedDay = now.getDate();
+  //
+  // Month/day/weekday all come from getLocalTimeParts(userTimezone) — the
+  // SAME source getTimeSlot()/getTimeOfDay()/getDayOfWeek() use. Before this,
+  // weather used the typed location's timezone while date/weekday silently
+  // used the device's own timezone — usually the same, but not guaranteed,
+  // e.g. testing a location you're not physically in. Now all four agree.
+  const localNow = getLocalTimeParts(userTimezone);
+  let mappedMonth = localNow.month;
+  let mappedDay = localNow.date;
   const isLeap = (yy) => (yy % 4 === 0 && yy % 100 !== 0) || yy % 400 === 0;
   if(mappedMonth === 1 && mappedDay === 29 && !isLeap(y)) mappedDay = 28; // Feb 29 guard
   const dialDate = new Date(y, mappedMonth, mappedDay);
@@ -2414,7 +2459,7 @@ function getDialDate(y){
   // Aug 17 1983 was a Wednesday, but if the listener is tuning in on a Monday,
   // the DJ should say Monday — the broadcast is anchored to the listener's
   // present moment. (Trade-off: the weekday won't match the 1983 calendar.)
-  const realDayOfWeek = new Date().toLocaleString('en-US', { weekday: 'long' });
+  const realDayOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][localNow.day];
 
   return {
     month:    dialDate.toLocaleString('en-US', { month: 'long' }),
@@ -7154,11 +7199,9 @@ document.getElementById('btn-next').addEventListener('click', function(){
   skipToNext();
 });
 
-document.getElementById('btn-prev').addEventListener('click', function(){
-  // Radio doesn't rewind — this restarts the current song from the broadcast position
-  if(playbackTimer) clearTimeout(playbackTimer);
-  if(playing) doPlay();
-});
+// prev button removed — it never actually went to a previous track (radio
+// doesn't rewind), it just restarted the current song, which was a
+// misleading icon for what it did. "Next" alone covers the real listener need.
 
 // Shuffle disabled in broadcast mode — stations run in fixed rotation
 const _sb = document.getElementById('shuffle-btn'); if(_sb) _sb.style.display = 'none';
