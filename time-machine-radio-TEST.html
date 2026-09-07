@@ -5327,6 +5327,74 @@ function getRecentFacts(dialDate, count=3, stationId){
   }).slice(0, count);
 }
 
+// ─── SONG FACTS — deep song-origin knowledge injection ───────────────────────
+// Song-keyed (not station-keyed) — same cross-station-reusable pattern as
+// ARTIST_LIBRARY_* / getArtistFacts() below. A song that plays on two
+// different stations gets the same facts on both; no per-station duplication.
+//
+// Schema: SONG_FACTS[normalizeSongKey(title, artist)] = [
+//   { text: "...", type: "origin"|"recording"|"chart"|"trivia",
+//     source: "wikipedia"|"songfacts"|"allmusic"|"curated" }
+// ]
+//
+// Source policy (locked decision — see TMR_Strategy_Notes.md):
+//   "wikipedia" and "curated" are safe everywhere — Wikipedia is CC-BY-SA
+//   licensed and attributable, "curated" means hand-written/verified, not
+//   scraped. "songfacts"/"allmusic" have no public API or license — content
+//   from them is dev/personal-use only, gated by DEV.factSources below.
+//   Default that OFF on anything deployed for outside testers or a pitch.
+//
+// PLACEHOLDER CONTENT — these two entries exist only to prove the plumbing
+// works end to end. Replace with real facts once the KHIT 1983 / WBDX 1996
+// lists are finalized. Not verified, not for shipping as-is.
+const SONG_FACTS = {
+  "billie jean|michael jackson": [
+    { text: "Quincy Jones wanted to cut the four-bar intro to save time — Michael insisted it stay so the song was recognizable from the very first beat, even in a loud club.", type: "recording", source: "curated" },
+    { text: "The bassline started as a loop Michael wrote and sang into a tape recorder himself before anyone else touched the track.", type: "origin", source: "curated" },
+  ],
+  "juicy|the notorious b.i.g.": [
+    { text: "Biggie name-checks Word Up! magazine and Rap Attack in the opening verse — real touchstones from his own Bed-Stuy childhood, not generic references.", type: "origin", source: "curated" },
+    { text: "The hook samples Mtume's 'Juicy Fruit' — the same song Biggie's own hook is titled after.", type: "trivia", source: "curated" },
+  ],
+};
+
+function normalizeSongKey(title, artist){
+  if(!title || !artist) return '';
+  return `${title.trim()}|${artist.trim()}`.toLowerCase();
+}
+
+const SONG_FACT_LOG = {}; // { [stationId]: ["key::idx", ...] } — avoids repeating the same fact back-to-back
+const SONG_FACT_LOG_MAX = 8;
+
+function logSongFactUsed(sid, factKey){
+  if(!factKey) return;
+  if(!SONG_FACT_LOG[sid]) SONG_FACT_LOG[sid] = [];
+  SONG_FACT_LOG[sid].unshift(factKey);
+  if(SONG_FACT_LOG[sid].length > SONG_FACT_LOG_MAX){
+    SONG_FACT_LOG[sid] = SONG_FACT_LOG[sid].slice(0, SONG_FACT_LOG_MAX);
+  }
+}
+
+// Returns { text, type, source, _key } for one usable fact about this song,
+// or null if there are no facts, or none pass the enabled-source filter.
+function getSongFacts(song, sid){
+  if(!song || !DEV.songfacts) return null;
+  const key = normalizeSongKey(song.t, song.a);
+  const entries = SONG_FACTS[key];
+  if(!entries || !entries.length) return null;
+
+  const enabledSources = DEV.factSources || {};
+  const usable = entries
+    .map((f, i) => ({ ...f, _key: `${key}::${i}` }))
+    .filter(f => enabledSources[f.source]);
+  if(!usable.length) return null;
+
+  const recentKeys = SONG_FACT_LOG[sid] || [];
+  const fresh = usable.filter(f => !recentKeys.includes(f._key));
+  const pool = fresh.length ? fresh : usable;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function getArtistFacts(artistName, dialDate){
   if(!artistName || !dialDate) return null;
   const iso = dialDate ? dialDate.iso : null;
@@ -5756,6 +5824,15 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
     ? `ARTIST KNOWLEDGE (deliver as insider info — "I was with them at...", "He told me personally..." — never recite like a bio):\n${artistFacts}`
     : '';
 
+  // ── 4b. SONG KNOWLEDGE ───────────────────────────────────────────────────
+  // Focus song: during 'intro' the DJ is hyping what's about to play, so use
+  // nextSong; every other mode is reacting to what just played, so prevSong.
+  const focusSong = entryMode === 'intro' ? nextSong : (prevSong || nextSong);
+  const songFact = getSongFacts(focusSong, sid);
+  const songFactSection = songFact
+    ? `SONG KNOWLEDGE (drop this in conversationally, one fact max, never as a recited bio-fact list — "funny story about this one..." not "fun fact:"):\n${songFact.text}`
+    : '';
+
   // ── 5. CURRENT EVENTS & CULTURAL CONTEXT ────────────────────────────────
   const recentFacts = getRecentFacts(dialDate, 3, sid);
   let eventsSection = '';
@@ -5826,6 +5903,7 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
     eraSection,
     nowSection && ('─'.repeat(50) + '\n' + nowSection),
     artistSection && ('─'.repeat(50) + '\n' + artistSection),
+    songFactSection && ('─'.repeat(50) + '\n' + songFactSection),
     eventsSection && ('─'.repeat(50) + '\n' + eventsSection),
     listenerSection && ('─'.repeat(50) + '\n' + listenerSection),
     memorySection && ('─'.repeat(50) + '\n' + memorySection),
@@ -5833,7 +5911,7 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
     rules,
   ].filter(Boolean).join('\n\n');
 
-  return { briefing: sections, lengthKey };
+  return { briefing: sections, lengthKey, songFactKey: songFact ? songFact._key : null };
 }
 
 async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', dialDate=null, artistFacts=null){
@@ -5915,7 +5993,7 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
     : '';
 
   // ── BUILD UNIFIED DJ CONTEXT BRIEFING ─────────────────────────────────
-  const { briefing: systemPrompt } =
+  const { briefing: systemPrompt, songFactKey } =
     await buildDJContext(curStation, curYear, _dialDate2, prevSong, nextSong, entryMode, weatherData, artistFacts);
 
   // Entry mode user message — tells DJ exactly what moment they're in
@@ -6032,6 +6110,7 @@ async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
     if(line){
       // Log this break to DJ memory
       logDJBreak(curStation, prevSong || nextSong, line, entryMode);
+      logSongFactUsed(curStation, songFactKey);
       showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']);
     }
   } finally {
@@ -7642,6 +7721,13 @@ function scheduleDJBreak(track, analysis, positionMs, prevSong, nextSong, schedu
 const DEV = {
   weather: true, timeofday: true, songrefs: true, newsong: true,
   eracontext: true, stationid: true, knowledge: true, sweepers: true,
+  songfacts: true, // master toggle for the song-origin knowledge system
+  // Per-source gating for SONG_FACTS. "wikipedia"/"curated" are licensed or
+  // hand-written — safe everywhere. "songfacts"/"allmusic" have no public
+  // API/license — dev/personal use only. MUST be false on anything deployed
+  // for outside testers or a pitch. Flip on locally for max content density
+  // during your own testing, never on the live GitHub Pages build.
+  factSources: { wikipedia: true, songfacts: false, allmusic: false, curated: true },
   freq: 50,       // 0-100 probability multiplier
   modes: { outro:true, gap:true, intro:true, mid:true, bridge:true },
   breakLen: 'mixed',
