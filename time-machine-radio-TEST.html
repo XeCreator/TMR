@@ -1504,7 +1504,7 @@ function getYTId(song){
 // ─── APP STATE ────────────────────────────────────────────────────────────────
 let curYear=1983, curStation='khit', prevYear=1983;
 let curPlaylist=[], curIdx=0, playing=false;
-let anthropicKey='', spotifyClientId='', elevenlabsKey='', userLocation='', proxyUrl='';
+let anthropicKey='', spotifyClientId='', elevenlabsKey='', userLocation='', proxyUrl='https://tmr-proxy.nougat-18spits.workers.dev';
 let djAudio=null, djGenPending=false;
 
 // ─── DJ BREAK MEMORY ──────────────────────────────────────────────────────────
@@ -1657,7 +1657,15 @@ function loadKeys(){
   spotifyClientId = localStorage.getItem('tmr_spotify_id')||'';
   anthropicKey = localStorage.getItem('tmr_anthropic')||'';
   elevenlabsKey = localStorage.getItem('tmr_elevenlabs')||'';
-  proxyUrl = localStorage.getItem('tmr_proxy_url')||'';
+  // 'never set' -> use the shared default proxy. An explicit empty string
+  // (someone deliberately cleared the field to opt out) is stored as a
+  // sentinel so it's not indistinguishable from "never touched this setting"
+  // — otherwise clearing it would just silently reapply the default on the
+  // next visit, ignoring the person's actual choice.
+  const storedProxyUrl = localStorage.getItem('tmr_proxy_url');
+  proxyUrl = storedProxyUrl === null ? 'https://tmr-proxy.nougat-18spits.workers.dev'
+           : storedProxyUrl === '__cleared__' ? ''
+           : storedProxyUrl;
   nytApiKey = localStorage.getItem('tmr_nyt_key')||null;
   spotifyToken = localStorage.getItem('tmr_spotify_token')||null;
   userLocation = localStorage.getItem('tmr_location')||'';
@@ -1744,8 +1752,12 @@ function saveKeys(){
   elevenlabsKey = document.getElementById('elevenlabs-key').value.trim();
   proxyUrl = document.getElementById('proxy-url')?.value.trim() || '';
   nytApiKey = document.getElementById('nyt-key')?.value.trim() || null;
+  // See loadKeys() for why an explicit clear writes a sentinel instead of
+  // just removing the key — otherwise "I deliberately want no proxy" and
+  // "I never touched this setting" look identical on the next visit, and
+  // the default would silently come back.
   if(proxyUrl) localStorage.setItem('tmr_proxy_url', proxyUrl);
-  else localStorage.removeItem('tmr_proxy_url');
+  else localStorage.setItem('tmr_proxy_url', '__cleared__');
   if(spotifyClientId) localStorage.setItem('tmr_spotify_id', spotifyClientId);
   else localStorage.removeItem('tmr_spotify_id');
   if(anthropicKey) localStorage.setItem('tmr_anthropic', anthropicKey);
