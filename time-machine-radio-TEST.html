@@ -2174,7 +2174,7 @@ const FORMAT_PROFILES = {
   wclx: {prob:0.12,lengths:["short","medium"],weather:false,time:false,maxTokens:90},
 };
 
-const LENGTH_TOKENS = {short:65, medium:110, long:160};
+const LENGTH_TOKENS = {short:65, medium:110, long:160, story:340};
 
 // ─── DJ BREAK PROBABILITY ENGINE ─────────────────────────────────────────────
 const DJ_TEST_MODE = false; // Set to true to fire DJ every song for testing
@@ -5414,6 +5414,62 @@ const SONG_FACTS = {
   ],
 };
 
+// ─── CALLER STORIES — long-form rant mode, recounted from real premises ──────
+// Station-keyed (unlike SONG_FACTS/ARTIST_LIBRARY_*) because a call's content
+// has to match that station's specific audience and era — a KHIT 1983 caller
+// and a WBDX 1996 caller wouldn't sound like the same person or bring up the
+// same things.
+//
+// v1 scope: the DJ RECOUNTS the call in monologue ("had a guy call in last
+// week who swore..."). A real two-voice exchange (separate caller voice,
+// live back-and-forth) is a real future upgrade, not this pass — but because
+// each entry is already structured as what-was-said/how-it-resolved rather
+// than a vague topic, upgrading later only changes the delivery mechanism,
+// not this data model.
+//
+// PLACEHOLDER CONTENT — one example per station to prove the plumbing works.
+// Not verified against anything, not for shipping as-is.
+const DJ_CALLER_LOG = {
+  khit: [
+    {
+      setup: "A caller swore up and down that Michael Jackson personally called their house once to apologize for a wrong-number dial.",
+      punchline: "Rick plays along for a beat before landing on the obvious: everybody in 1983 has a Michael Jackson story, and this one somehow keeps growing every time it gets retold.",
+      tag: "funny",
+    },
+  ],
+  wbdx: [
+    {
+      setup: "A caller phoned in demanding Cipher play a Biggie deep cut immediately, claiming it was the only thing that would get their car to start that night.",
+      punchline: "Cipher points out the car started fine on the way to make the call, and plays the song anyway because it's a good excuse.",
+      tag: "funny",
+    },
+  ],
+};
+
+const CALLER_LOG_USED = {}; // { [stationId]: [entryIndex, ...] } — avoids repeating the same caller story back-to-back
+const CALLER_LOG_USED_MAX = 4;
+
+function logCallerStoryUsed(sid, idx){
+  if(idx === null || idx === undefined) return;
+  if(!CALLER_LOG_USED[sid]) CALLER_LOG_USED[sid] = [];
+  CALLER_LOG_USED[sid].unshift(idx);
+  if(CALLER_LOG_USED[sid].length > CALLER_LOG_USED_MAX){
+    CALLER_LOG_USED[sid] = CALLER_LOG_USED[sid].slice(0, CALLER_LOG_USED_MAX);
+  }
+}
+
+// Returns { setup, punchline, tag, _idx } for one caller story on this
+// station, or null if none exist. Prefers one not used recently.
+function getCallerStory(sid){
+  const entries = DJ_CALLER_LOG[sid];
+  if(!entries || !entries.length) return null;
+  const recent = CALLER_LOG_USED[sid] || [];
+  const freshIdxs = entries.map((_, i) => i).filter(i => !recent.includes(i));
+  const pool = freshIdxs.length ? freshIdxs : entries.map((_, i) => i);
+  const idx = pool[Math.floor(Math.random() * pool.length)];
+  return { ...entries[idx], _idx: idx };
+}
+
 function normalizeSongKey(title, artist){
   if(!title || !artist) return '';
   return `${title.trim()}|${artist.trim()}`.toLowerCase();
@@ -5700,7 +5756,7 @@ ${extract.substring(0, 1500)}`;
 // briefing for the DJ. Every piece of knowledge — chart position, release
 // context, beefs, events, weather, time of day — flows through here.
 
-async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode, weather, artistFacts){
+async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode, weather, artistFacts, forcedLengthKey, callerStory){
   const dj = DJ_PERSONALITIES[sid] || DJ_PERSONALITIES['khit'];
   const stationDef = SDEFS[sid] || {};
   const profile = FORMAT_PROFILES[sid] || {};
@@ -5889,6 +5945,13 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
     ? `SONG KNOWLEDGE (drop this in conversationally, one fact max, never as a recited bio-fact list — "funny story about this one..." not "fun fact:"):\n${songFact.text}`
     : '';
 
+  // ── 4c. CALLER STORY (long-form rant mode) ────────────────────────────────
+  // Only present when generateDJLine already rolled and picked one — this
+  // section does not decide whether to fire, only how to deliver it.
+  const callerStorySection = callerStory
+    ? `LONG-FORM CALLER STORY — this break is a real story, not a quick line. Recount this call in your own voice, like you're telling a friend about your night:\nWHAT HAPPENED: ${callerStory.setup}\nHOW IT LANDED: ${callerStory.punchline}\nDeliver this as a story with a beginning and an ending — never read it back like notes.`
+    : '';
+
   // ── 5. CURRENT EVENTS & CULTURAL CONTEXT ────────────────────────────────
   const recentFacts = getRecentFacts(dialDate, 3, sid);
   let eventsSection = '';
@@ -5930,12 +5993,23 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
   const listenerSection = listenerParts.join('\n');
 
   // ── 7. DELIVERY RULES ───────────────────────────────────────────────────
-  let lengthKey;
-  if(entryMode === 'mid') lengthKey = 'short';
-  else if(DEV.breakLen !== 'mixed') lengthKey = DEV.breakLen;
-  else lengthKey = profile.lengths?.[Math.floor(Math.random() * (profile.lengths?.length||1))] || 'medium';
+  // lengthKey is decided by the caller (generateDJLine) and passed in as
+  // forcedLengthKey — this used to be re-rolled independently here, which
+  // meant the prompt's length instruction and the actual token budget sent
+  // to the API could disagree on any break. Fixed: one decision, shared.
+  let lengthKey = forcedLengthKey;
+  if(!lengthKey){
+    if(entryMode === 'mid') lengthKey = 'short';
+    else if(DEV.breakLen !== 'mixed') lengthKey = DEV.breakLen;
+    else lengthKey = profile.lengths?.[Math.floor(Math.random() * (profile.lengths?.length||1))] || 'medium';
+  }
 
-  const lengthRule = {short:'1-2 sentences MAX. Punchy.',medium:'2-3 sentences. Natural flow.',long:'3-4 sentences. Can breathe and tell a story.'}[lengthKey]||'2-3 sentences.';
+  const lengthRule = {
+    short:'1-2 sentences MAX. Punchy.',
+    medium:'2-3 sentences. Natural flow.',
+    long:'3-4 sentences. Can breathe and tell a story.',
+    story:'This is a long-form caller story. Take real space — 6-10 sentences. Beginning, middle, punchline. Still your voice, still radio, just a longer breath than usual.',
+  }[lengthKey]||'2-3 sentences.';
 
   const rules = [
     `LENGTH: ${lengthRule}`,
@@ -5960,6 +6034,7 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
     nowSection && ('─'.repeat(50) + '\n' + nowSection),
     artistSection && ('─'.repeat(50) + '\n' + artistSection),
     songFactSection && ('─'.repeat(50) + '\n' + songFactSection),
+    callerStorySection && ('─'.repeat(50) + '\n' + callerStorySection),
     eventsSection && ('─'.repeat(50) + '\n' + eventsSection),
     listenerSection && ('─'.repeat(50) + '\n' + listenerSection),
     memorySection && ('─'.repeat(50) + '\n' + memorySection),
@@ -5981,6 +6056,22 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
   if(entryMode === 'mid') lengthKey = 'short';
   else if(DEV.breakLen !== 'mixed') lengthKey = DEV.breakLen;
   else lengthKey = profile.lengths[Math.floor(Math.random() * profile.lengths.length)];
+
+  // ── LONG-FORM CALLER STORY ROLL ──────────────────────────────────────────
+  // Low-probability upgrade to the 'story' tier, only on gap/outro (never
+  // mid — too short to land a story) and only if this station actually has
+  // caller content. Boosted after a high-popularity song just played, since
+  // that's the natural "this record deserves more than a sentence" moment.
+  let callerStory = null;
+  if(DEV.rantMode && (entryMode === 'gap' || entryMode === 'outro') && DEV.breakLen === 'mixed'){
+    const hasCallers = DJ_CALLER_LOG[curStation]?.length > 0;
+    const popBoost = (prevSong?.p >= 90) ? 0.18 : 0.06;
+    if(hasCallers && Math.random() < popBoost){
+      const story = getCallerStory(curStation);
+      if(story){ lengthKey = 'story'; callerStory = story; }
+    }
+  }
+
   const maxTokens = entryMode === 'mid' ? 40 : (LENGTH_TOKENS[lengthKey] || 80);
 
   // Build context for the DJ
@@ -6050,7 +6141,7 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
 
   // ── BUILD UNIFIED DJ CONTEXT BRIEFING ─────────────────────────────────
   const { briefing: systemPrompt, songFactKey } =
-    await buildDJContext(curStation, curYear, _dialDate2, prevSong, nextSong, entryMode, weatherData, artistFacts);
+    await buildDJContext(curStation, curYear, _dialDate2, prevSong, nextSong, entryMode, weatherData, artistFacts, lengthKey, callerStory);
 
   // Entry mode user message — tells DJ exactly what moment they're in
   const modeInstructions = {
@@ -6167,6 +6258,7 @@ async function checkDJBreak(songIdx, prevSong, nextSong, entryMode){
       // Log this break to DJ memory
       logDJBreak(curStation, prevSong || nextSong, line, entryMode);
       logSongFactUsed(curStation, songFactKey);
+      logCallerStoryUsed(curStation, callerStory ? callerStory._idx : null);
       showDJBubble(line, DJ_PERSONALITIES[curStation]||DJ_PERSONALITIES['khit']);
     }
   } finally {
@@ -7778,6 +7870,7 @@ const DEV = {
   weather: true, timeofday: true, songrefs: true, newsong: true,
   eracontext: true, stationid: true, knowledge: true, sweepers: true,
   songfacts: true, // master toggle for the song-origin knowledge system
+  rantMode: true, // master toggle for long-form caller-story breaks
   // Per-source gating for SONG_FACTS. "wikipedia"/"curated" are licensed or
   // hand-written — safe everywhere. "songfacts"/"allmusic" have no public
   // API/license — dev/personal use only. MUST be false on anything deployed
