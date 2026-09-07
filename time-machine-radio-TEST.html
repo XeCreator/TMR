@@ -1301,18 +1301,18 @@ const DJ_PERSONALITIES = {
 
 // ─── STATION / TIMELINE / DB (reuse from base file) ───────────────────────
 const SDEFS={weaf:{name:"Big Band",call:"WEAF",color:"amber",freq:"88.1"},wjaz:{name:"Jazz & Blues",call:"WJAZ",color:"amber",freq:"89.3"},wjazb:{name:"Bebop",call:"WJZB",color:"amber",freq:"89.9"},wsng:{name:"Swing",call:"WSNG",color:"amber",freq:"90.5"},wcrn:{name:"Crooner",call:"WCRN",color:"amber",freq:"91.7"},wrnb:{name:"R&B",call:"WRNB",color:"coral",freq:"92.3"},khit:{name:"K-HIT",call:"K-HIT",color:"amber",freq:"103.7"},krok:{name:"Rocktop",call:"KROK",color:"red",freq:"94.5"},wsol:{name:"Soul FM",call:"WSOL",color:"coral",freq:"95.3"},kmet:{name:"Hard Rock",call:"KMET",color:"red",freq:"95.9"},kgro:{name:"Country",call:"KGRO",color:"green",freq:"96.3"},wflk:{name:"Folk",call:"WFLK",color:"teal",freq:"96.9"},kpsy:{name:"Psych",call:"KPSY",color:"purple",freq:"97.5"},kdsc:{name:"Disco·54",call:"KDSC",color:"purple",freq:"98.1"},kpnk:{name:"Punk",call:"KPNK",color:"red",freq:"98.7"},kroq:{name:"Alternative",call:"KROQ",color:"teal",freq:"99.3"},kdnc:{name:"Dance FM",call:"KDNC",color:"teal",freq:"100.1"},wbdx:{name:"Hip·Hop",call:"WBDX",color:"purple",freq:"100.9"},kwst:{name:"West Coast",call:"KWST",color:"purple",freq:"101.7"},kbtm:{name:"South Rap",call:"KBTM",color:"purple",freq:"102.3"},ktrap:{name:"Trap",call:"KTRAP",color:"purple",freq:"104.5"},kcons:{name:"Conscious",call:"KCONS",color:"purple",freq:"105.1"},ksth:{name:"South Hip Hop",call:"KSTH",color:"purple",freq:"105.7"},wltn:{name:"Latin·FM",call:"WLTN",color:"coral",freq:"106.3"},wclx:{name:"Classical",call:"WCLX",color:"blue",freq:"107.1"}};
-const TIMELINE=[{range:[1920,1929],stations:[{id:"wjaz"},{id:"weaf"},{id:"wclx"}]},{range:[1930,1939],stations:[{id:"wsng"},{id:"wjaz"},{id:"wcrn"},{id:"kgro"},{id:"wclx"}]},{range:[1940,1949],stations:[{id:"wsng"},{id:"wcrn"},{id:"wrnb",appearsAt:1942},{id:"kgro"},{id:"wjazb"},{id:"wclx"}]},{range:[1950,1959],stations:[{id:"khit"},{id:"krok",appearsAt:1954},{id:"wrnb"},{id:"kgro"},{id:"wjaz"},{id:"kmet",appearsAt:1958},{id:"wclx"}]},{range:[1960,1969],stations:[{id:"khit"},{id:"krok"},{id:"wsol",appearsAt:1962},{id:"wrnb"},{id:"kmet"},{id:"kgro"},{id:"wjaz"},{id:"wflk",appearsAt:1962},{id:"kpsy",appearsAt:1967},{id:"wclx"}]},{range:[1970,1979],stations:[{id:"khit"},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"kdsc",appearsAt:1974,disappearsAt:1981},{id:"kgro"},{id:"wjaz"},{id:"kpnk",appearsAt:1977},{id:"wclx"}]},{range:[1980,1989],stations:[{id:"khit"},{id:"kroq",appearsAt:1980},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"wbdx",appearsAt:1988},{id:"kgro"},{id:"kdnc",appearsAt:1983},{id:"wjaz"},{id:"wclx"}]},{range:[1990,1999],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"kpnk"},{id:"wbdx"},{id:"kwst",appearsAt:1992},{id:"kbtm",appearsAt:1995},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn",appearsAt:1996},{id:"wjaz"},{id:"wclx"}]},{range:[2000,2009],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ksth"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2010,2019],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap",appearsAt:2012},{id:"kcons",appearsAt:2012},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2020,2029],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap"},{id:"kcons"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]}];
+const TIMELINE=[{range:[1920,1929],stations:[{id:"wjaz",appearsAt:1918},{id:"weaf"},{id:"wclx"}]},{range:[1930,1939],stations:[{id:"wsng"},{id:"wjaz"},{id:"wcrn"},{id:"kgro"},{id:"weaf"},{id:"wclx"}]},{range:[1940,1949],stations:[{id:"wsng"},{id:"wcrn"},{id:"wrnb",appearsAt:1942},{id:"kgro"},{id:"wjazb",disappearsAt:1951},{id:"weaf",disappearsAt:1944},{id:"wjaz"},{id:"wclx"}]},{range:[1950,1959],stations:[{id:"khit"},{id:"krok",appearsAt:1954},{id:"wrnb"},{id:"kgro"},{id:"wjaz"},{id:"kmet",appearsAt:1958},{id:"wcrn"},{id:"wclx"}]},{range:[1960,1969],stations:[{id:"khit"},{id:"krok"},{id:"wsol",appearsAt:1962},{id:"wrnb"},{id:"kmet"},{id:"kgro"},{id:"wjaz"},{id:"wflk",appearsAt:1962},{id:"kpsy",appearsAt:1967},{id:"wcrn"},{id:"wclx"}]},{range:[1970,1979],stations:[{id:"khit"},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"kdsc",appearsAt:1974,disappearsAt:1981},{id:"kgro"},{id:"wjaz"},{id:"kpnk",appearsAt:1977},{id:"wcrn",disappearsAt:1980},{id:"wclx"}]},{range:[1980,1989],stations:[{id:"khit"},{id:"kroq",appearsAt:1980},{id:"krok"},{id:"kmet"},{id:"wsol"},{id:"wrnb"},{id:"wbdx",appearsAt:1988},{id:"kgro"},{id:"kdnc",appearsAt:1983},{id:"wjaz"},{id:"wclx"}]},{range:[1990,1999],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"kpnk"},{id:"wbdx"},{id:"kwst",appearsAt:1992},{id:"kbtm",appearsAt:1995},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn",appearsAt:1996},{id:"wjaz"},{id:"wclx"}]},{range:[2000,2009],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ksth"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2010,2019],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap",appearsAt:2012},{id:"kcons",appearsAt:2012},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]},{range:[2020,2029],stations:[{id:"khit"},{id:"kroq"},{id:"krok"},{id:"kmet"},{id:"wbdx"},{id:"ktrap"},{id:"kcons"},{id:"wrnb"},{id:"wsol"},{id:"kgro"},{id:"kdnc"},{id:"wltn"},{id:"wjaz"},{id:"wclx"}]}];
 const TRANSITIONS=[{year:1942,id:"wrnb",label:"New signal: WRNB — Rhythm & Blues is born"},{year:1954,id:"krok",label:"New signal: KROK — Rock & Roll just changed everything"},{year:1958,id:"kmet",label:"New signal: KMET — Hard rock is coming"},{year:1962,id:"wsol",label:"New signal: WSOL — Soul music finds its voice"},{year:1962,id:"wflk",label:"New signal: WFLK — Folk & protest on the air"},{year:1967,id:"kpsy",label:"New signal: KPSY — Turn on, tune in"},{year:1974,id:"kdsc",label:"New signal: KDSC — The dancefloor is open"},{year:1977,id:"kpnk",label:"New signal: KPNK — Punk is not dead"},{year:1980,id:"kroq",label:"New signal: KROQ — Alternative is here"},{year:1981,id:"kdsc",label:"Signal lost: KDSC — Disco is dead. Long live disco.",disappears:true},{year:1983,id:"kdnc",label:"New signal: KDNC — House music all night long"},{year:1988,id:"wbdx",label:"New signal: WBDX — Hip Hop has its own station now"},{year:1992,id:"kwst",label:"New signal: KWST — West Coast in the house"},{year:1995,id:"kbtm",label:"New signal: KBTM — The South is about to run this"},{year:1996,id:"wltn",label:"New signal: WLTN — Latin radio has arrived"},{year:2012,id:"ktrap",label:"New signal: KTRAP — Atlanta takes over"},{year:2012,id:"kcons",label:"New signal: KCONS — Real hip hop never left"}];
 
 const CLASSICAL=[{t:"Symphony No 5",a:"Beethoven",y:1808,st:["wclx"],p:99,q:"Beethoven Symphony No 5 Karajan"},{t:"Ode to Joy",a:"Beethoven",y:1824,st:["wclx"],p:99,q:"Beethoven Ode to Joy Symphony 9"},{t:"The Four Seasons Spring",a:"Vivaldi",y:1725,st:["wclx"],p:97,q:"Vivaldi Four Seasons Spring"},{t:"Clair de lune",a:"Debussy",y:1905,st:["wclx"],p:97,q:"Debussy Clair de lune"},{t:"Moonlight Sonata",a:"Beethoven",y:1801,st:["wclx"],p:97,q:"Beethoven Moonlight Sonata"},{t:"Rhapsody in Blue",a:"Gershwin",y:1924,st:["wclx"],p:96,q:"Gershwin Rhapsody in Blue Bernstein"},{t:"Swan Lake Suite",a:"Tchaikovsky",y:1877,st:["wclx"],p:96,q:"Tchaikovsky Swan Lake Suite"},{t:"Canon in D",a:"Pachelbel",y:1694,st:["wclx"],p:96,q:"Pachelbel Canon in D"},{t:"Bolero",a:"Ravel",y:1928,st:["wclx"],p:95,q:"Ravel Bolero"},{t:"Symphony No 40",a:"Mozart",y:1788,st:["wclx"],p:95,q:"Mozart Symphony No 40"},{t:"Gymnopedie No 1",a:"Satie",y:1888,st:["wclx"],p:94,q:"Satie Gymnopedie No 1"},{t:"Air on the G String",a:"Bach",y:1731,st:["wclx"],p:94,q:"Bach Air on G String"},{t:"New World Symphony",a:"Dvorak",y:1893,st:["wclx"],p:95,q:"Dvorak New World Symphony"},{t:"Adagio for Strings",a:"Barber",y:1936,st:["wclx"],p:95,q:"Barber Adagio for Strings"},{t:"Schindlers List Theme",a:"John Williams",y:1993,st:["wclx"],p:96,q:"Schindlers List Theme John Williams"},{t:"Interstellar Main Theme",a:"Hans Zimmer",y:2014,st:["wclx"],p:94,q:"Interstellar Main Theme Hans Zimmer"},{t:"On the Nature of Daylight",a:"Max Richter",y:2004,st:["wclx"],p:93,q:"Max Richter On the Nature of Daylight"}];
 
-const DB={"1920":[{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng","weaf"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng","weaf","wcrn"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng","weaf"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["kgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"You Are My Sunshine",a:"Jimmie Davis",y:1940,st:["kgro"],p:85,q:"You Are My Sunshine Jimmie Davis 1940"},{t:"Blue Moon of Kentucky",a:"Bill Monroe",y:1946,st:["kgro"],p:84,q:"Blue Moon of Kentucky Bill Monroe 1946"},{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},
+const DB={"1920":[{t:"Dipper Mouth Blues",a:"King Oliver's Creole Jazz Band",y:1923,st:["wjaz"],p:82,q:"Dipper Mouth Blues King Oliver Creole Jazz Band 1923"},{t:"Black Bottom Stomp",a:"Jelly Roll Morton",y:1926,st:["wjaz"],p:83,q:"Black Bottom Stomp Jelly Roll Morton 1926"},{t:"It Don't Mean a Thing (If It Ain't Got That Swing)",a:"Duke Ellington",y:1932,st:["wjaz","weaf","wsng"],p:88,q:"It Dont Mean a Thing Duke Ellington 1932"},{t:"King Porter Stomp",a:"Benny Goodman",y:1935,st:["wjaz","weaf","wsng"],p:86,q:"King Porter Stomp Benny Goodman 1935"},{t:"West End Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:95,q:"West End Blues Louis Armstrong 1928"},{t:"Tiger Rag",a:"Original Dixieland Jazz Band",y:1918,st:["wjaz"],p:85,q:"Tiger Rag Original Dixieland Jazz Band"},{t:"St James Infirmary Blues",a:"Louis Armstrong",y:1928,st:["wjaz"],p:88,q:"St James Infirmary Blues Louis Armstrong 1928"},{t:"My Blue Heaven",a:"Gene Austin",y:1927,st:["weaf"],p:90,q:"My Blue Heaven Gene Austin 1927"},{t:"It Had to Be You",a:"Isham Jones",y:1924,st:["weaf"],p:85,q:"It Had to Be You Isham Jones 1924"},{t:"Blue Skies",a:"Ben Selvin",y:1927,st:["weaf"],p:80,q:"Blue Skies Ben Selvin 1927"}],"1930":[{t:"Sing Sing Sing",a:"Benny Goodman",y:1937,st:["wsng","weaf"],p:92,q:"Sing Sing Sing Benny Goodman 1937"},{t:"Moonlight Serenade",a:"Glenn Miller",y:1939,st:["wsng","weaf","wcrn"],p:89,q:"Moonlight Serenade Glenn Miller 1939"},{t:"In the Mood",a:"Glenn Miller",y:1939,st:["wsng","weaf"],p:90,q:"In the Mood Glenn Miller 1939"},{t:"Over the Rainbow",a:"Judy Garland",y:1939,st:["wcrn"],p:98,q:"Over the Rainbow Judy Garland 1939"},{t:"Cheek to Cheek",a:"Fred Astaire",y:1935,st:["wcrn"],p:90,q:"Cheek to Cheek Fred Astaire 1935"},{t:"Strange Fruit",a:"Billie Holiday",y:1939,st:["wjaz"],p:91,q:"Strange Fruit Billie Holiday 1939"},{t:"Body and Soul",a:"Coleman Hawkins",y:1939,st:["wjaz"],p:90,q:"Body and Soul Coleman Hawkins 1939"},{t:"Wabash Cannonball",a:"The Carter Family",y:1932,st:["kgro"],p:82,q:"Wabash Cannonball Carter Family 1932"}],"1940":[{t:"Sentimental Journey",a:"Doris Day",y:1945,st:["wsng"],p:84,q:"Sentimental Journey Doris Day Les Brown 1945"},{t:"Route 66",a:"Nat King Cole",y:1946,st:["wsng"],p:83,q:"Route 66 Nat King Cole 1946"},{t:"The Christmas Song",a:"Nat King Cole",y:1946,st:["wcrn"],p:86,q:"The Christmas Song Nat King Cole 1946"},{t:"Nature Boy",a:"Nat King Cole",y:1948,st:["wcrn"],p:85,q:"Nature Boy Nat King Cole 1948"},{t:"You Are My Sunshine",a:"Jimmie Davis",y:1940,st:["kgro"],p:85,q:"You Are My Sunshine Jimmie Davis 1940"},{t:"Blue Moon of Kentucky",a:"Bill Monroe",y:1946,st:["kgro"],p:84,q:"Blue Moon of Kentucky Bill Monroe 1946"},{t:"White Christmas",a:"Bing Crosby",y:1942,st:["wcrn"],p:99,q:"White Christmas Bing Crosby 1942"},{t:"Boogie Woogie Bugle Boy",a:"Andrews Sisters",y:1941,st:["wsng"],p:92,q:"Boogie Woogie Bugle Boy Andrews Sisters 1941"},{t:"Chattanooga Choo Choo",a:"Glenn Miller",y:1941,st:["wsng"],p:90,q:"Chattanooga Choo Choo Glenn Miller 1941"},{t:"As Time Goes By",a:"Dooley Wilson",y:1942,st:["wcrn"],p:89,q:"As Time Goes By Dooley Wilson 1942"},{t:"Boogie Chillen",a:"John Lee Hooker",y:1948,st:["wrnb"],p:85,q:"Boogie Chillen John Lee Hooker 1948"},{t:"Caldonia",a:"Louis Jordan",y:1945,st:["wrnb"],p:83,q:"Caldonia Louis Jordan 1945"},{t:"Round Midnight",a:"Thelonious Monk",y:1947,st:["wjazb"],p:90,q:"Round Midnight Thelonious Monk 1947"},{t:"A Night in Tunisia",a:"Dizzy Gillespie",y:1942,st:["wjazb"],p:88,q:"A Night in Tunisia Dizzy Gillespie 1942"},
 {t:"Ko-Ko",a:"Charlie Parker",y:1945,st:["wjazb"],p:89,q:"Ko-Ko Charlie Parker 1945"},
 {t:"Now's the Time",a:"Charlie Parker",y:1945,st:["wjazb"],p:88,q:"Nows the Time Charlie Parker 1945"},
 {t:"Salt Peanuts",a:"Dizzy Gillespie",y:1945,st:["wjazb"],p:86,q:"Salt Peanuts Dizzy Gillespie 1945"},
 {t:"Groovin High",a:"Dizzy Gillespie",y:1945,st:["wjazb"],p:85,q:"Groovin High Dizzy Gillespie 1945"},
 {t:"Anthropology",a:"Charlie Parker",y:1946,st:["wjazb"],p:84,q:"Anthropology Charlie Parker 1946"},
-{t:"Un Poco Loco",a:"Bud Powell",y:1951,st:["wjazb"],p:83,q:"Un Poco Loco Bud Powell 1951"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["kgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Shake, Rattle and Roll",a:"Big Joe Turner",y:1954,st:["wrnb"],p:87,q:"Shake Rattle and Roll Big Joe Turner 1954"},{t:"Tears on My Pillow",a:"Little Anthony and the Imperials",y:1958,st:["wrnb"],p:85,q:"Tears on My Pillow Little Anthony Imperials 1958"},{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"Please Mr. Postman",a:"The Marvelettes",y:1961,st:["wrnb"],p:88,q:"Please Mr Postman The Marvelettes 1961"},{t:"You've Really Got a Hold on Me",a:"Smokey Robinson and the Miracles",y:1964,st:["wrnb"],p:89,q:"You've Really Got a Hold on Me Smokey Robinson 1964"},{t:"Harper Valley P.T.A.",a:"Jeannie C. Riley",y:1968,st:["kgro"],p:86,q:"Harper Valley PTA Jeannie C Riley 1968"},{t:"Okie from Muskogee",a:"Merle Haggard",y:1969,st:["kgro"],p:87,q:"Okie from Muskogee Merle Haggard 1969"},{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet","kpsy"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,uri:"spotify:track:6e1cB2E4G8ZVFcBHps0zG5",st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet","krok"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit","wrnb"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol","wrnb"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc","kdnc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc","wbdx"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Rise Above",a:"Black Flag",y:1981,st:["kpnk"],p:82,q:"Rise Above Black Flag 1981"},{t:"Institutionalized",a:"Suicidal Tendencies",y:1983,st:["kpnk"],p:83,q:"Institutionalized Suicidal Tendencies 1983"},{t:"Blister in the Sun",a:"Violent Femmes",y:1983,st:["kpnk","kroq"],p:86,q:"Blister in the Sun Violent Femmes 1983"},{t:"New Day Rising",a:"Husker Du",y:1985,st:["kpnk"],p:80,q:"New Day Rising Husker Du 1985"},{t:"Bastards of Young",a:"The Replacements",y:1985,st:["kpnk"],p:82,q:"Bastards of Young The Replacements 1985"},{t:"Suburban Home",a:"Descendents",y:1987,st:["kpnk"],p:79,q:"Suburban Home Descendents 1987"},{t:"Waiting Room",a:"Fugazi",y:1988,st:["kpnk"],p:84,q:"Waiting Room Fugazi 1988"},{t:"Ball and Chain",a:"Social Distortion",y:1990,st:["kpnk"],p:83,q:"Ball and Chain Social Distortion 1990"},{t:"Roni",a:"Bobby Brown",y:1988,st:["wrnb"],p:85,q:"Roni Bobby Brown 1988"},{t:"Real Love",a:"Jody Watley",y:1989,st:["wrnb"],p:84,q:"Real Love Jody Watley 1989"},{t:"Vision of Love",a:"Mariah Carey",y:1990,st:["wrnb"],p:90,q:"Vision of Love Mariah Carey 1990"},{t:"I Wanna Sex You Up",a:"Color Me Badd",y:1991,st:["wrnb"],p:86,q:"I Wanna Sex You Up Color Me Badd 1991"},{t:"Kiss",a:"Prince",y:1986,st:["wsol"],p:91,q:"Kiss Prince 1986"},{t:"Wishing Well",a:"Terence Trent D'Arby",y:1987,st:["wsol"],p:85,q:"Wishing Well Terence Trent Darby 1987"},{t:"My Prerogative",a:"Bobby Brown",y:1988,st:["wsol"],p:89,q:"My Prerogative Bobby Brown 1988"},{t:"Miss You Much",a:"Janet Jackson",y:1989,st:["wsol"],p:90,q:"Miss You Much Janet Jackson 1989"},{t:"Hold On",a:"En Vogue",y:1990,st:["wsol"],p:87,q:"Hold On En Vogue 1990"},{t:"Motownphilly",a:"Boyz II Men",y:1991,st:["wsol"],p:88,q:"Motownphilly Boyz II Men 1991"},{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,party:true,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,party:true,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit","kdnc"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"American Jesus",a:"Bad Religion",y:1993,st:["kpnk"],p:82,q:"American Jesus Bad Religion 1993"},{t:"Linoleum",a:"NOFX",y:1994,st:["kpnk"],p:80,q:"Linoleum NOFX 1994"},{t:"Salvation",a:"Rancid",y:1994,st:["kpnk"],p:81,q:"Salvation Rancid 1994"},{t:"Walk",a:"Pantera",y:1992,st:["kmet"],p:87,q:"Walk Pantera 1992"},{t:"Sober",a:"Tool",y:1993,st:["kmet"],p:85,q:"Sober Tool 1993"},{t:"Self Esteem",a:"The Offspring",y:1994,st:["kpnk"],p:87,q:"Self Esteem The Offspring 1994"},{t:"Longview",a:"Green Day",y:1994,st:["kpnk"],p:86,q:"Longview Green Day 1994"},{t:"Bulls on Parade",a:"Rage Against the Machine",y:1996,st:["krok","kmet"],p:88,q:"Bulls on Parade Rage Against the Machine 1996"},{t:"Everlong",a:"Foo Fighters",y:1997,st:["krok"],p:91,q:"Everlong Foo Fighters 1997"},{t:"Good Riddance (Time of Your Life)",a:"Green Day",y:1997,st:["kpnk","krok"],p:90,q:"Good Riddance Time of Your Life Green Day 1997"},{t:"Freak on a Leash",a:"Korn",y:1998,st:["kmet"],p:86,q:"Freak on a Leash Korn 1998"},{t:"My Hero",a:"Foo Fighters",y:1998,st:["krok"],p:87,q:"My Hero Foo Fighters 1998"},{t:"Wait and Bleed",a:"Slipknot",y:1999,st:["kmet"],p:85,q:"Wait and Bleed Slipknot 1999"},{t:"Macarena (Bayside Boys Remix)",a:"Los Del Rio",y:1996,st:["wltn"],p:92,q:"Macarena Bayside Boys Remix Los Del Rio 1996"},{t:"Check Yes or No",a:"George Strait",y:1995,st:["kgro"],p:87,q:"Check Yes or No George Strait 1995"},{t:"How Do I Live",a:"LeAnn Rimes",y:1997,st:["kgro"],p:89,q:"How Do I Live LeAnn Rimes 1997"},{t:"This Kiss",a:"Faith Hill",y:1998,st:["kgro"],p:88,q:"This Kiss Faith Hill 1998"},{t:"Champagne Supernova",a:"Oasis",y:1996,st:["kroq"],p:90,q:"Champagne Supernova Oasis 1996"},{t:"Iris",a:"Goo Goo Dolls",y:1998,st:["kroq"],p:92,q:"Iris Goo Goo Dolls 1998"},{t:"All the Small Things",a:"Blink-182",y:1999,st:["kroq"],p:93,q:"All the Small Things Blink 182 1999"},{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol","wrnb"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb","wsol"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok","kroq"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:96,party:true,q:"Juicy Notorious BIG 1994"},{t:"Big Poppa",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:95,q:"Big Poppa Notorious BIG 1994"},{t:"One More Chance",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:94,q:"One More Chance Notorious BIG 1995"},{t:"C.R.E.A.M.",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:95,q:"CREAM Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["wbdx"],p:95,q:"NY State of Mind Nas 1994"},{t:"The World Is Yours",a:"Nas",y:1994,st:["wbdx"],p:94,q:"The World Is Yours Nas 1994"},{t:"Illmatic",a:"Nas",y:1994,st:["wbdx"],p:93,q:"Illmatic Nas 1994"},{t:"Dead Presidents II",a:"Jay-Z",y:1996,st:["wbdx"],p:93,q:"Dead Presidents II Jay-Z 1996"},{t:"Ain't No Nigga",a:"Jay-Z ft Foxy Brown",y:1996,st:["wbdx"],p:92,q:"Ain't No Nigga Jay-Z Foxy Brown 1996"},{t:"Mass Appeal",a:"Gang Starr",y:1994,st:["wbdx"],p:91,q:"Mass Appeal Gang Starr 1994"},{t:"I Got a Man",a:"Positive K",y:1992,st:["wbdx"],p:88,q:"I Got a Man Positive K 1992"},{t:"Scenario",a:"A Tribe Called Quest",y:1991,st:["wbdx"],p:93,q:"Scenario A Tribe Called Quest 1991"},{t:"Electric Relaxation",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:94,q:"Electric Relaxation A Tribe Called Quest 1993"},{t:"Award Tour",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:93,q:"Award Tour A Tribe Called Quest 1993"},{t:"I Used to Love H.E.R.",a:"Common",y:1994,st:["wbdx"],p:91,q:"I Used to Love HER Common 1994"},{t:"Deja Vu (Uptown Baby)",a:"Lord Tariq and Peter Gunz",y:1996,st:["wbdx"],p:89,q:"Deja Vu Uptown Baby Lord Tariq Peter Gunz"},{t:"Shook Ones Pt II",a:"Mobb Deep",y:1995,st:["wbdx"],p:94,q:"Shook Ones Part II Mobb Deep 1995"},{t:"Survival of the Fittest",a:"Mobb Deep",y:1995,st:["wbdx"],p:92,q:"Survival of the Fittest Mobb Deep 1995"},{t:"Method Man",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:93,q:"Method Man Wu-Tang Clan 1993"},{t:"Protect Ya Neck",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:92,q:"Protect Ya Neck Wu-Tang Clan 1993"},{t:"Passin Me By",a:"The Pharcyde",y:1992,st:["wbdx"],p:91,q:"Passin Me By The Pharcyde 1992"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst","wbdx"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,party:true,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},
+{t:"Un Poco Loco",a:"Bud Powell",y:1951,st:["wjazb"],p:83,q:"Un Poco Loco Bud Powell 1951"},{t:"Move It On Over",a:"Hank Williams",y:1947,st:["kgro"],p:82,q:"Move It On Over Hank Williams 1947"}],"1950":[{t:"Shake, Rattle and Roll",a:"Big Joe Turner",y:1954,st:["wrnb"],p:87,q:"Shake Rattle and Roll Big Joe Turner 1954"},{t:"Tears on My Pillow",a:"Little Anthony and the Imperials",y:1958,st:["wrnb"],p:85,q:"Tears on My Pillow Little Anthony Imperials 1958"},{t:"Rock Around the Clock",a:"Bill Haley",y:1955,st:["khit","krok"],p:97,q:"Rock Around the Clock Bill Haley 1955"},{t:"Hound Dog",a:"Elvis Presley",y:1956,st:["khit","krok"],p:96,q:"Hound Dog Elvis Presley 1956"},{t:"Heartbreak Hotel",a:"Elvis Presley",y:1956,st:["khit","krok"],p:95,q:"Heartbreak Hotel Elvis Presley 1956"},{t:"Mona Lisa",a:"Nat King Cole",y:1950,st:["khit","wjaz"],p:94,q:"Mona Lisa Nat King Cole 1950"},{t:"Johnny B Goode",a:"Chuck Berry",y:1958,st:["krok"],p:95,q:"Johnny B Goode Chuck Berry 1958"},{t:"Jailhouse Rock",a:"Elvis Presley",y:1957,st:["krok"],p:93,q:"Jailhouse Rock Elvis Presley 1957"},{t:"So What",a:"Miles Davis",y:1959,st:["wjaz"],p:95,q:"So What Miles Davis 1959"},{t:"I Walk the Line",a:"Johnny Cash",y:1956,st:["kgro","krok"],p:95,q:"I Walk the Line Johnny Cash 1956"},{t:"Your Cheatin Heart",a:"Hank Williams",y:1953,st:["kgro"],p:93,q:"Your Cheatin Heart Hank Williams 1953"},{t:"Rumble",a:"Link Wray",y:1958,st:["kmet"],p:86,q:"Rumble Link Wray 1958"}],"1960":[{t:"Please Mr. Postman",a:"The Marvelettes",y:1961,st:["wrnb"],p:88,q:"Please Mr Postman The Marvelettes 1961"},{t:"You've Really Got a Hold on Me",a:"Smokey Robinson and the Miracles",y:1964,st:["wrnb"],p:89,q:"You've Really Got a Hold on Me Smokey Robinson 1964"},{t:"Harper Valley P.T.A.",a:"Jeannie C. Riley",y:1968,st:["kgro"],p:86,q:"Harper Valley PTA Jeannie C Riley 1968"},{t:"Okie from Muskogee",a:"Merle Haggard",y:1969,st:["kgro"],p:87,q:"Okie from Muskogee Merle Haggard 1969"},{t:"I Want to Hold Your Hand",a:"The Beatles",y:1964,st:["khit","krok"],p:99,q:"I Want to Hold Your Hand Beatles 1964"},{t:"Satisfaction",a:"The Rolling Stones",y:1965,st:["khit","krok"],p:98,q:"Satisfaction Rolling Stones 1965"},{t:"Hey Jude",a:"The Beatles",y:1968,st:["khit","krok"],p:98,q:"Hey Jude Beatles 1968"},{t:"Good Vibrations",a:"The Beach Boys",y:1966,st:["khit"],p:96,q:"Good Vibrations Beach Boys 1966"},{t:"Respect",a:"Aretha Franklin",y:1967,st:["wsol","wrnb","khit"],p:98,q:"Respect Aretha Franklin 1967"},{t:"My Girl",a:"The Temptations",y:1964,st:["wsol"],p:97,q:"My Girl Temptations 1964"},{t:"Purple Haze",a:"Jimi Hendrix",y:1967,st:["krok","kmet","kpsy"],p:95,q:"Purple Haze Jimi Hendrix 1967"},{t:"Light My Fire",a:"The Doors",y:1967,st:["krok","kpsy"],p:95,q:"Light My Fire The Doors 1967"},{t:"Whole Lotta Love",a:"Led Zeppelin",y:1969,st:["krok","kmet"],p:96,q:"Whole Lotta Love Led Zeppelin 1969"},{t:"Like a Rolling Stone",a:"Bob Dylan",y:1965,st:["krok","wflk"],p:97,q:"Like a Rolling Stone Bob Dylan 1965"},{t:"Blowin in the Wind",a:"Bob Dylan",y:1963,st:["wflk"],p:94,q:"Blowin in the Wind Bob Dylan 1963"},{t:"White Rabbit",a:"Jefferson Airplane",y:1967,st:["kpsy"],p:91,q:"White Rabbit Jefferson Airplane 1967"},{t:"Strawberry Fields Forever",a:"The Beatles",y:1967,st:["kpsy"],p:95,q:"Strawberry Fields Forever Beatles 1967"},{t:"Ring of Fire",a:"Johnny Cash",y:1963,st:["kgro"],p:95,q:"Ring of Fire Johnny Cash 1963"},{t:"Crazy",a:"Patsy Cline",y:1961,uri:"spotify:track:6e1cB2E4G8ZVFcBHps0zG5",st:["kgro"],p:94,q:"Crazy Patsy Cline 1961"},{t:"The Girl from Ipanema",a:"Stan Getz",y:1964,st:["wjaz"],p:92,q:"The Girl from Ipanema Stan Getz 1964"}],"1970":[{t:"The Way We Were",a:"Barbra Streisand",y:1974,st:["wcrn"],p:88,q:"The Way We Were Barbra Streisand 1974"},{t:"Feels So Good",a:"Chuck Mangione",y:1977,st:["wjaz"],p:87,q:"Feels So Good Chuck Mangione 1977"},{t:"On Broadway",a:"George Benson",y:1978,st:["wjaz"],p:86,q:"On Broadway George Benson 1978"},{t:"Bohemian Rhapsody",a:"Queen",y:1975,st:["khit","krok"],p:99,q:"Bohemian Rhapsody Queen 1975"},{t:"Hotel California",a:"Eagles",y:1977,st:["khit","krok"],p:98,q:"Hotel California Eagles 1977"},{t:"Stayin Alive",a:"Bee Gees",y:1977,st:["khit","kdsc"],p:98,q:"Stayin Alive Bee Gees 1977"},{t:"Piano Man",a:"Billy Joel",y:1973,st:["khit"],p:95,q:"Piano Man Billy Joel 1973"},{t:"Stairway to Heaven",a:"Led Zeppelin",y:1971,st:["krok","kmet"],p:98,q:"Stairway to Heaven Led Zeppelin 1971"},{t:"Born to Run",a:"Bruce Springsteen",y:1975,st:["krok"],p:96,q:"Born to Run Bruce Springsteen 1975"},{t:"Smoke on the Water",a:"Deep Purple",y:1972,st:["kmet","krok"],p:95,q:"Smoke on the Water Deep Purple 1972"},{t:"Iron Man",a:"Black Sabbath",y:1970,st:["kmet"],p:94,q:"Iron Man Black Sabbath 1970"},{t:"Superstition",a:"Stevie Wonder",y:1972,st:["wsol","khit","wrnb"],p:97,q:"Superstition Stevie Wonder 1972"},{t:"Whats Going On",a:"Marvin Gaye",y:1971,st:["wsol","wrnb"],p:97,q:"What's Going On Marvin Gaye 1971"},{t:"Lean on Me",a:"Bill Withers",y:1972,st:["wsol","khit"],p:96,q:"Lean on Me Bill Withers 1972"},{t:"I Will Survive",a:"Gloria Gaynor",y:1978,st:["wrnb","kdsc","kdnc"],p:97,q:"I Will Survive Gloria Gaynor 1978"},{t:"September",a:"Earth Wind and Fire",y:1978,st:["wrnb","kdsc","khit"],p:96,q:"September Earth Wind Fire 1978"},{t:"Good Times",a:"Chic",y:1979,st:["kdsc","wbdx"],p:94,q:"Good Times Chic 1979"},{t:"Jolene",a:"Dolly Parton",y:1973,st:["kgro"],p:96,q:"Jolene Dolly Parton 1973"},{t:"London Calling",a:"The Clash",y:1979,st:["kpnk"],p:95,q:"London Calling The Clash 1979"},{t:"Blitzkrieg Bop",a:"Ramones",y:1976,st:["kpnk"],p:91,q:"Blitzkrieg Bop Ramones 1976"},{t:"Chameleon",a:"Herbie Hancock",y:1973,st:["wjaz"],p:89,q:"Chameleon Herbie Hancock 1973"}],"1980":[{t:"Black Codes (From the Underground)",a:"Wynton Marsalis",y:1985,st:["wjaz"],p:85,q:"Black Codes From the Underground Wynton Marsalis 1985"},{t:"Songbird",a:"Kenny G",y:1987,st:["wjaz"],p:87,q:"Songbird Kenny G 1987"},{t:"It Had to Be You",a:"Harry Connick Jr",y:1989,st:["wjaz"],p:86,q:"It Had to Be You Harry Connick Jr 1989"},{t:"Rise Above",a:"Black Flag",y:1981,st:["kpnk"],p:82,q:"Rise Above Black Flag 1981"},{t:"Institutionalized",a:"Suicidal Tendencies",y:1983,st:["kpnk"],p:83,q:"Institutionalized Suicidal Tendencies 1983"},{t:"Blister in the Sun",a:"Violent Femmes",y:1983,st:["kpnk","kroq"],p:86,q:"Blister in the Sun Violent Femmes 1983"},{t:"New Day Rising",a:"Husker Du",y:1985,st:["kpnk"],p:80,q:"New Day Rising Husker Du 1985"},{t:"Bastards of Young",a:"The Replacements",y:1985,st:["kpnk"],p:82,q:"Bastards of Young The Replacements 1985"},{t:"Suburban Home",a:"Descendents",y:1987,st:["kpnk"],p:79,q:"Suburban Home Descendents 1987"},{t:"Waiting Room",a:"Fugazi",y:1988,st:["kpnk"],p:84,q:"Waiting Room Fugazi 1988"},{t:"Ball and Chain",a:"Social Distortion",y:1990,st:["kpnk"],p:83,q:"Ball and Chain Social Distortion 1990"},{t:"Roni",a:"Bobby Brown",y:1988,st:["wrnb"],p:85,q:"Roni Bobby Brown 1988"},{t:"Real Love",a:"Jody Watley",y:1989,st:["wrnb"],p:84,q:"Real Love Jody Watley 1989"},{t:"Vision of Love",a:"Mariah Carey",y:1990,st:["wrnb"],p:90,q:"Vision of Love Mariah Carey 1990"},{t:"I Wanna Sex You Up",a:"Color Me Badd",y:1991,st:["wrnb"],p:86,q:"I Wanna Sex You Up Color Me Badd 1991"},{t:"Kiss",a:"Prince",y:1986,st:["wsol"],p:91,q:"Kiss Prince 1986"},{t:"Wishing Well",a:"Terence Trent D'Arby",y:1987,st:["wsol"],p:85,q:"Wishing Well Terence Trent Darby 1987"},{t:"My Prerogative",a:"Bobby Brown",y:1988,st:["wsol"],p:89,q:"My Prerogative Bobby Brown 1988"},{t:"Miss You Much",a:"Janet Jackson",y:1989,st:["wsol"],p:90,q:"Miss You Much Janet Jackson 1989"},{t:"Hold On",a:"En Vogue",y:1990,st:["wsol"],p:87,q:"Hold On En Vogue 1990"},{t:"Motownphilly",a:"Boyz II Men",y:1991,st:["wsol"],p:88,q:"Motownphilly Boyz II Men 1991"},{t:"Billie Jean",a:"Michael Jackson",y:1983,st:["khit","wsol"],p:99,party:true,q:"Billie Jean Michael Jackson 1983"},{t:"Beat It",a:"Michael Jackson",y:1983,st:["khit"],p:98,party:true,q:"Beat It Michael Jackson 1983"},{t:"Every Breath You Take",a:"The Police",y:1983,st:["khit"],p:98,q:"Every Breath You Take Police 1983"},{t:"Girls Just Want to Have Fun",a:"Cyndi Lauper",y:1983,st:["khit"],p:97,q:"Girls Just Want to Have Fun Cyndi Lauper 1983"},{t:"Sweet Dreams Are Made of This",a:"Eurythmics",y:1983,st:["khit"],p:96,q:"Sweet Dreams Eurythmics 1983"},{t:"Come On Eileen",a:"Dexys Midnight Runners",y:1982,st:["khit"],p:96,q:"Come On Eileen Dexys Midnight Runners"},{t:"Eye of the Tiger",a:"Survivor",y:1982,st:["khit"],p:97,q:"Eye of the Tiger Survivor 1982"},{t:"Tainted Love",a:"Soft Cell",y:1981,st:["khit","kdnc"],p:94,q:"Tainted Love Soft Cell 1981"},{t:"Physical",a:"Olivia Newton-John",y:1981,st:["khit"],p:95,q:"Physical Olivia Newton-John 1981"},{t:"I Love Rock N Roll",a:"Joan Jett",y:1982,st:["khit"],p:95,q:"I Love Rock N Roll Joan Jett 1982"},{t:"Down Under",a:"Men at Work",y:1981,st:["khit"],p:94,q:"Down Under Men at Work 1981"},{t:"Maneater",a:"Hall and Oates",y:1982,st:["khit"],p:94,q:"Maneater Hall Oates 1982"},{t:"Africa",a:"Toto",y:1982,st:["khit"],p:95,q:"Africa Toto 1982"},{t:"Mickey",a:"Toni Basil",y:1982,st:["khit"],p:93,q:"Mickey Toni Basil 1982"},{t:"Wanna Be Startin Somethin",a:"Michael Jackson",y:1983,st:["khit"],p:94,q:"Wanna Be Startin Somethin Michael Jackson 1983"},{t:"Thriller",a:"Michael Jackson",y:1983,st:["khit"],p:98,q:"Thriller Michael Jackson 1983"},{t:"Total Eclipse of the Heart",a:"Bonnie Tyler",y:1983,st:["khit"],p:95,q:"Total Eclipse of the Heart Bonnie Tyler 1983"},{t:"True",a:"Spandau Ballet",y:1983,st:["khit"],p:93,q:"True Spandau Ballet 1983"},{t:"Time After Time",a:"Cyndi Lauper",y:1983,st:["khit"],p:94,q:"Time After Time Cyndi Lauper 1983"},{t:"99 Luftballons",a:"Nena",y:1983,st:["khit"],p:93,q:"99 Luftballons Nena 1983"},{t:"Lets Dance",a:"David Bowie",y:1983,st:["khit"],p:94,q:"Lets Dance David Bowie 1983"},{t:"Karma Chameleon",a:"Culture Club",y:1983,st:["khit"],p:93,q:"Karma Chameleon Culture Club 1983"},{t:"Jack and Diane",a:"John Mellencamp",y:1982,st:["khit"],p:95,q:"Jack and Diane John Mellencamp 1982"},{t:"Ebony and Ivory",a:"Paul McCartney",y:1982,st:["khit"],p:93,q:"Ebony and Ivory Paul McCartney 1982"},{t:"Human Nature",a:"Michael Jackson",y:1983,st:["khit"],p:93,q:"Human Nature Michael Jackson 1983"},{t:"PYT",a:"Michael Jackson",y:1983,st:["khit"],p:92,q:"PYT Michael Jackson 1983"},{t:"Hurts So Good",a:"John Mellencamp",y:1982,st:["khit"],p:91,q:"Hurts So Good John Mellencamp 1982"}],"1990":[{t:"Cantaloop (Flip Fantasia)",a:"Us3",y:1993,st:["wjaz"],p:85,q:"Cantaloop Flip Fantasia Us3 1993"},{t:"When I Look in Your Eyes",a:"Diana Krall",y:1999,st:["wjaz"],p:86,q:"When I Look in Your Eyes Diana Krall 1999"},{t:"American Jesus",a:"Bad Religion",y:1993,st:["kpnk"],p:82,q:"American Jesus Bad Religion 1993"},{t:"Linoleum",a:"NOFX",y:1994,st:["kpnk"],p:80,q:"Linoleum NOFX 1994"},{t:"Salvation",a:"Rancid",y:1994,st:["kpnk"],p:81,q:"Salvation Rancid 1994"},{t:"Walk",a:"Pantera",y:1992,st:["kmet"],p:87,q:"Walk Pantera 1992"},{t:"Sober",a:"Tool",y:1993,st:["kmet"],p:85,q:"Sober Tool 1993"},{t:"Self Esteem",a:"The Offspring",y:1994,st:["kpnk"],p:87,q:"Self Esteem The Offspring 1994"},{t:"Longview",a:"Green Day",y:1994,st:["kpnk"],p:86,q:"Longview Green Day 1994"},{t:"Bulls on Parade",a:"Rage Against the Machine",y:1996,st:["krok","kmet"],p:88,q:"Bulls on Parade Rage Against the Machine 1996"},{t:"Everlong",a:"Foo Fighters",y:1997,st:["krok"],p:91,q:"Everlong Foo Fighters 1997"},{t:"Good Riddance (Time of Your Life)",a:"Green Day",y:1997,st:["kpnk","krok"],p:90,q:"Good Riddance Time of Your Life Green Day 1997"},{t:"Freak on a Leash",a:"Korn",y:1998,st:["kmet"],p:86,q:"Freak on a Leash Korn 1998"},{t:"My Hero",a:"Foo Fighters",y:1998,st:["krok"],p:87,q:"My Hero Foo Fighters 1998"},{t:"Wait and Bleed",a:"Slipknot",y:1999,st:["kmet"],p:85,q:"Wait and Bleed Slipknot 1999"},{t:"Macarena (Bayside Boys Remix)",a:"Los Del Rio",y:1996,st:["wltn"],p:92,q:"Macarena Bayside Boys Remix Los Del Rio 1996"},{t:"Check Yes or No",a:"George Strait",y:1995,st:["kgro"],p:87,q:"Check Yes or No George Strait 1995"},{t:"How Do I Live",a:"LeAnn Rimes",y:1997,st:["kgro"],p:89,q:"How Do I Live LeAnn Rimes 1997"},{t:"This Kiss",a:"Faith Hill",y:1998,st:["kgro"],p:88,q:"This Kiss Faith Hill 1998"},{t:"Champagne Supernova",a:"Oasis",y:1996,st:["kroq"],p:90,q:"Champagne Supernova Oasis 1996"},{t:"Iris",a:"Goo Goo Dolls",y:1998,st:["kroq"],p:92,q:"Iris Goo Goo Dolls 1998"},{t:"All the Small Things",a:"Blink-182",y:1999,st:["kroq"],p:93,q:"All the Small Things Blink 182 1999"},{t:"Smells Like Teen Spirit",a:"Nirvana",y:1991,st:["khit","kroq"],p:99,q:"Smells Like Teen Spirit Nirvana 1991"},{t:"I Will Always Love You",a:"Whitney Houston",y:1992,st:["khit","wsol","wrnb"],p:99,q:"I Will Always Love You Whitney Houston 1992"},{t:"Waterfalls",a:"TLC",y:1995,st:["khit","wrnb","wsol"],p:97,q:"Waterfalls TLC 1995"},{t:"Wonderwall",a:"Oasis",y:1995,st:["khit","kroq"],p:96,q:"Wonderwall Oasis 1995"},{t:"Creep",a:"Radiohead",y:1992,st:["kroq"],p:95,q:"Creep Radiohead 1992"},{t:"Under the Bridge",a:"Red Hot Chili Peppers",y:1992,st:["kroq","krok"],p:95,q:"Under the Bridge Red Hot Chili Peppers 1992"},{t:"Basket Case",a:"Green Day",y:1994,st:["kpnk","kroq"],p:94,q:"Basket Case Green Day 1994"},{t:"Enter Sandman",a:"Metallica",y:1991,st:["kmet","krok","kroq"],p:96,q:"Enter Sandman Metallica 1991"},{t:"Juicy",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:96,party:true,q:"Juicy Notorious BIG 1994"},{t:"Big Poppa",a:"The Notorious B.I.G.",y:1994,st:["wbdx"],p:95,q:"Big Poppa Notorious BIG 1994"},{t:"One More Chance",a:"The Notorious B.I.G.",y:1995,st:["wbdx"],p:94,q:"One More Chance Notorious BIG 1995"},{t:"C.R.E.A.M.",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:95,q:"CREAM Wu-Tang Clan 1993"},{t:"NY State of Mind",a:"Nas",y:1994,st:["wbdx"],p:95,q:"NY State of Mind Nas 1994"},{t:"The World Is Yours",a:"Nas",y:1994,st:["wbdx"],p:94,q:"The World Is Yours Nas 1994"},{t:"Illmatic",a:"Nas",y:1994,st:["wbdx"],p:93,q:"Illmatic Nas 1994"},{t:"Dead Presidents II",a:"Jay-Z",y:1996,st:["wbdx"],p:93,q:"Dead Presidents II Jay-Z 1996"},{t:"Ain't No Nigga",a:"Jay-Z ft Foxy Brown",y:1996,st:["wbdx"],p:92,q:"Ain't No Nigga Jay-Z Foxy Brown 1996"},{t:"Mass Appeal",a:"Gang Starr",y:1994,st:["wbdx"],p:91,q:"Mass Appeal Gang Starr 1994"},{t:"I Got a Man",a:"Positive K",y:1992,st:["wbdx"],p:88,q:"I Got a Man Positive K 1992"},{t:"Scenario",a:"A Tribe Called Quest",y:1991,st:["wbdx"],p:93,q:"Scenario A Tribe Called Quest 1991"},{t:"Electric Relaxation",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:94,q:"Electric Relaxation A Tribe Called Quest 1993"},{t:"Award Tour",a:"A Tribe Called Quest",y:1993,st:["wbdx"],p:93,q:"Award Tour A Tribe Called Quest 1993"},{t:"I Used to Love H.E.R.",a:"Common",y:1994,st:["wbdx"],p:91,q:"I Used to Love HER Common 1994"},{t:"Deja Vu (Uptown Baby)",a:"Lord Tariq and Peter Gunz",y:1996,st:["wbdx"],p:89,q:"Deja Vu Uptown Baby Lord Tariq Peter Gunz"},{t:"Shook Ones Pt II",a:"Mobb Deep",y:1995,st:["wbdx"],p:94,q:"Shook Ones Part II Mobb Deep 1995"},{t:"Survival of the Fittest",a:"Mobb Deep",y:1995,st:["wbdx"],p:92,q:"Survival of the Fittest Mobb Deep 1995"},{t:"Method Man",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:93,q:"Method Man Wu-Tang Clan 1993"},{t:"Protect Ya Neck",a:"Wu-Tang Clan",y:1993,st:["wbdx"],p:92,q:"Protect Ya Neck Wu-Tang Clan 1993"},{t:"Passin Me By",a:"The Pharcyde",y:1992,st:["wbdx"],p:91,q:"Passin Me By The Pharcyde 1992"},{t:"California Love",a:"2Pac ft Dr Dre",y:1995,st:["kwst","wbdx"],p:97,q:"California Love 2Pac Dr Dre 1995"},{t:"Nuthin But a G Thang",a:"Dr Dre ft Snoop Dogg",y:1992,st:["kwst"],p:96,party:true,q:"Nuthin But a G Thang Dr Dre Snoop Dogg 1992"},{t:"Ms Jackson",a:"OutKast",y:2000,st:["kbtm"],p:95,q:"Ms Jackson OutKast 2000"},
 {t:"International Players Anthem",a:"UGK ft OutKast",y:2007,st:["kbtm"],p:94,party:true,q:"International Players Anthem UGK OutKast 2007"},
 {t:"Sippin On Some Syrup",a:"Three 6 Mafia ft UGK",y:2000,st:["kbtm"],p:88,q:"Sippin On Some Syrup Three 6 Mafia UGK 2000"},
 {t:"Mind Playing Tricks on Me",a:"Geto Boys",y:1991,st:["kbtm"],p:92,q:"Mind Playing Tricks on Me Geto Boys 1991"},
@@ -4992,6 +4992,10 @@ const STATION_NYT_SECTIONS = {
   kwst:  ['Arts', 'Music', 'Culture', 'California'],
   kroq:  ['Arts', 'Music', 'Culture'],
   krok:  ['Arts', 'Music', 'Culture'],
+  weaf:  ['Arts', 'Music', 'Radio', 'Culture'],
+  wsng:  ['Arts', 'Music', 'Radio', 'Culture'],
+  wjazb: ['Arts', 'Music', 'Culture'],
+  wcrn:  ['Arts', 'Music', 'Culture'],
   kmet:  ['Arts', 'Music', 'Culture'],
   kpnk:  ['Arts', 'Music', 'Culture'],
   kbtm:  ['Arts', 'Music', 'Culture', 'Metro'],
@@ -5885,6 +5889,26 @@ const DJ_CALLER_LOG = {
       punchline: "Rick plays along for a beat before landing on the obvious: everybody in 1983 has a Michael Jackson story, and this one somehow keeps growing every time it gets retold.",
       tag: "funny",
     },
+    {
+      setup: "A caller phones in every Friday at the same time asking for the same song, week after week. This Friday he doesn't call.",
+      punchline: "Rick mentions it on air, half-joking, half-actually checking in — and the guy calls during the next break just to say he's fine, he just got stuck at work. Rick plays the song anyway.",
+      tag: "sincere",
+    },
+    {
+      setup: "A guy calls in wanting to dedicate a song live on air to propose to his girlfriend, who's listening at home right now.",
+      punchline: "Rick has to fill dead air for what feels like forever waiting to find out if she said yes. She did. He never finds out the guy's name.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller dedicates a song to an ex. Two hours later, the ex calls in and dedicates a very pointed different song right back.",
+      punchline: "Rick realizes what's happening in real time and decides the professional move is to just let the songs do the talking.",
+      tag: "funny",
+    },
+    {
+      setup: "A caller insists he went to high school with a very famous musician, with details that don't quite line up the more he talks.",
+      punchline: "Rick never calls him out on it directly — just lets him have the story, because everybody in this city needs one good one.",
+      tag: "weird",
+    },
   ],
   wbdx: [
     {
@@ -5892,8 +5916,282 @@ const DJ_CALLER_LOG = {
       punchline: "Cipher points out the car started fine on the way to make the call, and plays the song anyway because it's a good excuse.",
       tag: "funny",
     },
+    {
+      setup: "A young caller asks Cipher who's actually being sampled on a track he loves, expecting a one-line answer.",
+      punchline: "Cipher gives him the whole history instead — where the sample's from, who played on it, why it mattered before this record ever existed. The kid stays on the line the whole time.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller mails in a demo tape hoping Cipher will play it on air.",
+      punchline: "Cipher actually listens to the whole thing — twice — and what he says about it isn't a yes or a no, it's real, specific feedback nobody expected him to bother giving.",
+      tag: "sincere",
+    },
+    {
+      setup: "Two callers phone in back to back with opposite hot takes in the middle of the coast rivalry, both wanting Cipher to pick a side on air.",
+      punchline: "Cipher deliberately doesn't. The restraint is the whole point — and it says more than picking a side ever would.",
+      tag: "weird",
+    },
+  ],
+  kroq: [
+    {
+      setup: "A caller swears he was backstage at the '92 Weenie Roast and got the whole lineup to sign his shirt, describing details that shift a little every time he tells it.",
+      punchline: "Sarah was actually there. She doesn't correct him — some stories are better left exactly as remembered.",
+      tag: "weird",
+    },
+    {
+      setup: "A caller wants a specific UK import single that never got a US pressing, assuming no station would actually have it.",
+      punchline: "Sarah has it on vinyl in the booth right now — her father's shop stocked exactly this kind of thing, and some habits never left her.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller says he found his entire music taste, basically his whole personality at seventeen, from staying up late for her show specifically.",
+      punchline: "Sarah's heard versions of this before, but she still stops for a second before answering — that's exactly why she does this.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller argues a band everyone loved went alternative purely as a marketing move once labels realized the genre could sell.",
+      punchline: "Sarah doesn't dismiss it — she agrees more than the caller expects, and names two other bands who did the exact same thing first.",
+      tag: "funny",
+    },
+    {
+      setup: "A caller phones in from a pay phone outside a club, still buzzing, describing a mosh pit injury like it's the best thing that happened to him all year.",
+      punchline: "Sarah tells him to go get some ice on it, then plays the song he asked for anyway — priorities, apparently, are priorities.",
+      tag: "funny",
+    },
+  ],
+  wsol: [
+    {
+      setup: "A caller phones in wrecked about a breakup and asks Velvet to play something devastating — the fourth week in a row he's called with a different sad request.",
+      punchline: "This week, for the first time, he asks for something upbeat instead. Velvet doesn't make a thing of it, just plays it — but she notices.",
+      tag: "sincere",
+    },
+  ],
+  wrnb: [
+    {
+      setup: "A caller insists a specific extended dance remix saved her marriage — it's the song that got her and her husband dancing together again after years of barely talking.",
+      punchline: "Big Mama Sweet plays it and dedicates it right back to every couple still up dancing in their kitchen tonight.",
+      tag: "sincere",
+    },
+  ],
+  kgro: [
+    {
+      setup: "A trucker calls in from an actual truck stop pay phone, wanting a song dedicated to everybody still driving overnight.",
+      punchline: "Buck's done this show long enough to know that call comes in most nights — it just doesn't always land this clean.",
+      tag: "sincere",
+    },
+  ],
+  kdnc: [
+    {
+      setup: "A caller describes finding a warehouse party off a paper flyer and a payphone number, no address until the last minute, and wants Axis to play whatever was on when she walked in the door.",
+      punchline: "Axis doesn't need the song title — he already knows exactly which record was the one everybody walked in on that year.",
+      tag: "weird",
+    },
+  ],
+  wltn: [
+    {
+      setup: "A caller's grandmother gets on the line — she doesn't speak much English — asking for a song in Spanish that reminds her of home.",
+      punchline: "La Voz translates on air without making it a moment, just bridges the gap like it's the easiest thing in the world, and plays exactly what she asked for.",
+      tag: "sincere",
+    },
+  ],
+  krok: [
+    {
+      setup: "A caller wants a deep-cut Detroit rock song most stations wouldn't touch, insisting the city's real sound never gets played anymore.",
+      punchline: "Daddy Thunders plays it and reminds him this is the same city that gave the world Motown and the MC5 — Detroit's never had just one sound.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller asks Daddy Thunders to isolate and explain a specific guitar solo note by note, like it's a religious text.",
+      punchline: "He takes the question completely seriously, because to him it basically is one — and walks through the whole thing like he's teaching Sunday school.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller phones in from a garage where his band is practicing right now, asking if it's worth sticking with when they still sound rough.",
+      punchline: "Daddy Thunders tells him every great Detroit band sounded rough in that same garage once — the sound isn't the problem, quitting is.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller wants to start the greatest-guitarist-of-all-time argument and demands a definitive answer, no dodging allowed.",
+      punchline: "Daddy Thunders actually gives one — and it's not the obvious pick, which is exactly why the caller stays on the line another ten minutes arguing back.",
+      tag: "funny",
+    },
+    {
+      setup: "A caller says he lost the ticket stub from a legendary show decades ago and has regretted it ever since.",
+      punchline: "Daddy Thunders tells him the stub was never the point — he was there, he remembers it, and that's the only proof that actually matters.",
+      tag: "sincere",
+    },
+  ],
+  kmet: [
+    {
+      setup: "A caller claims he snuck backstage at a big arena metal show and got a setlist signed by the whole band, with a story that gets a little more elaborate each retelling.",
+      punchline: "Iron Rex has heard a hundred versions of this exact story over the years. He plays along anyway, because the excitement is real even if the details aren't.",
+      tag: "weird",
+    },
+  ],
+  kwst: [
+    {
+      setup: "A caller phones in from an actual lowrider car show, wanting the one song that always gets played when the cars start rolling through.",
+      punchline: "Westside Loc doesn't have to ask which one — there's only one right answer for a night like that, and he already has it queued.",
+      tag: "sincere",
+    },
+  ],
+  wjaz: [
+    {
+      setup: "A caller claims to have been in the room for a legendary late-night jazz club set decades ago, describing a detail or two that don't quite match how Memphis Blue remembers it.",
+      punchline: "Memphis Blue was actually there. He gently sets the detail straight without taking anything away from the memory — the feeling in the room was real either way.",
+      tag: "weird",
+    },
+  ],
+  weaf: [
+    {
+      setup: "A caller phones in using the loosest, slangiest request Pemberton has ever heard on the air, nothing like the formal telegrams and letters the station usually gets.",
+      punchline: "Pemberton answers with exactly the same courtly formality he'd use for a senator — 'A splendid selection, sir' — and plays it without missing a beat.",
+      tag: "funny",
+    },
+  ],
+  wsng: [
+    {
+      setup: "A caller asks Frankie about a specific dance step from the Savoy Ballroom's glory days, half-expecting a textbook answer.",
+      punchline: "Frankie doesn't describe it — he's back there for a second, describing exactly where he was standing the night Chick Webb's band battled Benny Goodman's, like it happened last week.",
+      tag: "sincere",
+    },
+  ],
+  wjazb: [
+    {
+      setup: "A caller phones in insisting bebop 'isn't real jazz,' the same argument traditionalists have been making since Bird and Dizzy started playing it.",
+      punchline: "Professor Charlie B does not let this go politely — he's genuinely fired up, and it's the most alive he's sounded all night defending the music he loves.",
+      tag: "funny",
+    },
+  ],
+  wcrn: [
+    {
+      setup: "A caller wants to propose over the phone to someone far away, right now, live, and needs exactly the right song to say it for him.",
+      punchline: "Montgomery Reed doesn't hesitate — this is precisely the moment his whole format exists for, and he picks the song without even needing to think.",
+      tag: "sincere",
+    },
+  ],
+  kbtm: [
+    {
+      setup: "A caller asks Dirty Slab to play a song 'screwed' — slowed all the way down, the real chopped-and-screwed way, not just a vague request for something slow.",
+      punchline: "Slab was actually at the parties where DJ Screw was doing this in real time on the turntables. He doesn't just play it — he tells the caller what they're actually hearing.",
+      tag: "sincere",
+    },
+  ],
+  ktrap: [
+    {
+      setup: "A caller wants a track played specifically for a car audio competition that night, describing exactly how much bass his system can handle.",
+      punchline: "Savage K takes the request completely seriously and picks the one track built to actually test those speakers, like he's been asked this exact question a hundred times before.",
+      tag: "funny",
+    },
+  ],
+  kcons: [
+    {
+      setup: "A student caller asks Thought to explain what a specific lyric actually means — it's for a school paper, and he's genuinely stuck.",
+      punchline: "Thought doesn't give him a quick answer. He walks through it properly, the way he'd want someone to walk him through Baldwin — because to him this is exactly the same kind of work.",
+      tag: "sincere",
+    },
+  ],
+  ksth: [
+    {
+      setup: "A caller wants a song dedicated to a whole block party happening right now, describing the entire scene down to who's grilling and who's still setting up speakers.",
+      punchline: "Lil Buck's been DJing exactly this kind of party since he was fifteen — he doesn't even need the caller to finish describing it before he knows which song the moment needs.",
+      tag: "sincere",
+    },
+  ],
+  kpsy: [
+    {
+      setup: "A caller describes a show where the lights and the music seemed to genuinely merge into one experience, asking if that's a real thing or just him.",
+      punchline: "Captain Cosmo tells him about the Human Be-In in Golden Gate Park — he was there, and no, it wasn't just him.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller says a specific song made him question what's actually real for about twenty minutes straight, and he's not sure if that's a compliment.",
+      punchline: "Cosmo takes it as the highest compliment there is and plays the song again immediately, no explanation needed.",
+      tag: "weird",
+    },
+    {
+      setup: "A caller asks what the light shows at the old Fillmore-era shows actually looked like, since photos never seem to capture it.",
+      punchline: "Cosmo tries to describe it and gives up halfway through — some things, he says, you genuinely had to be standing in the room for.",
+      tag: "sincere",
+    },
+  ],
+  wflk: [
+    {
+      setup: "A caller says he's about to hitchhike across the country with nothing but a guitar and wants a song to leave on.",
+      punchline: "Dusty doesn't try to talk him out of it — he did the exact same thing at nineteen with fifteen dollars and a book, and he just tells him to be careful.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller requests a protest song for a demonstration happening the next morning, nervous about what to expect.",
+      punchline: "Dusty plays it and adds one line before it starts: the song doesn't make you brave, it just reminds you that you already are.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller picked up a guitar for the very first time this week and wants to know where to even start.",
+      punchline: "Dusty tells him the same thing someone told him in Greenwich Village decades ago — three chords and something true to say, in that order.",
+      tag: "sincere",
+    },
+  ],
+  wclx: [
+    {
+      setup: "A caller admits, a little embarrassed, that a specific symphony made him cry in his car and he doesn't know why.",
+      punchline: "Maestro Hartwell tells him that's not embarrassing, that's the entire point of the piece working exactly as written.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller wants to argue that one specific recording of a symphony is definitively the best, and won't accept a diplomatic answer.",
+      punchline: "Hartwell, delighted, actually picks a side — and then spends a full minute explaining exactly why, tempo choice by tempo choice.",
+      tag: "funny",
+    },
+    {
+      setup: "A child gets on the phone, put there by a parent, and asks in a very small voice what the loudest instrument is.",
+      punchline: "Hartwell answers with complete seriousness, like it's the most important question he's been asked all week — because to him, it is.",
+      tag: "sincere",
+    },
+  ],
+  kdsc: [
+    {
+      setup: "A caller asks what it actually felt like inside the Loft on a real night, back when Freddie was going every week.",
+      punchline: "Freddie doesn't describe the music first — he describes walking in and feeling like, for the first time anywhere, nobody was watching him funny.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller is planning an all-night dance marathon and wants Freddie to build the whole set list personally.",
+      punchline: "Freddie's done this before, literally, at the Gallery with Nicky Siano — he knows exactly how a night like that has to build.",
+      tag: "sincere",
+    },
+    {
+      setup: "A young caller says he just came out to his family this week and doesn't really know where else to call.",
+      punchline: "Freddie doesn't make it a big moment — just tells him the floor's always been a safe place for people figuring that out, and plays him something to dance to.",
+      tag: "sincere",
+    },
+  ],
+  kpnk: [
+    {
+      setup: "A caller claims he was at CBGB the exact same night as Johnny Wreck, describing details that are close but not quite right.",
+      punchline: "Johnny was there almost every night that whole stretch — he doesn't correct him, just asks a follow-up question that quietly confirms the guy wasn't actually there.",
+      tag: "weird",
+    },
+    {
+      setup: "A caller says he just started his first band and they're terrible, but they played their first show anyway.",
+      punchline: "Johnny tells him that's exactly how it's supposed to go — nobody at CBGB in '76 could really play either, that was never the point.",
+      tag: "sincere",
+    },
+    {
+      setup: "A caller wants to argue about what counts as 'real punk' and what's just a costume.",
+      punchline: "Johnny shuts the whole debate down in one line: if you're asking the question this hard, you already care too much to be a poser.",
+      tag: "funny",
+    },
   ],
 };
+
+const DJ_CALLER_LOG_STATIONS_PENDING = [];
+// This list no longer really applies — with DEV.callerGeneration on, every
+// station can fire a story-tier break regardless of pool size. What's still
+// true: stations below aren't in DJ_CALLER_LOG's "gold" curated tier yet, or
+// have a thin one, so their story breaks lean more heavily on live
+// generation than on hand-researched content. Worth deepening over time,
+// same pattern as everywhere else, but no longer a hard gap.
 
 const CALLER_LOG_USED = {}; // { [stationId]: [entryIndex, ...] } — avoids repeating the same caller story back-to-back
 const CALLER_LOG_USED_MAX = 4;
@@ -6279,6 +6577,220 @@ const ARTIST_LIBRARY_SOUTHERN = {
 
 // Normalize an artist name for matching: lowercase, drop a leading "the",
 // strip punctuation. "The Rolling Stones" -> "rolling stones".
+const ARTIST_LIBRARY_JAZZ = {
+  "Louis Armstrong": {
+    "artist": "Louis Armstrong", "era": [1920, 1930],
+    "bio": "New Orleans-born, cornet then trumpet — the single most important figure in early jazz. He turned the music from ensemble playing into a soloist's art, and his gravelly voice made him as famous a singer as a horn player.",
+    "keyAlbums": [
+      {"title": "Hot Five and Hot Seven Sessions", "releaseDate": "1928-06-28", "context": "West End Blues opens with an unaccompanied cadenza that's still taught as the moment jazz solo playing arrived fully formed."}
+    ],
+    "keyEvents": [{"date": "1928-06-28", "fact": "West End Blues just landed — that opening cadenza is unlike anything recorded before it."}],
+    "djLines": ["The most important horn in the history of the music — Louis Armstrong.", "Satchmo, and there's a reason that voice is unmistakable — Louis Armstrong.", "New Orleans to the world — Louis Armstrong."]
+  },
+  "Duke Ellington": {
+    "artist": "Duke Ellington", "era": [1920, 1930, 1940],
+    "bio": "Bandleader and composer out of Washington, D.C. — he ran his orchestra at the Cotton Club for years and wrote for the specific musicians in his band rather than generic arrangements, which is why his music still sounds unlike anyone else's.",
+    "keyAlbums": [
+      {"title": "Take the A Train", "releaseDate": "1941-02-15", "context": "Written by his arranger Billy Strayborn, it became the band's signature and one of the defining big band recordings ever made."}
+    ],
+    "keyEvents": [{"date": "1941-02-15", "fact": "Take the A Train just came out — Billy Strayhorn wrote it, and it's about to become Ellington's signature for the rest of his career."}],
+    "djLines": ["He wrote for his musicians, not for a chart — Duke Ellington.", "The Cotton Club's finest — Duke Ellington.", "Nobody has ever sounded quite like this orchestra — Duke Ellington."]
+  },
+  "Count Basie": {
+    "artist": "Count Basie", "era": [1930, 1940],
+    "bio": "Kansas City bandleader whose orchestra swung harder and looser than almost anyone on the East Coast — built on riffs, space, and a rhythm section that never rushed.",
+    "keyAlbums": [
+      {"title": "One O'Clock Jump", "releaseDate": "1937-07-07", "context": "Started as an on-air jam with no written arrangement, and became the band's theme song."}
+    ],
+    "keyEvents": [{"date": "1937-07-07", "fact": "One O'Clock Jump just hit — it started as an unplanned jam on the radio and it's already the band's calling card."}],
+    "djLines": ["Kansas City swing at its loosest and hardest — Count Basie.", "That rhythm section never rushes — Count Basie.", "The Count, live from Kansas City — Count Basie."]
+  },
+  "Ella Fitzgerald": {
+    "artist": "Ella Fitzgerald", "era": [1930, 1940, 1950],
+    "bio": "The First Lady of Song — she won an amateur night contest at the Apollo as a teenager planning to dance, sang instead, and never stopped. Her scat singing and pitch control are still the standard other singers are measured against.",
+    "keyAlbums": [
+      {"title": "A-Tisket, A-Tasket", "releaseDate": "1938-05-02", "context": "Her first big hit, co-written by Ella herself, turned a children's nursery rhyme into a swing standard."}
+    ],
+    "keyEvents": [{"date": "1938-05-02", "fact": "A-Tisket, A-Tasket just dropped — a nursery rhyme turned into a swing hit, and Ella co-wrote it herself."}],
+    "djLines": ["The First Lady of Song — Ella Fitzgerald.", "She went to the Apollo planning to dance and sang instead — Ella Fitzgerald.", "That pitch, that scat — nobody else sounds like this — Ella Fitzgerald."]
+  },
+  "Billie Holiday": {
+    "artist": "Billie Holiday", "era": [1930, 1940, 1950],
+    "bio": "Lady Day — a vocalist who phrased behind the beat like nobody before her, turning even simple lyrics into something aching and specific. Her life was hard and her recordings carry every bit of it without ever tipping into performance.",
+    "keyAlbums": [
+      {"title": "Strange Fruit", "releaseDate": "1939-04-20", "context": "A protest song about lynching in the American South — one of the first popular recordings to confront it directly, and it took real courage to release."}
+    ],
+    "keyEvents": [{"date": "1939-04-20", "fact": "Strange Fruit is out — a protest song like nothing else on the radio right now, and Billie is taking a real risk putting it out."}],
+    "djLines": ["Lady Day — Billie Holiday.", "She phrases behind the beat like nobody else ever has — Billie Holiday.", "Every bit of her life is in that voice — Billie Holiday."]
+  },
+  "Coleman Hawkins": {
+    "artist": "Coleman Hawkins", "era": [1930, 1940],
+    "bio": "The player who made the tenor saxophone a serious solo instrument in jazz, rather than a supporting voice in the section. His tone is thick, warm, and instantly identifiable.",
+    "keyAlbums": [
+      {"title": "Body and Soul", "releaseDate": "1939-10-11", "context": "A single take, almost entirely improvised — routinely named one of the greatest saxophone solos ever recorded."}
+    ],
+    "keyEvents": [{"date": "1939-10-11", "fact": "Body and Soul just landed — that solo is nearly all improvised and it's going to define what a tenor sax solo can be."}],
+    "djLines": ["He made the tenor sax a lead voice — Coleman Hawkins.", "That tone is unmistakable — Coleman Hawkins.", "The man who invented the jazz tenor solo — Coleman Hawkins."]
+  },
+  "Charlie Parker": {
+    "artist": "Charlie Parker", "era": [1940, 1950],
+    "bio": "Bird — the alto saxophonist who, alongside Dizzy Gillespie, invented bebop by playing faster and harmonically further out than swing had ever gone. His recordings from Kansas City clubs into New York's 52nd Street changed jazz permanently in about five years.",
+    "keyAlbums": [
+      {"title": "Ko-Ko", "releaseDate": "1945-11-26", "context": "One of the first true bebop recordings — dense, fast, harmonically radical compared to anything on the radio at the time."}
+    ],
+    "keyEvents": [{"date": "1945-11-26", "fact": "Ko-Ko just landed — this is bebop arriving in full force, and it's not going to sound like anything else on the dial."}],
+    "djLines": ["Bird — Charlie Parker.", "He and Dizzy invented a whole new language for this music — Charlie Parker.", "Nobody has ever played this fast and this clean — Charlie Parker."]
+  },
+  "Dizzy Gillespie": {
+    "artist": "Dizzy Gillespie", "era": [1940, 1950],
+    "bio": "Trumpet, bent bell and all — alongside Charlie Parker he built bebop from the ground up, and later pushed jazz further by bringing Afro-Cuban rhythm into the mainstream of the music.",
+    "keyAlbums": [
+      {"title": "A Night in Tunisia", "releaseDate": "1942-01-01", "context": "One of the first compositions to blend bebop harmony with Latin rhythm — a sound Dizzy kept building on for the rest of his career."}
+    ],
+    "keyEvents": [{"date": "1945-01-01", "fact": "Dizzy and Bird are playing together on 52nd Street right now, and everyone who hears it knows the music just changed."}],
+    "djLines": ["That bent trumpet bell is unmistakable — Dizzy Gillespie.", "He built bebop and then built Latin jazz on top of it — Dizzy Gillespie.", "One half of the most important duo in jazz history — Dizzy Gillespie."]
+  },
+  "Thelonious Monk": {
+    "artist": "Thelonious Monk", "era": [1940, 1950, 1960],
+    "bio": "A pianist and composer whose playing sounded deliberately off-balance — odd intervals, sudden silences, notes that seemed to land a beat late on purpose. He wrote some of the most covered compositions in jazz while sounding like nobody else at the keyboard.",
+    "keyAlbums": [
+      {"title": "Round Midnight", "releaseDate": "1947-01-01", "context": "One of the most recorded jazz compositions ever written — Monk's own version remains the strangest and most essential."}
+    ],
+    "keyEvents": [{"date": "1947-01-01", "fact": "Round Midnight is out — it's going to become one of the most covered songs in jazz history, and Monk's own version still sounds the strangest."}],
+    "djLines": ["Nobody else's piano sounds like this — Thelonious Monk.", "He plays like the piano is fighting back — Monk.", "Every note lands exactly where you don't expect it — Thelonious Monk."]
+  },
+  "Bud Powell": {
+    "artist": "Bud Powell", "era": [1940, 1950],
+    "bio": "The pianist who translated Charlie Parker and Dizzy Gillespie's bebop language onto the keyboard — fast right-hand lines over sparse left-hand chords, a template nearly every jazz pianist since has worked from.",
+    "keyAlbums": [
+      {"title": "Un Poco Loco", "releaseDate": "1951-05-01", "context": "A dense, driving performance widely cited as one of the greatest jazz piano recordings ever made."}
+    ],
+    "keyEvents": [{"date": "1951-05-01", "fact": "Un Poco Loco just landed — Bud Powell playing at a level almost nobody else on piano can touch right now."}],
+    "djLines": ["He put bebop on the piano — Bud Powell.", "The template every jazz pianist since has worked from — Bud Powell.", "That right hand doesn't slow down — Bud Powell."]
+  },
+  "Miles Davis": {
+    "artist": "Miles Davis", "era": [1950, 1960, 1970],
+    "bio": "Trumpet — and the rare musician who reinvented jazz multiple times in one career: cool jazz, hard bop, modal jazz, then fusion, always a few years ahead of where the rest of the music was heading.",
+    "keyAlbums": [
+      {"title": "Kind of Blue", "releaseDate": "1959-08-17", "context": "Built on scales instead of chord changes — the best-selling jazz album ever made, and still the first record most people hear in the genre."}
+    ],
+    "keyEvents": [{"date": "1959-08-17", "fact": "Kind of Blue just dropped — built on modes instead of chord changes, and it's going to become the best-selling jazz record ever made."}],
+    "djLines": ["He reinvented this music more times than anyone else — Miles Davis.", "Always a few years ahead of everybody — Miles Davis.", "That trumpet tone is instantly his — Miles Davis."]
+  },
+  "John Coltrane": {
+    "artist": "John Coltrane", "era": [1950, 1960],
+    "bio": "Tenor and soprano sax — a player of relentless spiritual and technical intensity, whose late-career recordings pushed jazz toward free improvisation while his earlier work set the standard for harmonic sophistication.",
+    "keyAlbums": [
+      {"title": "My Favorite Things", "releaseDate": "1961-03-21", "context": "A Broadway show tune turned into a hypnotic, modal, nearly fourteen-minute reinvention on soprano sax."}
+    ],
+    "keyEvents": [{"date": "1961-03-21", "fact": "My Favorite Things just came out — a show tune turned into something completely different on soprano sax."}],
+    "djLines": ["Relentless, spiritual, technically untouchable — John Coltrane.", "He took a show tune and made it his own for fourteen minutes — Coltrane.", "Trane."]
+  },
+  "Stan Getz": {
+    "artist": "Stan Getz", "era": [1960],
+    "bio": "Tenor saxophonist with the warmest, softest tone in jazz — he almost single-handedly brought Brazilian bossa nova to American audiences in the early 1960s.",
+    "keyAlbums": [
+      {"title": "Getz/Gilberto", "releaseDate": "1964-03-01", "context": "The Girl from Ipanema is on it — the record that made bossa nova a genuine American phenomenon."}
+    ],
+    "keyEvents": [{"date": "1964-03-01", "fact": "Getz/Gilberto just landed and The Girl from Ipanema is on it — bossa nova just arrived in America for good."}],
+    "djLines": ["The softest tenor tone in jazz — Stan Getz.", "He brought Brazil to American radio — Stan Getz.", "That Ipanema record changed everything — Stan Getz."]
+  },
+  "Herbie Hancock": {
+    "artist": "Herbie Hancock", "era": [1960, 1970],
+    "bio": "Pianist and composer who moved from Miles Davis's band into funk and electric jazz fusion without ever losing the harmonic sophistication he started with.",
+    "keyAlbums": [
+      {"title": "Head Hunters", "releaseDate": "1973-10-13", "context": "Chameleon is on it — jazz fusion crossing over into funk territory and finding a genuinely wide audience."}
+    ],
+    "keyEvents": [{"date": "1973-10-13", "fact": "Head Hunters just dropped — Chameleon is on it, and jazz fusion just found a much bigger audience."}],
+    "djLines": ["From Miles's band into funk and fusion — Herbie Hancock.", "He never lost the sophistication chasing the groove — Herbie Hancock.", "Chameleon, and it still sounds like the future — Herbie Hancock."]
+  },
+  "Weather Report": {
+    "artist": "Weather Report", "era": [1970],
+    "bio": "Joe Zawinul and Wayne Shorter's fusion group — dense, electric, and structured more like a single evolving composition than a set of solos trading off.",
+    "keyAlbums": [
+      {"title": "Heavy Weather", "releaseDate": "1977-03-01", "context": "Birdland is on it, dedicated to the legendary jazz club — one of fusion's most enduring compositions."}
+    ],
+    "keyEvents": [{"date": "1977-03-01", "fact": "Heavy Weather just landed — Birdland is on it and it's going to become one of the most enduring fusion records ever made."}],
+    "djLines": ["Structured like one long evolving composition — Weather Report.", "Zawinul and Shorter, doing something nobody else was — Weather Report.", "Birdland, right here — Weather Report."]
+  },
+  "Chick Corea": {
+    "artist": "Chick Corea", "era": [1970],
+    "bio": "Pianist and composer who moved between straight-ahead jazz, fusion, and Latin-inflected work with Return to Forever — restless, prolific, and technically dazzling across every one of those lanes.",
+    "keyAlbums": [
+      {"title": "Light as a Feather", "releaseDate": "1972-10-01", "context": "Spain is on it — one of the most recorded jazz compositions of the fusion era."}
+    ],
+    "keyEvents": [{"date": "1972-10-01", "fact": "Light as a Feather just came out — Spain is on it and it's about to become one of the most covered tunes in modern jazz."}],
+    "djLines": ["Restless, prolific, dazzling every time — Chick Corea.", "Return to Forever's own — Chick Corea.", "Spain, and it never gets old — Chick Corea."]
+  },
+  "Norah Jones": {
+    "artist": "Norah Jones", "era": [2000],
+    "bio": "A jazz-trained vocalist and pianist whose debut record blended jazz, folk, and country into something warm and radio-friendly enough to become a genuine mainstream crossover.",
+    "keyAlbums": [
+      {"title": "Come Away with Me", "releaseDate": "2002-02-26", "context": "Don't Know Why is on it — a jazz-adjacent debut that sold in numbers nobody in the genre had seen in decades."}
+    ],
+    "keyEvents": [{"date": "2002-02-26", "fact": "Come Away with Me just dropped — Don't Know Why is on it, and this is selling at a scale jazz-adjacent records almost never do."}],
+    "djLines": ["Jazz-trained, and it shows in every phrase — Norah Jones.", "A crossover that never feels like it's chasing the crossover — Norah Jones.", "Don't Know Why, still the one — Norah Jones."]
+  },
+};
+
+const ARTIST_LIBRARY_CROONER = {
+  "Fred Astaire": {
+    "artist": "Fred Astaire", "era": [1930],
+    "bio": "Dancer first, but his singing voice — light, conversational, perfectly on the beat — introduced more Great American Songbook standards than almost anyone else of his era, mostly through film musicals.",
+    "keyAlbums": [
+      {"title": "Top Hat", "releaseDate": "1935-08-29", "context": "Cheek to Cheek is on the soundtrack — introduced in the film and immediately a standard."}
+    ],
+    "keyEvents": [{"date": "1935-08-29", "fact": "Top Hat just hit theaters — Cheek to Cheek is already the song everyone's going to be humming."}],
+    "djLines": ["He introduced more standards than almost anyone — Fred Astaire.", "Light, conversational, perfectly on the beat — Fred Astaire.", "Cheek to Cheek, straight off the screen — Fred Astaire."]
+  },
+  "Judy Garland": {
+    "artist": "Judy Garland", "era": [1930, 1940],
+    "bio": "A voice that could carry both aching vulnerability and full theatrical power, often in the same phrase — she became a star as a teenager and never stopped being one.",
+    "keyAlbums": [
+      {"title": "The Wizard of Oz Soundtrack", "releaseDate": "1939-08-25", "context": "Over the Rainbow was almost cut from the film before release — it became her signature song for the rest of her life."}
+    ],
+    "keyEvents": [{"date": "1939-08-25", "fact": "The Wizard of Oz just opened — Over the Rainbow was almost cut from the picture and it's going to define her career instead."}],
+    "djLines": ["That voice carries both ache and power in the same breath — Judy Garland.", "A teenager when she became a star, and never stopped — Judy Garland.", "Over the Rainbow, the song that almost didn't make the cut — Judy Garland."]
+  },
+  "Bing Crosby": {
+    "artist": "Bing Crosby", "era": [1930, 1940, 1950],
+    "bio": "The first true crossover crooner — his relaxed, low, intimate baritone was made possible by the microphone itself, letting him sing quietly instead of belting the way stage singers had to.",
+    "keyAlbums": [
+      {"title": "White Christmas", "releaseDate": "1942-10-03", "context": "It's the best-selling single of all time — a wartime song about home that resonated far beyond its holiday framing."}
+    ],
+    "keyEvents": [{"date": "1942-10-03", "fact": "White Christmas is out — this is going to become the best-selling single ever recorded, full stop."}],
+    "djLines": ["The microphone made his whole career possible — Bing Crosby.", "Relaxed, low, intimate — the first real crooner — Bing Crosby.", "The best-selling single ever made — Bing Crosby."]
+  },
+  "Dooley Wilson": {
+    "artist": "Dooley Wilson", "era": [1940],
+    "bio": "An actor and singer whose one enduring recording came from a single film scene — proof that a song's cultural weight has nothing to do with the size of an artist's catalog.",
+    "keyAlbums": [
+      {"title": "Casablanca Soundtrack", "releaseDate": "1942-11-26", "context": "As Time Goes By, performed on screen as Sam — one of the most quoted musical moments in film history."}
+    ],
+    "keyEvents": [{"date": "1942-11-26", "fact": "Casablanca just opened — As Time Goes By, right there on screen, and it's never going to be forgotten."}],
+    "djLines": ["One song, and it's immortal — Dooley Wilson.", "Play it, Sam — Dooley Wilson.", "As Time Goes By, straight from the screen — Dooley Wilson."]
+  },
+  "Frank Sinatra": {
+    "artist": "Frank Sinatra", "era": [1940, 1950, 1960, 1970],
+    "bio": "The defining voice of American popular song for four decades — he took the crooning style Bing Crosby pioneered and pushed it toward something tougher, more phrased, more emotionally direct.",
+    "keyAlbums": [
+      {"title": "In the Wee Small Hours", "releaseDate": "1955-04-25", "context": "Widely considered the first true concept album — a sustained mood of heartbreak across a full record."},
+      {"title": "Trilogy", "releaseDate": "1980-03-17", "context": "New York, New York is on it — a late-career song that became as identified with him as anything from decades earlier."}
+    ],
+    "keyEvents": [{"date": "1980-03-17", "fact": "New York, New York is out — decades into his career, and he's still landing songs that define him all over again."}],
+    "djLines": ["The voice of the American songbook, full stop — Frank Sinatra.", "Four decades and he's still finding new signature songs — Sinatra.", "Chairman of the Board — Frank Sinatra."]
+  },
+  "Nat King Cole": {
+    "artist": "Nat King Cole", "era": [1940, 1950, 1960],
+    "bio": "A jazz pianist first, who became one of the smoothest vocal stylists in popular music — and one of the first Black artists to host his own national television show, breaking real ground while carrying an unmistakably warm voice.",
+    "keyAlbums": [
+      {"title": "Unforgettable", "releaseDate": "1951-06-01", "context": "The title track became one of the most enduring standards in American popular music."}
+    ],
+    "keyEvents": [{"date": "1951-06-01", "fact": "Unforgettable just dropped — that title track is going to outlive every trend that comes after it."}],
+    "djLines": ["A jazz pianist who became one of the smoothest voices in the business — Nat King Cole.", "Unforgettable, and it earned that title — Nat King Cole.", "Warmth, straight through the speaker — Nat King Cole."]
+  },
+};
+
 function normalizeArtistName(s){
   return String(s || '').toLowerCase()
     .replace(/^the\s+/, '')
@@ -6338,6 +6850,8 @@ function getArtistFacts(artistName, dialDate){
     ARTIST_LIBRARY_DISCO,
     ARTIST_LIBRARY_ROCK,
     ARTIST_LIBRARY_SOUTHERN,
+    ARTIST_LIBRARY_JAZZ,
+    ARTIST_LIBRARY_CROONER,
   ];
   let entry = null;
 
@@ -6769,9 +7283,16 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
   // ── 4c. CALLER STORY (long-form rant mode) ────────────────────────────────
   // Only present when generateDJLine already rolled and picked one — this
   // section does not decide whether to fire, only how to deliver it.
-  const callerStorySection = callerStory
-    ? `LONG-FORM CALLER STORY — this break is a real story, not a quick line. Recount this call in your own voice, like you're telling a friend about your night:\nWHAT HAPPENED: ${callerStory.setup}\nHOW IT LANDED: ${callerStory.punchline}\nDeliver this as a story with a beginning and an ending — never read it back like notes.`
-    : '';
+  // Two shapes: a curated entry (real setup/punchline written in advance) or
+  // a generated one (callerStory.generated === true), where the model
+  // invents the call itself. The grounding rule on the generated path exists
+  // because a story instruction nudges the model toward specific-sounding
+  // detail more than ordinary patter does — the caller and their words are
+  // always fictional either way, so the actual risk is only ever the DJ
+  // stating a false *historical* fact as if it were real along the way.
+  const callerStorySection = !callerStory ? '' : callerStory.generated
+    ? `LONG-FORM CALLER STORY — this break is a real story, not a quick line. Invent a believable caller and a story that fits this station's era, format, and your own persona above — a beginning, a middle, a punchline, told like you're recounting your night to a friend. GROUNDING RULE: if you reference a specific real venue, artist, or event, only use ones already established as real elsewhere in this briefing (your bio, the events/culture section, artist knowledge). Otherwise keep specifics general ("a caller," "a show downtown") rather than inventing a precise-sounding fact you're not sure is true. The caller and the conversation are fictional regardless — the only thing to actually avoid is stating a made-up historical claim as if it were established fact.`
+    : `LONG-FORM CALLER STORY — this break is a real story, not a quick line. Recount this call in your own voice, like you're telling a friend about your night:\nWHAT HAPPENED: ${callerStory.setup}\nHOW IT LANDED: ${callerStory.punchline}\nDeliver this as a story with a beginning and an ending — never read it back like notes.`;
 
   // ── 5. CURRENT EVENTS & CULTURAL CONTEXT ────────────────────────────────
   const recentFacts = getRecentFacts(dialDate, 3, sid);
@@ -6880,16 +7401,28 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
 
   // ── LONG-FORM CALLER STORY ROLL ──────────────────────────────────────────
   // Low-probability upgrade to the 'story' tier, only on gap/outro (never
-  // mid — too short to land a story) and only if this station actually has
-  // caller content. Boosted after a high-popularity song just played, since
-  // that's the natural "this record deserves more than a sentence" moment.
+  // mid — too short to land a story). Boosted after a high-popularity song
+  // just played, since that's the natural "this record deserves more than
+  // a sentence" moment.
+  //
+  // Two sources, not one: a hand-curated pool (DJ_CALLER_LOG, the "gold"
+  // tier — real research behind each one) and live generation, which lets
+  // every station fire a story even with no pool at all, and keeps stations
+  // WITH a pool from just cycling the same handful forever. See
+  // DEV.callerGenFraction below for the split.
   let callerStory = null;
   if(DEV.rantMode && (entryMode === 'gap' || entryMode === 'outro') && DEV.breakLen === 'mixed'){
-    const hasCallers = DJ_CALLER_LOG[curStation]?.length > 0;
     const popBoost = (prevSong?.p >= 90) ? 0.18 : 0.06;
-    if(hasCallers && Math.random() < popBoost){
-      const story = getCallerStory(curStation);
-      if(story){ lengthKey = 'story'; callerStory = story; }
+    if(Math.random() < popBoost){
+      const hasPool = DJ_CALLER_LOG[curStation]?.length > 0;
+      const useGenerated = DEV.callerGeneration && (!hasPool || Math.random() < DEV.callerGenFraction);
+      if(useGenerated){
+        lengthKey = 'story';
+        callerStory = { generated: true };
+      } else {
+        const story = getCallerStory(curStation);
+        if(story){ lengthKey = 'story'; callerStory = story; }
+      }
     }
   }
 
@@ -8731,6 +9264,8 @@ const DEV = {
   eracontext: true, stationid: true, knowledge: true, sweepers: true,
   songfacts: true, // master toggle for the song-origin knowledge system
   rantMode: true, // master toggle for long-form caller-story breaks
+  callerGeneration: true, // let the model invent caller stories live instead of only drawing from DJ_CALLER_LOG
+  callerGenFraction: 0.5, // for stations WITH a curated pool, chance a story-tier break generates fresh instead of using it. Stations with no pool always generate when callerGeneration is on.
   // Per-source gating for SONG_FACTS. "wikipedia"/"curated" are licensed or
   // hand-written — safe everywhere. "songfacts"/"allmusic" have no public
   // API/license — dev/personal use only. MUST be false on anything deployed
