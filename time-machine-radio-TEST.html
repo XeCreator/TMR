@@ -7078,7 +7078,7 @@ ${extract.substring(0, 1500)}`;
     const resp = await fetch(getAnthropicUrl(), {
       method: 'POST',
       headers: getAnthropicHeaders(),
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:150, messages:[{role:'user',content:filterPrompt}] })
+      body: JSON.stringify({ model:'claude-sonnet-5', max_tokens:150, messages:[{role:'user',content:filterPrompt}] })
     });
     if(!resp.ok) return null;
     const result = await resp.json();
@@ -7368,12 +7368,13 @@ async function buildDJContext(sid, year, dialDate, prevSong, nextSong, entryMode
   const rules = [
     `LENGTH: ${lengthRule}`,
     `ERA: Only language and references from ${year} or earlier. No anachronisms.`,
-    `VOICE: Warm, confident, in the moment. Speaking to thousands of listeners.`,
+    `VOICE: You've spent a life inside this music. Let your own take show — a hunch, an opinion, a raised eyebrow — not just the facts. That's what makes you a DJ instead of a liner-note reader.`,
+    `WIT: Don't reach for the on-the-nose connection — find the one nobody else in the room would think to say. A smooth cliché is still a cliché. If you have real material above (an artist fact, a chart position, a real event), look for the angle underneath it, not the obvious headline.`,
+    `SPECIFICITY: Everything above — this song, this chart position, this weather, what just happened in the world — is true of THIS exact moment and no other. If your line could be copy-pasted onto a different night without changing a word, it isn't doing its job.`,
     `RHYTHM: Write for the human voice. Vary sentence length — a short punch followed by something longer. Use natural pauses with "..." where a real DJ would breathe or let something land. Stress key words through placement, not capitalization.`,
     `PRIORITY: If there is a breaking event or major cultural moment above — acknowledge it. Don't bury the lead.`,
     `MEMORY: If you said something recently (shown above), build on it or reference it. Don't repeat yourself. Don't contradict yourself.`,
     `NEVER: Address the listener directly. No "you" or "I". No quotes around output or stage directions.`,
-    `FUN: This should feel alive. Something that could only be said on THIS station, about THIS song, on THIS specific night.`,
     `OUTPUT: ONLY the DJ spoken words. Nothing else.`,
   ].join('\n');
 
@@ -7526,7 +7527,7 @@ async function generateDJLine(prevSong, nextSong, weatherData, entryMode='gap', 
     const resp = await fetch(getAnthropicUrl(), {
       method: 'POST',
       headers: getAnthropicHeaders(),
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
+      body: JSON.stringify({ model:'claude-sonnet-5', max_tokens:maxTokens, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
     });
     if(!resp.ok){
       const errText = await resp.text();
